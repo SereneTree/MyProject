@@ -1,5 +1,6 @@
 node_modules/
 dist/
 .env
+.gh-config/
 *.tsbuildinfo
 .DS_Store
