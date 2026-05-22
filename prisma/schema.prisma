@@ -1,0 +1,223 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// 核心业务模型
+// ==========================================
+
+// 1. 用户表
+model User {
+  id               String    @id @default(uuid()) @map("id") // 用户唯一标识
+  phone            String    @unique @map("phone") @db.VarChar(16) // 手机号
+  nickname         String?   @default("未命名同学") @map("nickname") @db.VarChar(64) // 昵称
+  school           String?   @map("school") @db.VarChar(128) // 学校
+  major            String?   @map("major") @db.VarChar(128) // 专业
+  gradeId          String?   @map("grade_id") @db.VarChar(64) // 年级ID
+  memberLevel      String    @default("free") @map("member_level") // 会员等级: free, study, career
+  memberExpiresAt  DateTime? @map("member_expires_at") // 会员到期时间
+  
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  deletedAt        DateTime? @map("deleted_at")
+
+  // 关联关系
+  grade            Grade?             @relation(fields: [gradeId], references: [id])
+  orders           Order[]
+  favorites        UserFavorite[]
+  consultationLeads ConsultationLead[]
+  loginRecords     LoginRecord[]
+
+  @@map("users")
+}
+
+// 2. 年级表
+model Grade {
+  id        String   @id @map("id") @db.VarChar(64) // 年级唯一标识，如 freshman_fall
+  name      String   @map("name") @db.VarChar(32) // 年级名称：大一上/大一下/.../大四下
+  sortOrder Int      @default(0) @map("sort_order") // 排序顺序
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 关联关系
+  users             User[]
+  courses           Course[]
+  consultationLeads ConsultationLead[]
+
+  @@map("grades")
+}
+
+// 3. 课程表
+model Course {
+  id        String   @id @map("id") @db.VarChar(64) // 课程唯一标识
+  gradeId   String   @map("grade_id") @db.VarChar(64) // 年级ID
+  name      String   @map("name") @db.VarChar(128) // 课程名称
+  isHot     Boolean  @default(false) @map("is_hot") // 是否热门
+  viewCount Int      @default(0) @map("view_count") // 浏览量
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 关联关系
+  grade       Grade        @relation(fields: [gradeId], references: [id])
+  assignments Assignment[]
+
+  @@map("courses")
+}
+
+// 4. 作业表
+model Assignment {
+  id             String   @id @map("id") @db.VarChar(64) // 作业唯一标识
+  courseId       String   @map("course_id") @db.VarChar(64) // 课程ID
+  title          String   @map("title") @db.VarChar(256) // 作业标题
+  summary        String?  @map("summary") @db.Text // 作业摘要
+  difficulty     String   @map("difficulty") // 难度：easy/medium/hard
+  assignmentType String   @map("assignment_type") // 作业类型：coding/theory/project
+  viewCount      Int      @default(0) @map("view_count") // 浏览量
+  favoriteCount  Int      @default(0) @map("favorite_count") // 收藏数
+  isFreeFull     Boolean  @default(false) @map("is_free_full") // 是否免费完整
+  
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  // 关联关系
+  course    Course             @relation(fields: [courseId], references: [id])
+  modules   AssignmentModule[]
+  favorites UserFavorite[]
+
+  @@map("assignments")
+}
+
+// 5. 作业模块表
+model AssignmentModule {
+  id            String   @id @map("id") @db.VarChar(128) // 模块唯一标识
+  assignmentId  String   @map("assignment_id") @db.VarChar(64) // 作业ID
+  moduleType    String   @map("module_type") @db.VarChar(64) // 模块类型
+  title         String   @map("title") @db.VarChar(128) // 模块标题
+  requiredLevel String   @default("free") @map("required_level") // 需要的会员等级: free, study, career
+  content       String   @map("content") @db.Text // 模块完整内容
+  previewContent String? @map("preview_content") @db.Text // 模块预览内容
+  sortOrder     Int      @default(0) @map("sort_order") // 排序顺序
+  
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // 关联关系
+  assignment Assignment @relation(fields: [assignmentId], references: [id])
+
+  @@map("assignment_modules")
+}
+
+// 6. 会员套餐表
+model MembershipPlan {
+  id        String   @id @map("id") @db.VarChar(64) // 套餐唯一标识
+  level     String   @unique @map("level") // 会员等级: free, study, career
+  name      String   @map("name") @db.VarChar(64) // 套餐名称
+  tagline   String?  @map("tagline") @db.VarChar(256) // 宣传语
+  price     Decimal  @map("price") @db.Decimal(10, 2) // 价格
+  period    String   @map("period") @db.VarChar(32) // 付费周期：永久/学期/年
+  benefits  Json     @map("benefits") // 权益列表
+  isActive  Boolean  @default(true) @map("is_active") // 是否启用
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 关联关系
+  orders Order[]
+
+  @@map("membership_plans")
+}
+
+// 7. 订单表 (包含支付扩展字段)
+model Order {
+  id              String   @id @map("id") @db.VarChar(64) // 订单唯一标识
+  userId          String   @map("user_id") @db.VarChar(64) // 用户ID
+  planId          String   @map("plan_id") @db.VarChar(64) // 套餐ID
+  planLevel       String   @map("plan_level") // 会员等级
+  planName        String?  @map("plan_name") @db.VarChar(64) // 套餐名称快照
+  amount          Decimal  @map("amount") @db.Decimal(10, 2) // 订单金额
+  status          String   @default("pending") @map("status") // 订单状态: pending, paid, cancelled, refunded
+  
+  // 支付扩展字段 (为后续接入支付预留)
+  externalTradeNo String?  @map("external_trade_no") @db.VarChar(128) // 外部交易号(微信/支付宝流水号)
+  paymentChannel  String?  @map("payment_channel") @db.VarChar(32) // 支付渠道: wechat, alipay
+  paymentStatus   String?  @map("payment_status") @db.VarChar(32) // 支付网关状态
+  refundStatus    String?  @map("refund_status") @db.VarChar(32) // 退款状态
+  paidAt          DateTime? @map("paid_at") // 支付时间
+  expiredAt       DateTime? @map("expired_at") // 订单过期时间
+  rawCallback     Json?    @map("raw_callback") // 支付网关原始回调数据
+  
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // 关联关系
+  user User           @relation(fields: [userId], references: [id])
+  plan MembershipPlan @relation(fields: [planId], references: [id])
+
+  @@map("orders")
+}
+
+// 8. 咨询意向表
+model ConsultationLead {
+  id          String   @id @map("id") @db.VarChar(64) // 咨询ID
+  userId      String?  @map("user_id") @db.VarChar(64) // 用户ID（登录用户）
+  name        String   @map("name") @db.VarChar(64) // 姓名
+  contact     String   @map("contact") @db.VarChar(128) // 联系方式
+  school      String?  @map("school") @db.VarChar(128) // 学校
+  major       String?  @map("major") @db.VarChar(128) // 专业
+  gradeId     String?  @map("grade_id") @db.VarChar(64) // 年级ID
+  goal        String?  @map("goal") @db.VarChar(64) // 咨询方向：实习与就业/考研与保研/留学/其他
+  description String   @map("description") @db.Text // 当前困惑
+  status      String   @default("new") @map("status") // 状态: new, contacted, processing, completed, closed
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // 关联关系
+  user  User?  @relation(fields: [userId], references: [id])
+  grade Grade? @relation(fields: [gradeId], references: [id])
+
+  @@map("consultation_leads")
+}
+
+// 9. 用户收藏表
+model UserFavorite {
+  id           BigInt   @id @default(autoincrement()) @map("id") // 收藏ID
+  userId       String   @map("user_id") @db.VarChar(64) // 用户ID
+  assignmentId String   @map("assignment_id") @db.VarChar(64) // 作业ID
+  
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // 关联关系
+  user       User       @relation(fields: [userId], references: [id])
+  assignment Assignment @relation(fields: [assignmentId], references: [id])
+
+  @@unique([userId, assignmentId])
+  @@map("user_favorites")
+}
+
+// 10. 登录记录表
+model LoginRecord {
+  id         BigInt   @id @default(autoincrement()) @map("id") // 记录ID
+  userId     String   @map("user_id") @db.VarChar(64) // 用户ID
+  ipAddress  String?  @map("ip_address") @db.VarChar(64) // IP地址
+  userAgent  String?  @map("user_agent") @db.Text // 用户代理
+  deviceInfo Json?    @map("device_info") // 设备信息
+  
+  loginAt    DateTime @default(now()) @map("login_at")
+
+  // 关联关系
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("login_records")
+}
