@@ -53,17 +53,186 @@ const plans = [
 ];
 
 // ==========================================
-// 3. 课程数据
+// 3. 课程数据 (信息与计算科学 + 数字媒体 + 电子信息工程)
 // ==========================================
 const courses = [
-  { id: 'c-lang', gradeId: 'freshman_fall', name: 'C 语言程序设计', isHot: true, viewCount: 5280 },
-  { id: 'discrete-math', gradeId: 'freshman_spring', name: '离散数学', isHot: false, viewCount: 2310 },
+  // —— 信息与计算科学（沿用原 8 门） ——
+  // 信息与计算科学大一上
+  { id: 'pdp', gradeId: 'freshman_fall', name: '个人发展规划&企业技能', isHot: false, viewCount: 5280 },
+  { id: 'math-analysis', gradeId: 'freshman_fall', name: '数学分析', isHot: true, viewCount: 5280 },
+  { id: 'advanced-algebra', gradeId: 'freshman_fall', name: '高等代数', isHot: true, viewCount: 5280 },
+  { id: 'cs-intro', gradeId: 'freshman_fall', name: '计算机导论&程序设计', isHot: false, viewCount: 5280 },
+
+  // 信息与计算科学大一下
+  { id: 'analytic-geometry', gradeId: 'freshman_spring', name: '空间解析几何', isHot: false, viewCount: 2310 },
+  { id: 'data-science-intro', gradeId: 'freshman_spring', name: '数科编程导论', isHot: false, viewCount: 2310 },
+  
+  // 信息与计算科学大二上
   { id: 'data-structure', gradeId: 'sophomore_fall', name: '数据结构', isHot: true, viewCount: 6890 },
-  { id: 'database', gradeId: 'sophomore_spring', name: '数据库系统', isHot: true, viewCount: 4520 },
-  { id: 'os', gradeId: 'junior_fall', name: '操作系统', isHot: true, viewCount: 5670 },
-  { id: 'network', gradeId: 'junior_spring', name: '计算机网络', isHot: true, viewCount: 4890 },
-  { id: 'ml', gradeId: 'senior_fall', name: '机器学习', isHot: true, viewCount: 7120 },
-  { id: 'career-project', gradeId: 'senior_spring', name: '毕业设计与职业项目', isHot: false, viewCount: 1890 }
+  { id: 'program-design', gradeId: 'sophomore_fall', name: '项目设计', isHot: true, viewCount: 6890 },
+  { id: 'advanced-physics', gradeId: 'sophomore_fall', name: '大学物理', isHot: true, viewCount: 6890 },
+  { id: 'probability-statistics', gradeId: 'sophomore_fall', name: '概率论与数理统计', isHot: true, viewCount: 6890 },
+  { id: 'exploratory-data-analysis', gradeId: 'sophomore_fall', name: '数据分析', isHot: true, viewCount: 6890 },
+  { id: 'ordinary-diff-equation', gradeId: 'sophomore_fall', name: '常微分方程', isHot: true, viewCount: 6890 },
+
+  // 信息与计算科学大二下
+  { id: 'data-science', gradeId: 'sophomore_spring', name: '数据科学', isHot: true, viewCount: 4520 },
+  { id: 'ai', gradeId: 'sophomore_spring', name: '人工智能', isHot: true, viewCount: 4520 },
+  { id: 'computer-network', gradeId: 'sophomore_spring', name: '计算机网络', isHot: true, viewCount: 4520 },
+  { id: 'math-model', gradeId: 'sophomore_spring', name: '数学模型', isHot: true, viewCount: 4520 },
+  { id: 'numerical-model', gradeId: 'sophomore_spring', name: '数值模型', isHot: true, viewCount: 4520 },
+
+  // 信息与计算科学大三上
+  { id: 'linear-programming', gradeId: 'junior_fall', name: '线性规划&博弈论', isHot: true, viewCount: 5670 },
+  { id: 'ml', gradeId: 'junior_fall', name: '机器学习', isHot: true, viewCount: 7120 },
+  { id: 'database', gradeId: 'junior_fall', name: '数据库系统', isHot: true, viewCount: 7120 },
+  { id: 'dsp-fundamentals', gradeId: 'junior_fall', name: '数字信号处理入门', isHot: true, viewCount: 7120 },
+  { id: 'diff-equation', gradeId: 'junior_fall', name: '微分方程数值解', isHot: true, viewCount: 7120 },
+
+  // 信息与计算科学大三下
+  { id: 'block-chain', gradeId: 'junior_spring', name: '区块链', isHot: true, viewCount: 4890 },
+  { id: 'graph-theory', gradeId: 'junior_spring', name: '图论', isHot: true, viewCount: 4890 },
+  { id: 'bayesian', gradeId: 'junior_spring', name: '贝叶斯统计', isHot: true, viewCount: 4890 },
+  { id: 'complex-networks', gradeId: 'junior_spring', name: '复杂网络', isHot: true, viewCount: 4890 },
+  { id: 'dl', gradeId: 'junior_spring', name: '深度学习', isHot: true, viewCount: 4890 },
+
+  // 信息与计算科学大四上
+  { id: 'aaa', gradeId: 'senior_fall', name: 'aaa', isHot: true, viewCount: 7120 },
+
+  // 信息与计算科学大四下
+  { id: 'xxx', gradeId: 'senior_spring', name: 'xxx', isHot: true, viewCount: 7120 },
+
+  // —— 数字媒体专业课程 ——
+  { id: 'dm-design-basics', gradeId: 'freshman_fall', name: '设计基础', isHot: false, viewCount: 1320 },
+  { id: 'dm-color-theory', gradeId: 'freshman_fall', name: '色彩构成', isHot: false, viewCount: 1180 },
+  { id: 'dm-image-process', gradeId: 'freshman_spring', name: '数字图像处理', isHot: true, viewCount: 2480 },
+  { id: 'dm-typography', gradeId: 'freshman_spring', name: '字体与版式设计', isHot: false, viewCount: 1420 },
+  { id: 'dm-graphic-design', gradeId: 'sophomore_fall', name: '平面设计实战', isHot: true, viewCount: 2360 },
+  { id: 'dm-3d-modeling', gradeId: 'sophomore_spring', name: '三维建模与动画', isHot: true, viewCount: 3120 },
+  { id: 'dm-motion-graphics', gradeId: 'sophomore_spring', name: '动态图形设计', isHot: false, viewCount: 1860 },
+  { id: 'dm-web-design', gradeId: 'junior_fall', name: '网页设计与交互', isHot: true, viewCount: 2890 },
+  { id: 'dm-ui-ux', gradeId: 'junior_fall', name: 'UI/UX 设计', isHot: true, viewCount: 3210 },
+  { id: 'dm-video-edit', gradeId: 'junior_spring', name: '影视后期与剪辑', isHot: true, viewCount: 2740 },
+  { id: 'dm-final-project', gradeId: 'senior_spring', name: '数字媒体毕业作品', isHot: false, viewCount: 980 },
+
+  // —— 电子信息工程专业课程 ——
+  { id: 'ei-circuit', gradeId: 'freshman_fall', name: '电路分析基础', isHot: false, viewCount: 1820 },
+  { id: 'ei-c-lang', gradeId: 'freshman_spring', name: 'C 语言程序设计 (电信)', isHot: true, viewCount: 2640 },
+  { id: 'ei-analog', gradeId: 'sophomore_fall', name: '模拟电子技术', isHot: false, viewCount: 1980 },
+  { id: 'ei-digital', gradeId: 'sophomore_spring', name: '数字电子技术', isHot: true, viewCount: 2360 },
+  { id: 'ei-signal-system', gradeId: 'junior_fall', name: '信号与系统', isHot: true, viewCount: 2540 },
+  { id: 'ei-mcu', gradeId: 'junior_spring', name: '单片机原理与应用', isHot: true, viewCount: 2870 },
+  { id: 'ei-embedded', gradeId: 'junior_spring', name: '嵌入式系统设计', isHot: false, viewCount: 1980 },
+  { id: 'ei-comm', gradeId: 'senior_fall', name: '通信原理', isHot: false, viewCount: 1620 },
+
+];
+
+// ==========================================
+// 3.1 专业数据
+// ==========================================
+const majors = [
+  { id: 'info_computing', name: '信息与计算科学', sortOrder: 1 },
+  { id: 'digital_media', name: '数字媒体', sortOrder: 2 },
+  { id: 'electronic_info', name: '电子信息工程', sortOrder: 3 }
+];
+
+// ==========================================
+// 3.2 专业-课程关联 (决定不同专业学生在个人页看到的课程)
+// 说明：courseId 必须在上方 courses 中实际存在；
+//      主键为 (majorId, courseId)，同一专业不能重复关联同一 courseId。
+// ==========================================
+const majorCourses = [
+  // —— 信息与计算科学 (按年级 + sortOrder 排列) ——
+  // 大一上
+  { majorId: 'info_computing', courseId: 'pdp', sortOrder: 1 },
+  { majorId: 'info_computing', courseId: 'math-analysis', sortOrder: 2 },
+  { majorId: 'info_computing', courseId: 'advanced-algebra', sortOrder: 3 },
+  { majorId: 'info_computing', courseId: 'cs-intro', sortOrder: 4 },
+
+  // 大一下
+  { majorId: 'info_computing', courseId: 'analytic-geometry', sortOrder: 5 },
+  { majorId: 'info_computing', courseId: 'data-science-intro', sortOrder: 6 },
+
+  // 大二上
+  { majorId: 'info_computing', courseId: 'data-structure', sortOrder: 7 },
+  { majorId: 'info_computing', courseId: 'program-design', sortOrder: 8 },
+  { majorId: 'info_computing', courseId: 'advanced-physics', sortOrder: 9 },
+  { majorId: 'info_computing', courseId: 'probability-statistics', sortOrder: 10 },
+  { majorId: 'info_computing', courseId: 'exploratory-data-analysis', sortOrder: 11 },
+  { majorId: 'info_computing', courseId: 'ordinary-diff-equation', sortOrder: 12 },
+
+  // 大二下
+  { majorId: 'info_computing', courseId: 'data-science', sortOrder: 13 },
+  { majorId: 'info_computing', courseId: 'ai', sortOrder: 14 },
+  { majorId: 'info_computing', courseId: 'computer-network', sortOrder: 15 },
+  { majorId: 'info_computing', courseId: 'math-model', sortOrder: 16 },
+  { majorId: 'info_computing', courseId: 'numerical-model', sortOrder: 17 },
+
+  // 大三上
+  { majorId: 'info_computing', courseId: 'linear-programming', sortOrder: 18 },
+  { majorId: 'info_computing', courseId: 'ml', sortOrder: 19 }, // 注： courses 中 ml 出现于大三上/大四上/大四下， id 重复会被后写的覆盖
+  { majorId: 'info_computing', courseId: 'database', sortOrder: 20 },
+  { majorId: 'info_computing', courseId: 'dsp-fundamentals', sortOrder: 21 },
+  { majorId: 'info_computing', courseId: 'diff-equation', sortOrder: 22 },
+
+  // 大三下
+  { majorId: 'info_computing', courseId: 'block-chain', sortOrder: 23 },
+  { majorId: 'info_computing', courseId: 'graph-theory', sortOrder: 24 },
+  { majorId: 'info_computing', courseId: 'bayesian', sortOrder: 25 },
+  { majorId: 'info_computing', courseId: 'complex-networks', sortOrder: 26 },
+  { majorId: 'info_computing', courseId: 'dl', sortOrder: 27 },
+
+  // —— 数字媒体专业（仅展示数字媒体自己的课程，不与信息与计算科学共享） ——
+  { majorId: 'digital_media', courseId: 'dm-design-basics', sortOrder: 1 },
+  { majorId: 'digital_media', courseId: 'dm-color-theory', sortOrder: 2 },
+  { majorId: 'digital_media', courseId: 'dm-image-process', sortOrder: 3 },
+  { majorId: 'digital_media', courseId: 'dm-typography', sortOrder: 4 },
+  { majorId: 'digital_media', courseId: 'dm-graphic-design', sortOrder: 5 },
+  { majorId: 'digital_media', courseId: 'dm-3d-modeling', sortOrder: 6 },
+  { majorId: 'digital_media', courseId: 'dm-motion-graphics', sortOrder: 7 },
+  { majorId: 'digital_media', courseId: 'dm-web-design', sortOrder: 8 },
+  { majorId: 'digital_media', courseId: 'dm-ui-ux', sortOrder: 9 },
+  { majorId: 'digital_media', courseId: 'dm-video-edit', sortOrder: 10 },
+  { majorId: 'digital_media', courseId: 'dm-final-project', sortOrder: 11 },
+
+  // —— 电子信息工程专业（仅展示电子信息工程自己的课程） ——
+  { majorId: 'electronic_info', courseId: 'ei-circuit', sortOrder: 1 },
+  { majorId: 'electronic_info', courseId: 'ei-c-lang', sortOrder: 2 },
+  { majorId: 'electronic_info', courseId: 'ei-analog', sortOrder: 3 },
+  { majorId: 'electronic_info', courseId: 'ei-digital', sortOrder: 4 },
+  { majorId: 'electronic_info', courseId: 'ei-signal-system', sortOrder: 5 },
+  { majorId: 'electronic_info', courseId: 'ei-mcu', sortOrder: 6 },
+  { majorId: 'electronic_info', courseId: 'ei-embedded', sortOrder: 7 },
+  { majorId: 'electronic_info', courseId: 'ei-comm', sortOrder: 8 }
+
+  // 说明：三个专业的 courseId 完全互斥，不存在共享课程；
+  //      另外 schema 里 (majorId, courseId) 是复合主键，天然保证了严格隔离。
+];
+
+// ==========================================
+// 3.3 批量学生数据 (3 个专业 × 5 人)
+// ==========================================
+const students = [
+  // —— 信息与计算科学 ——
+  { phone: '13900000101', nickname: '信息小赵', school: '海南大学',         majorId: 'info_computing',  major: '信息与计算科学', gradeId: 'junior_fall' },
+  { phone: '13900000102', nickname: '信息小钱', school: '海南师范大学',     majorId: 'info_computing',  major: '信息与计算科学', gradeId: 'sophomore_fall' },
+  { phone: '13900000103', nickname: '信息小孙', school: '海南热带海洋学院', majorId: 'info_computing',  major: '信息与计算科学', gradeId: 'junior_spring' },
+  { phone: '13900000104', nickname: '信息小李', school: '海南医学院',       majorId: 'info_computing',  major: '信息与计算科学', gradeId: 'senior_fall' },
+  { phone: '13900000105', nickname: '信息小周', school: '海南大学',         majorId: 'info_computing',  major: '信息与计算科学', gradeId: 'sophomore_spring' },
+
+  // —— 数字媒体 ——
+  { phone: '13900000201', nickname: '媒体小吴', school: '海南大学',           majorId: 'digital_media', major: '数字媒体', gradeId: 'junior_fall' },
+  { phone: '13900000202', nickname: '媒体小郑', school: '海南师范大学',       majorId: 'digital_media', major: '数字媒体', gradeId: 'sophomore_fall' },
+  { phone: '13900000203', nickname: '媒体小王', school: '海南科技职业学院',   majorId: 'digital_media', major: '数字媒体', gradeId: 'junior_spring' },
+  { phone: '13900000204', nickname: '媒体小冯', school: '三亚学院',           majorId: 'digital_media', major: '数字媒体', gradeId: 'senior_fall' },
+  { phone: '13900000205', nickname: '媒体小陈', school: '海南大学',           majorId: 'digital_media', major: '数字媒体', gradeId: 'freshman_spring' },
+
+  // —— 电子信息工程 ——
+  { phone: '13900000301', nickname: '电子小褚', school: '海南大学',           majorId: 'electronic_info', major: '电子信息工程', gradeId: 'junior_fall' },
+  { phone: '13900000302', nickname: '电子小卫', school: '海南师范大学',       majorId: 'electronic_info', major: '电子信息工程', gradeId: 'sophomore_fall' },
+  { phone: '13900000303', nickname: '电子小蒋', school: '海南热带海洋学院',   majorId: 'electronic_info', major: '电子信息工程', gradeId: 'junior_spring' },
+  { phone: '13900000304', nickname: '电子小沈', school: '海口经济学院',       majorId: 'electronic_info', major: '电子信息工程', gradeId: 'senior_fall' },
+  { phone: '13900000305', nickname: '电子小韩', school: '海南大学',           majorId: 'electronic_info', major: '电子信息工程', gradeId: 'sophomore_spring' }
 ];
 
 // ==========================================
@@ -241,6 +410,23 @@ async function main() {
   }
   console.log('✅ 课程数据写入完成');
 
+  // 3.1 写入专业
+  for (const m of majors) {
+    await prisma.major.upsert({
+      where: { id: m.id },
+      update: m,
+      create: m,
+    });
+  }
+  console.log('✅ 专业数据写入完成');
+
+  // 3.2 写入专业-课程关联（先清空后重建，保证顺序一致）
+  await prisma.majorCourse.deleteMany();
+  for (const mc of majorCourses) {
+    await prisma.majorCourse.create({ data: mc });
+  }
+  console.log(`✅ 专业-课程关联 ${majorCourses.length} 条写入完成`);
+
   // 4. 写入作业
   for (const a of assignments) {
     await prisma.assignment.upsert({
@@ -275,6 +461,50 @@ async function main() {
     }
   }
   console.log(`✅ ${moduleCount} 条作业详情模块写入完成`);
+
+
+
+  // 6. 批量写入三个专业的学生（幂等：同手机号重复运行不会报错）
+  // 同时随机赋予每个学生可访问的年级权限 accessibleGradeIds：
+  //   规则：当前年级 gradeId 必须解锁 + 随机额外 1~3 个其他年级
+  const allGradeIds = grades.map((g) => g.id);
+  function pickRandomGradeIds(currentGradeId) {
+    const others = allGradeIds.filter((id) => id !== currentGradeId);
+    // 洗牌 (Fisher–Yates)
+    for (let i = others.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [others[i], others[j]] = [others[j], others[i]];
+    }
+    const extraCount = 1 + Math.floor(Math.random() * 3); // 1~3 个
+    const extras = others.slice(0, extraCount);
+    return [currentGradeId, ...extras];
+  }
+
+  for (const s of students) {
+    const accessibleGradeIds = pickRandomGradeIds(s.gradeId);
+    await prisma.user.upsert({
+      where: { phone: s.phone },
+      update: {
+        nickname: s.nickname,
+        school: s.school,
+        major: s.major,
+        majorId: s.majorId,
+        gradeId: s.gradeId,
+        accessibleGradeIds,
+      },
+      create: {
+        phone: s.phone,
+        nickname: s.nickname,
+        school: s.school,
+        major: s.major,
+        majorId: s.majorId,
+        gradeId: s.gradeId,
+        accessibleGradeIds,
+      },
+    });
+    console.log(`   · ${s.nickname}(${s.phone}) 解锁年级：${accessibleGradeIds.join(', ')}`);
+  }
+  console.log(`✅ 批量写入 ${students.length} 名三专业学生完成`);
 
   console.log('🎉 18条真实模拟数据初始化全部完成！你可以去前端页面查看了！');
 }

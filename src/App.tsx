@@ -3,8 +3,8 @@ import { Alert, Badge, Button, Card, Col, Divider, Empty, Form, Input, Layout, L
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { BrowserRouter, Link, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { createOrder, getAssignmentDetail, getAssignments, getHomeResources, getMembershipPlans, submitConsultationLead } from './api';
-import type { Assignment, AssignmentDetail, Course, Grade, MemberLevel, MembershipPlan, Profile } from './types';
+import { createOrder, getAssignmentDetail, getAssignments, getHomeResources, getMajors, getMembershipPlans, getUserCourses, submitConsultationLead } from './api';
+import type { Assignment, AssignmentDetail, Course, Grade, Major, MajorCourse, MemberLevel, MembershipPlan, Profile } from './types';
 
 const { Header, Content, Footer } = Layout;
 const { Title, Paragraph, Text } = Typography;
@@ -84,8 +84,8 @@ function AppShell() {
       </Header>
       <Content className="content">
         <Routes>
-          <Route path="/" element={<Home isLoggedIn={isLoggedIn} />} />
-          <Route path="/assignments/:id" element={<AssignmentPage memberLevel={memberLevel} />} />
+          <Route path="/" element={<Home isLoggedIn={isLoggedIn} profile={profile} />} />
+          <Route path="/assignments/:id" element={<AssignmentPage memberLevel={memberLevel} profile={profile} isLoggedIn={isLoggedIn} />} />
           <Route path="/membership" element={<MembershipPage memberLevel={memberLevel} setMemberLevel={setMemberLevel} />} />
           <Route
             path="/profile"
@@ -116,7 +116,7 @@ function getSelectedNavKey(pathname: string) {
   return '';
 }
 
-function Home({ isLoggedIn }: { isLoggedIn: boolean }) {
+function Home({ isLoggedIn, profile }: { isLoggedIn: boolean; profile: Profile }) {
   const [grades, setGrades] = useState<Grade[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [allAssignments, setAllAssignments] = useState<Assignment[]>([]);
@@ -125,6 +125,11 @@ function Home({ isLoggedIn }: { isLoggedIn: boolean }) {
   const [selectedCourse, setSelectedCourse] = useState<string>();
   const [keyword, setKeyword] = useState('');
   const [loading, setLoading] = useState(false);
+  // 当前用户的专业课程范围（仅登录且已绑定专业时生效）
+  const [majorCourseIds, setMajorCourseIds] = useState<string[] | null>(null);
+  const [majorName, setMajorName] = useState<string>('');
+  // 当前用户被赋予的年级访问权限（null 代表不限制，如未登录或未设置）
+  const [unlockedGradeIds, setUnlockedGradeIds] = useState<string[] | null>(null);
 
   useEffect(() => {
     getHomeResources().then((data) => {
@@ -135,6 +140,40 @@ function Home({ isLoggedIn }: { isLoggedIn: boolean }) {
     });
   }, []);
 
+  // 登录后拉取当前用户的专业课程范围
+  useEffect(() => {
+    if (!isLoggedIn || !profile.phone) {
+      setMajorCourseIds(null);
+      setMajorName('');
+      setUnlockedGradeIds(null);
+      return;
+    }
+    getUserCourses(profile.phone)
+      .then((res) => {
+        if (res.data.user.majorId) {
+          // 已绑定专业：严格按专业过滤，哪怕该专业课程为空也保持过滤（避免退化为全展示）
+          setMajorCourseIds(res.data.courses.map((c) => c.id));
+          setMajorName(res.data.user.majorName || '');
+        } else {
+          // 未绑定专业的用户才退化到“不过滤”
+          setMajorCourseIds(null);
+          setMajorName('');
+        }
+        // 年级权限：后端返回不为空才启用锁定逻辑
+        const unlocked = res.data.user.unlockedGradeIds;
+        if (Array.isArray(unlocked) && unlocked.length > 0) {
+          setUnlockedGradeIds(unlocked);
+        } else {
+          setUnlockedGradeIds(null);
+        }
+      })
+      .catch(() => {
+        setMajorCourseIds(null);
+        setMajorName('');
+        setUnlockedGradeIds(null);
+      });
+  }, [isLoggedIn, profile.phone]);
+
   useEffect(() => {
     setLoading(true);
     getAssignments({ gradeId: selectedGrade, courseId: selectedCourse, q: keyword })
@@ -142,13 +181,45 @@ function Home({ isLoggedIn }: { isLoggedIn: boolean }) {
       .finally(() => setLoading(false));
   }, [selectedGrade, selectedCourse, keyword]);
 
+  // 按专业过滤课程与作业（未登录或未绑定专业时保持原逻辑，展示全部）
+  const scopedCourses = useMemo(() => {
+    if (!majorCourseIds) return courses;
+    const idSet = new Set(majorCourseIds);
+    return courses.filter((c) => idSet.has(c.id));
+  }, [courses, majorCourseIds]);
+
+  const scopedAssignments = useMemo(() => {
+    if (!majorCourseIds) return assignments;
+    const idSet = new Set(majorCourseIds);
+    return assignments.filter((a) => idSet.has(a.courseId));
+  }, [assignments, majorCourseIds]);
+
+  const scopedAllAssignments = useMemo(() => {
+    if (!majorCourseIds) return allAssignments;
+    const idSet = new Set(majorCourseIds);
+    return allAssignments.filter((a) => idSet.has(a.courseId));
+  }, [allAssignments, majorCourseIds]);
+
+  // 年级权限判断工具
+  const unlockedSet = useMemo(
+    () => (unlockedGradeIds ? new Set(unlockedGradeIds) : null),
+    [unlockedGradeIds]
+  );
+  const isGradeLocked = (gradeId: string) => !!unlockedSet && !unlockedSet.has(gradeId);
+
+  // 锁定策略：不过滤，仅记录哪些课程处于锁定状态。列表照常展示所有标题，进入详情时才拦截。
+  const lockedCourseIdSet = useMemo(() => {
+    if (!unlockedSet) return new Set<string>();
+    return new Set(scopedCourses.filter((c) => !unlockedSet.has(c.gradeId)).map((c) => c.id));
+  }, [scopedCourses, unlockedSet]);
+
   const visibleCourses = useMemo(() => {
-    let result = selectedGrade ? courses.filter((course) => course.gradeId === selectedGrade) : courses;
+    let result = selectedGrade ? scopedCourses.filter((course) => course.gradeId === selectedGrade) : scopedCourses;
     // 按浏览量降序排序
     return [...result].sort((a, b) => b.viewCount - a.viewCount);
-  }, [courses, selectedGrade]);
+  }, [scopedCourses, selectedGrade]);
   const selectedGradeName = selectedGrade ? grades.find((grade) => grade.id === selectedGrade)?.name || '年级' : '全部年级';
-  const selectedCourseText = selectedCourse ? courses.find((course) => course.id === selectedCourse)?.name || '已选课程' : `${visibleCourses.length} 个课程`;
+  const selectedCourseText = selectedCourse ? scopedCourses.find((course) => course.id === selectedCourse)?.name || '已选课程' : `${visibleCourses.length} 个课程`;
 
   return (
     <div>
@@ -158,10 +229,31 @@ function Home({ isLoggedIn }: { isLoggedIn: boolean }) {
           <Paragraph>覆盖计算机专业核心课程，从参考解析、知识点提炼，到企业应用和 AI 实现，帮学生真正理解、掌握并迁移到未来发展。</Paragraph>
         </div>
         <Card className="hero-card">
-          <Statistic title="已覆盖课程" value={courses.length} suffix="门" />
-          <Statistic title="学习资源" value={allAssignments.length} suffix="项" />
+          <Statistic title="已覆盖课程" value={scopedCourses.length} suffix="门" />
+          <Statistic title="学习资源" value={scopedAllAssignments.length} suffix="项" />
         </Card>
       </section>
+
+      {majorCourseIds && (
+        <Alert
+          style={{ marginBottom: 16 }}
+          type="success"
+          showIcon
+          message={`已按你的专业《${majorName || '本专业'}》筛选，仅展示本专业课程与资源`}
+          description="如需查看其他专业内容，请在《个人中心 - 个人资料》中修改专业，或退出登录后以游客身份浏览。"
+        />
+      )}
+
+      {unlockedGradeIds && (
+        <Alert
+          style={{ marginBottom: 16 }}
+          type="info"
+          showIcon
+          icon={<LockOutlined />}
+          message={`年级访问权限：已解锁 ${unlockedGradeIds.length} 个年级`}
+          description="未解锁的年级下的课程与资源不会展示。如需解锁更多年级，请联系管理员或升级会员。"
+        />
+      )}
 
       <section className="resource-panel" id="resources">
         <div className="resource-panel-header">
@@ -176,16 +268,37 @@ function Home({ isLoggedIn }: { isLoggedIn: boolean }) {
           <em>/</em>
           <strong>{selectedCourseText}</strong>
           <em>/</em>
-          <strong>{assignments.length} 项课程资源</strong>
+          <strong>{scopedAssignments.length} 项课程资源</strong>
         </div>
         <div className="resource-cascade">
           <div className="cascade-column cascade-column-grade">
             <div className="cascade-title">
               <span>年级</span>
             </div>
-            <Radio.Group value={selectedGrade ?? 'all'} onChange={(event) => { setSelectedGrade(event.target.value === 'all' ? undefined : event.target.value); setSelectedCourse(undefined); }} className="grade-list">
+            <Radio.Group
+              value={selectedGrade ?? 'all'}
+              onChange={(event) => {
+                const v = event.target.value;
+                setSelectedGrade(v === 'all' ? undefined : v);
+                setSelectedCourse(undefined);
+              }}
+              className="grade-list"
+            >
               <Radio.Button value="all">全部</Radio.Button>
-              {grades.map((grade) => <Radio.Button key={grade.id} value={grade.id}>{grade.name}</Radio.Button>)}
+              {grades.map((grade) => {
+                const locked = isGradeLocked(grade.id);
+                return (
+                  <Radio.Button
+                    key={grade.id}
+                    value={grade.id}
+                    className={locked ? 'grade-locked' : ''}
+                    title={locked ? `《${grade.name}》未解锁：可查看列表，但不能进入详情` : undefined}
+                  >
+                    {locked && <LockOutlined style={{ marginRight: 4, color: '#bfbfbf' }} />}
+                    {grade.name}
+                  </Radio.Button>
+                );
+              })}
             </Radio.Group>
           </div>
           <div className="cascade-column cascade-column-course">
@@ -198,15 +311,24 @@ function Home({ isLoggedIn }: { isLoggedIn: boolean }) {
             </div>
             <List
               dataSource={visibleCourses}
-              renderItem={(course) => (
-                <List.Item className={course.id === selectedCourse ? 'active-list-item' : ''} onClick={() => setSelectedCourse(course.id)}>
-                  <Space>
-                    <BookOutlined />
-                    <Text strong={course.id === selectedCourse}>{course.name}</Text>
-                    {course.isHot && <Tag color="red">热门</Tag>}
-                  </Space>
-                </List.Item>
-              )}
+              renderItem={(course) => {
+                const locked = lockedCourseIdSet.has(course.id);
+                return (
+                  <List.Item
+                    className={course.id === selectedCourse ? 'active-list-item' : ''}
+                    onClick={() => setSelectedCourse(course.id)}
+                    title={locked ? '该课程处于锁定年级：可查看课程名与资源标题，但不能进入详情' : undefined}
+                  >
+                    <Space>
+                      {locked ? <LockOutlined style={{ color: '#bfbfbf' }} /> : <BookOutlined />}
+                      <Text strong={course.id === selectedCourse} style={locked ? { color: '#8c8c8c' } : undefined}>
+                        {course.name}
+                      </Text>
+                      {course.isHot && <Tag color="red">热门</Tag>}
+                    </Space>
+                  </List.Item>
+                );
+              }}
             />
           </div>
           <div className="cascade-column cascade-column-main">
@@ -216,7 +338,7 @@ function Home({ isLoggedIn }: { isLoggedIn: boolean }) {
             <Input.Search className="resource-search" placeholder="搜索课程资源/课程" allowClear onSearch={setKeyword} onChange={(e) => !e.target.value && setKeyword('')} />
             <List
               loading={loading}
-              dataSource={assignments}
+              dataSource={scopedAssignments}
               pagination={{
                 pageSize: 10,
                 hideOnSinglePage: true,
@@ -227,6 +349,7 @@ function Home({ isLoggedIn }: { isLoggedIn: boolean }) {
                 <AssignmentCard
                   assignment={assignment}
                   isLoggedIn={isLoggedIn}
+                  locked={lockedCourseIdSet.has(assignment.courseId)}
                 />
               )}
             />
@@ -237,19 +360,27 @@ function Home({ isLoggedIn }: { isLoggedIn: boolean }) {
   );
 }
 
-function AssignmentCard({ assignment, isLoggedIn }: { assignment: Assignment; isLoggedIn: boolean }) {
+function AssignmentCard({ assignment, isLoggedIn, locked }: { assignment: Assignment; isLoggedIn: boolean; locked?: boolean }) {
   const navigate = useNavigate();
 
   return (
-    <List.Item className="assignment-list-item">
-      <div className="assignment-item-main" onClick={() => {
-        if (!isLoggedIn) {
-          message.info('请先登录后再查看作业详情');
-          navigate('/profile');
-          return;
-        }
-        navigate(`/assignments/${assignment.id}`);
-      }}>
+    <List.Item className={`assignment-list-item${locked ? ' assignment-list-item-locked' : ''}`}>
+      <div
+        className="assignment-item-main"
+        style={locked ? { cursor: 'not-allowed', opacity: 0.7 } : undefined}
+        onClick={() => {
+          if (locked) {
+            message.warning(`《${assignment.gradeName}》年级未解锁，无法查看详情。请联系管理员或升级会员解锁。`);
+            return;
+          }
+          if (!isLoggedIn) {
+            message.info('请先登录后再查看作业详情');
+            navigate('/profile');
+            return;
+          }
+          navigate(`/assignments/${assignment.id}`);
+        }}
+      >
         <div className="assignment-item-left">
           <div className="assignment-item-header">
             <Space wrap size={[5, 4]}>
@@ -259,6 +390,7 @@ function AssignmentCard({ assignment, isLoggedIn }: { assignment: Assignment; is
               <Tag color={assignment.difficulty === 'hard' ? 'red' : assignment.difficulty === 'medium' ? 'orange' : 'green'}>
                 {difficultyMap[assignment.difficulty]}
               </Tag>
+              {locked && <Tag icon={<LockOutlined />} color="default">年级锁定</Tag>}
             </Space>
           </div>
           <Title level={4} className="assignment-item-title">{assignment.title}</Title>
@@ -274,14 +406,38 @@ function AssignmentCard({ assignment, isLoggedIn }: { assignment: Assignment; is
   );
 }
 
-function AssignmentPage({ memberLevel }: { memberLevel: MemberLevel }) {
+function AssignmentPage({ memberLevel, profile, isLoggedIn }: { memberLevel: MemberLevel; profile: Profile; isLoggedIn: boolean }) {
   const { id } = useParams();
   const [detail, setDetail] = useState<AssignmentDetail>();
+  const [unlockedGradeIds, setUnlockedGradeIds] = useState<string[] | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (id) getAssignmentDetail(id, memberLevel).then(setDetail);
   }, [id, memberLevel]);
+
+  // 拉取年级访问权限（仅登录后）
+  useEffect(() => {
+    if (!isLoggedIn || !profile.phone) {
+      setUnlockedGradeIds(null);
+      return;
+    }
+    getUserCourses(profile.phone)
+      .then((res) => {
+        const list = res.data.user.unlockedGradeIds;
+        setUnlockedGradeIds(Array.isArray(list) && list.length > 0 ? list : null);
+      })
+      .catch(() => setUnlockedGradeIds(null));
+  }, [isLoggedIn, profile.phone]);
+
+  // URL 直达兑底拦截：该作业所属年级未解锁则踢回首页
+  useEffect(() => {
+    if (!detail || !unlockedGradeIds) return;
+    if (!unlockedGradeIds.includes(detail.gradeId)) {
+      message.warning(`《${detail.gradeName}》年级未解锁，无法查看详情。`);
+      navigate('/', { replace: true });
+    }
+  }, [detail, unlockedGradeIds, navigate]);
 
   if (!detail) return <Card loading />;
 
@@ -483,7 +639,40 @@ function ProfilePage({
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [activeProfileSection, setActiveProfileSection] = useState('profile');
+  const [majors, setMajors] = useState<Major[]>([]);
+  const [majorCourses, setMajorCourses] = useState<MajorCourse[]>([]);
+  const [coursesLoading, setCoursesLoading] = useState(false);
   const navigate = useNavigate();
+
+  // 拉取专业列表（供表单下拉使用）
+  useEffect(() => {
+    getMajors().then((res) => setMajors(res.data)).catch(() => {});
+  }, []);
+
+  // 登录后，根据手机号拉取该用户专业下的课程
+  useEffect(() => {
+    if (!isLoggedIn || !profile.phone) {
+      setMajorCourses([]);
+      return;
+    }
+    setCoursesLoading(true);
+    getUserCourses(profile.phone)
+      .then((res) => {
+        setMajorCourses(res.data.courses);
+        // 如果本地 profile 还未记录专业信息，以后端为准同步一份
+        if (res.data.user.majorId && profile.majorId !== res.data.user.majorId) {
+          setProfile({
+            ...profile,
+            major: res.data.user.majorName || res.data.user.major || profile.major,
+            majorId: res.data.user.majorId,
+            grade: res.data.user.gradeId || profile.grade
+          });
+        }
+      })
+      .catch(() => setMajorCourses([]))
+      .finally(() => setCoursesLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn, profile.phone]);
 
   function login(values: { phone: string; code: string }) {
     const matchedName = matchUserName(values.phone);
@@ -564,6 +753,7 @@ function ProfilePage({
 
   const sectionTitleMap: Record<string, string> = {
     profile: '个人资料',
+    courses: '我的课程',
     membership: '会员状态',
     security: '账号安全'
   };
@@ -586,6 +776,7 @@ function ProfilePage({
               onClick={({ key }) => setActiveProfileSection(key)}
               items={[
                 { key: 'profile', label: '个人资料' },
+                { key: 'courses', label: '我的课程' },
                 { key: 'membership', label: '会员状态' },
                 { key: 'security', label: '账号安全' }
               ]}
@@ -623,7 +814,7 @@ function ProfilePage({
                     <Col xs={24} md={12}><Form.Item className="profile-form-item" name="nickname" label="用户名"><Input size="large" /></Form.Item></Col>
                     <Col xs={24} md={12}><Form.Item className="profile-form-item" name="phone" label="手机号"><Input size="large" disabled /></Form.Item></Col>
                     <Col xs={24} md={12}><Form.Item className="profile-form-item" name="school" label="学校"><Input size="large" placeholder="请输入学校" /></Form.Item></Col>
-                    <Col xs={24} md={12}><Form.Item className="profile-form-item" name="major" label="专业"><Input size="large" placeholder="请输入专业" /></Form.Item></Col>
+                    <Col xs={24} md={12}><Form.Item className="profile-form-item" name="major" label="专业"><Select size="large" placeholder="请选择专业" options={majors.map((m) => ({ value: m.name, label: m.name }))} /></Form.Item></Col>
                     <Col xs={24} md={12}><Form.Item className="profile-form-item" name="grade" label="年级"><Select size="large" options={gradeOptions} /></Form.Item></Col>
                   </Row>
                   <div className="profile-section-actions">
@@ -633,6 +824,43 @@ function ProfilePage({
                 </Form>
               </Space>
             )
+          )}
+          {activeProfileSection === 'courses' && (
+            <Space direction="vertical" size={16} className="full-width">
+              <Alert
+                className="profile-guide"
+                type="info"
+                showIcon
+                message={profile.major
+                  ? `以下为《${profile.major}》专业推荐学习的课程，由后端专业-课程关联动态生成。`
+                  : '请先在《个人资料》中选择专业，系统会为你推荐对应专业的课程。'}
+              />
+              {coursesLoading ? (
+                <Paragraph type="secondary">加载中…</Paragraph>
+              ) : majorCourses.length === 0 ? (
+                <Empty description="暂无专业课程，请先完善专业信息或联系管理员配置" />
+              ) : (
+                <List
+                  itemLayout="horizontal"
+                  dataSource={majorCourses}
+                  renderItem={(item) => (
+                    <List.Item
+                      actions={[
+                        <Tag key="grade" color="blue">{item.gradeName}</Tag>,
+                        item.isHot ? <Tag key="hot" color="volcano">热门</Tag> : null,
+                        <Text key="views" type="secondary"><EyeOutlined /> {item.viewCount}</Text>
+                      ].filter(Boolean) as ReactNode[]}
+                    >
+                      <List.Item.Meta
+                        avatar={<BookOutlined style={{ fontSize: 20 }} />}
+                        title={<Link to={`/?courseId=${item.id}`}>{item.name}</Link>}
+                        description={`序号 ${item.sortOrder} · 课程 ID：${item.id}`}
+                      />
+                    </List.Item>
+                  )}
+                />
+              )}
+            </Space>
           )}
           {activeProfileSection === 'membership' && (
             <Space direction="vertical" size={16} className="full-width">

@@ -20,7 +20,8 @@ model User {
   phone            String    @unique @map("phone") @db.VarChar(16) // 手机号
   nickname         String?   @default("未命名同学") @map("nickname") @db.VarChar(64) // 昵称
   school           String?   @map("school") @db.VarChar(128) // 学校
-  major            String?   @map("major") @db.VarChar(128) // 专业
+  major            String?   @map("major") @db.VarChar(128) // 专业名称（展示用快照，便于老逻辑兼容）
+  majorId          String?   @map("major_id") @db.VarChar(64) // 专业ID（外键，决定个人页课程）
   gradeId          String?   @map("grade_id") @db.VarChar(64) // 年级ID
   memberLevel      String    @default("free") @map("member_level") // 会员等级: free, study, career
   memberExpiresAt  DateTime? @map("member_expires_at") // 会员到期时间
@@ -28,9 +29,11 @@ model User {
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
   deletedAt        DateTime? @map("deleted_at")
+  accessibleGradeIds Json? @map("accessible_grade_ids") // e.g. ["sophomore_fall","sophomore_spring"]
 
   // 关联关系
   grade            Grade?             @relation(fields: [gradeId], references: [id])
+  majorRef         Major?             @relation(fields: [majorId], references: [id])
   orders           Order[]
   favorites        UserFavorite[]
   consultationLeads ConsultationLead[]
@@ -68,8 +71,9 @@ model Course {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // 关联关系
-  grade       Grade        @relation(fields: [gradeId], references: [id])
-  assignments Assignment[]
+  grade        Grade         @relation(fields: [gradeId], references: [id])
+  assignments  Assignment[]
+  majorCourses MajorCourse[]
 
   @@map("courses")
 }
@@ -204,6 +208,37 @@ model UserFavorite {
 
   @@unique([userId, assignmentId])
   @@map("user_favorites")
+}
+
+// 11. 专业表
+model Major {
+  id        String   @id @map("id") @db.VarChar(64) // 专业唯一标识，如 digital_media
+  name      String   @map("name") @db.VarChar(64) // 专业名称：数字媒体、电子信息工程、信息与计算科学
+  sortOrder Int      @default(0) @map("sort_order") // 排序顺序
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 关联关系
+  users        User[]
+  majorCourses MajorCourse[]
+
+  @@map("majors")
+}
+
+// 12. 专业-课程关联表 (决定不同专业的学生在个人页看到哪些课程)
+model MajorCourse {
+  majorId   String   @map("major_id") @db.VarChar(64)
+  courseId  String   @map("course_id") @db.VarChar(64)
+  sortOrder Int      @default(0) @map("sort_order") // 在该专业下的展示顺序
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  major  Major  @relation(fields: [majorId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
+
+  @@id([majorId, courseId])
+  @@map("major_courses")
 }
 
 // 10. 登录记录表

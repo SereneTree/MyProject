@@ -325,6 +325,102 @@ app.get('/api/admin/consultation-leads', async (req, res) => {
   }
 });
 
+// ==========================================
+// 9. 专业列表接口 (供个人页下拉选择)
+// ==========================================
+app.get('/api/majors', async (req, res) => {
+  try {
+    const majors = await prisma.major.findMany({ orderBy: { sortOrder: 'asc' } });
+    res.json({ data: majors });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: '获取专业列表失败' });
+  }
+});
+
+// ==========================================
+// 10. 根据手机号获取用户信息及其专业课程
+//     前端个人页登录后调用，返回该用户专业下的全部课程（用于展示不同专业看到不同课程）
+// ==========================================
+app.get('/api/users/courses', async (req, res) => {
+  try {
+    const phone = String(req.query.phone || '').trim();
+    if (!phone) {
+      return res.status(400).json({ message: '缺少手机号参数' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { phone },
+      include: { majorRef: true, grade: true }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: '用户不存在' });
+    }
+
+    // 未绑定专业的用户返回空列表
+    if (!user.majorId) {
+      return res.json({
+        data: {
+          user: {
+            id: user.id,
+            phone: user.phone,
+            nickname: user.nickname,
+            school: user.school,
+            major: user.major,
+            majorId: user.majorId,
+            majorName: null,
+            gradeId: user.gradeId,
+            gradeName: user.grade?.name || null,
+            unlockedGradeIds: Array.isArray(user.accessibleGradeIds) ? user.accessibleGradeIds : []
+          },
+          courses: []
+        }
+      });
+    }
+
+    // 拉取该专业下的课程（含年级信息）
+    const majorCourses = await prisma.majorCourse.findMany({
+      where: { majorId: user.majorId },
+      orderBy: { sortOrder: 'asc' },
+      include: {
+        course: { include: { grade: true } }
+      }
+    });
+
+    const courses = majorCourses.map(mc => ({
+      id: mc.course.id,
+      name: mc.course.name,
+      gradeId: mc.course.gradeId,
+      gradeName: mc.course.grade.name,
+      isHot: mc.course.isHot,
+      viewCount: mc.course.viewCount,
+      sortOrder: mc.sortOrder
+    }));
+
+    res.json({
+      data: {
+        user: {
+          id: user.id,
+          phone: user.phone,
+          nickname: user.nickname,
+          school: user.school,
+          major: user.major,
+          majorId: user.majorId,
+          majorName: user.majorRef?.name || user.major || null,
+          gradeId: user.gradeId,
+          gradeName: user.grade?.name || null,
+          unlockedGradeIds: Array.isArray(user.accessibleGradeIds) ? user.accessibleGradeIds : []
+        },
+        courses
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: '获取用户课程失败' });
+  }
+});
+
 app.listen(port, () => {
   console.log(`API server running at http://localhost:${port}`);
 });

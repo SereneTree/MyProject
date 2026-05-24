@@ -1,4 +1,4 @@
-import type { Assignment, AssignmentDetail, Course, Grade, MemberLevel, MembershipPlan } from './types';
+import type { Assignment, AssignmentDetail, Course, Grade, Major, MemberLevel, MembershipPlan, UserCoursesResponse } from './types';
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, {
@@ -50,4 +50,13 @@ export function submitConsultationLead(payload: Record<string, string>) {
 
 export function getAdminSummary() {
   return request<{ data: { users: number; assignments: number; orders: number; consultationLeads: number; conversionRate: string } }>('/api/admin/summary');
+}
+
+export function getMajors() {
+  return request<{ data: Major[] }>('/api/majors');
+}
+
+export function getUserCourses(phone: string) {
+  const search = new URLSearchParams({ phone });
+  return request<{ data: UserCoursesResponse }>(`/api/users/courses?${search.toString()}`);
 }

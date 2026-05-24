@@ -57,5 +57,39 @@ export interface Profile {
   phone?: string;
   school?: string;
   major?: string;
+  majorId?: string;
   grade?: string;
+}
+
+export interface Major {
+  id: string;
+  name: string;
+  sortOrder: number;
+}
+
+export interface MajorCourse {
+  id: string;
+  name: string;
+  gradeId: string;
+  gradeName: string;
+  isHot: boolean;
+  viewCount: number;
+  sortOrder: number;
+}
+
+export interface UserCoursesResponse {
+  user: {
+    id: string;
+    phone: string;
+    nickname: string | null;
+    school: string | null;
+    major: string | null;
+    majorId: string | null;
+    majorName: string | null;
+    gradeId: string | null;
+    gradeName: string | null;
+    /** 当前用户被赋予的年级访问权限（控制锁定/解锁 UI） */
+    unlockedGradeIds: string[];
+  };
+  courses: MajorCourse[];
 }
