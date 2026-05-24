@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import prisma from './lib/prisma.mjs';
@@ -5,7 +6,46 @@ import prisma from './lib/prisma.mjs';
 const app = express();
 const port = process.env.PORT || 3001;
 
-app.use(cors());
+// ==========================================
+// CORS 跨域配置
+// ==========================================
+// 通过环境变量 CORS_ORIGINS 配置允许的前端来源（逗号分隔）。
+// 示例：CORS_ORIGINS="https://example.com,https://www.example.com"
+// 未设置或设为 '*' 时，默认放行所有来源（仅开发环境推荐）。
+const allowedOriginsEnv = (process.env.CORS_ORIGINS || '*').trim();
+const allowAllOrigins = allowedOriginsEnv === '*' || allowedOriginsEnv === '';
+const allowedOrigins = allowAllOrigins
+  ? null
+  : allowedOriginsEnv.split(',').map((s) => s.trim()).filter(Boolean);
+
+const corsOptions = {
+  origin(origin, callback) {
+    // 同源请求、服务端互调、curl/Postman 等无 origin 场景一律放行
+    if (!origin) return callback(null, true);
+    if (allowAllOrigins) return callback(null, true);
+    if (allowedOrigins && allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error(`CORS 拒绝：未授权的来源 ${origin}`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Disposition'],
+  maxAge: 86400,
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+// 显式处理预检（OPTIONS）请求，避免某些路径或反向代理下预检丢头
+app.options('*', cors(corsOptions));
+
+// CORS 错误统一返回 403，避免被 Express 默认 500 报错页出头流后丢头
+app.use((err, req, res, next) => {
+  if (err && typeof err.message === 'string' && err.message.startsWith('CORS 拒绝')) {
+    return res.status(403).json({ message: err.message });
+  }
+  return next(err);
+});
+
 app.use(express.json());
 
 const memberRank = { free: 0, study: 1, career: 2 };
