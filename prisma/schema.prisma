@@ -74,6 +74,7 @@ model Course {
   grade        Grade         @relation(fields: [gradeId], references: [id])
   assignments  Assignment[]
   majorCourses MajorCourse[]
+  resources    CourseResource[]
 
   @@map("courses")
 }
@@ -255,4 +256,28 @@ model LoginRecord {
   user User @relation(fields: [userId], references: [id])
 
   @@map("login_records")
+}
+
+// 13. 课程资源表（课程下的 4 类资源：讲义/大作业/考试/职场）
+model CourseResource {
+  id            String   @id @map("id") @db.VarChar(64) // 资源唯一标识
+  courseId      String   @map("course_id") @db.VarChar(64) // 课程 ID
+  category      String   @map("category") @db.VarChar(32) // 主分类：lecture / homework / exam / career
+  subType       String   @map("sub_type") @db.VarChar(32) // 子类型：handout / notes / project / practice_summary / paper / paper_analysis / career_extension
+  title         String   @map("title") @db.VarChar(256) // 资源标题
+  summary       String?  @map("summary") @db.Text // 资源简介
+  content       String?  @map("content") @db.Text // 资源正文（详情页呈现）
+  url           String?  @map("url") @db.VarChar(512) // 可选外链
+  requiredLevel String   @default("free") @map("required_level") @db.VarChar(32) // free / study / career
+  viewCount     Int      @default(0) @map("view_count") // 浏览量
+  sortOrder     Int      @default(0) @map("sort_order") // 在该分类下的顺序
+
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // 关联关系
+  course        Course   @relation(fields: [courseId], references: [id])
+
+  @@index([courseId, category])
+  @@map("course_resources")
 }

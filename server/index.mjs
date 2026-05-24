@@ -185,6 +185,118 @@ app.get('/api/assignments/:id', async (req, res) => {
 });
 
 // ==========================================
+// 3.5 课程资源列表（按 4 类分组返回）
+// GET /api/courses/:id/resources?level=free|study|career
+// ==========================================
+app.get('/api/courses/:id/resources', async (req, res) => {
+  try {
+    const courseId = req.params.id;
+    const level = String(req.query.level || 'free');
+    const currentRank = memberRank[level] ?? 0;
+
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      include: { grade: true },
+    });
+    if (!course) {
+      return res.status(404).json({ message: '课程不存在' });
+    }
+
+    const resources = await prisma.courseResource.findMany({
+      where: { courseId },
+      orderBy: [{ category: 'asc' }, { sortOrder: 'asc' }],
+    });
+
+    const categories = ['lecture', 'homework', 'exam', 'career'];
+    const groups = categories.map((cat) => {
+      const items = resources
+        .filter((r) => r.category === cat)
+        .map((r) => {
+          const allowed = currentRank >= (memberRank[r.requiredLevel] || 0);
+          return {
+            id: r.id,
+            courseId: r.courseId,
+            category: r.category,
+            subType: r.subType,
+            title: r.title,
+            summary: r.summary,
+            requiredLevel: r.requiredLevel,
+            locked: !allowed,
+            viewCount: r.viewCount,
+            sortOrder: r.sortOrder,
+          };
+        });
+      return { category: cat, items };
+    });
+
+    res.json({
+      data: {
+        course: {
+          id: course.id,
+          name: course.name,
+          gradeId: course.gradeId,
+          gradeName: course.grade.name,
+        },
+        groups,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: '获取课程资源失败' });
+  }
+});
+
+// ==========================================
+// 3.6 课程资源详情接口（带会员权限控制）
+// GET /api/resources/:id?level=free|study|career
+// ==========================================
+app.get('/api/resources/:id', async (req, res) => {
+  try {
+    const resourceId = req.params.id;
+    const level = String(req.query.level || 'free');
+    const currentRank = memberRank[level] ?? 0;
+
+    const resource = await prisma.courseResource.findUnique({
+      where: { id: resourceId },
+      include: { course: { include: { grade: true } } },
+    });
+    if (!resource) {
+      return res.status(404).json({ message: '资源不存在' });
+    }
+
+    // 浏览量 +1 (异步)
+    prisma.courseResource
+      .update({ where: { id: resourceId }, data: { viewCount: { increment: 1 } } })
+      .catch(console.error);
+
+    const allowed = currentRank >= (memberRank[resource.requiredLevel] || 0);
+
+    const plans = await prisma.membershipPlan.findMany({ where: { isActive: true } });
+
+    res.json({
+      id: resource.id,
+      courseId: resource.courseId,
+      courseName: resource.course.name,
+      gradeId: resource.course.gradeId,
+      gradeName: resource.course.grade.name,
+      category: resource.category,
+      subType: resource.subType,
+      title: resource.title,
+      summary: resource.summary,
+      requiredLevel: resource.requiredLevel,
+      locked: !allowed,
+      content: allowed ? resource.content : null,
+      url: allowed ? resource.url : null,
+      viewCount: resource.viewCount,
+      plans,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: '获取资源详情失败' });
+  }
+});
+
+// ==========================================
 // 4. 会员套餐列表接口
 // ==========================================
 app.get('/api/membership/plans', async (req, res) => {

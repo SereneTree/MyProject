@@ -1,10 +1,10 @@
-import { BookOutlined, CrownOutlined, EyeOutlined, LockOutlined, UserOutlined } from '@ant-design/icons';
+import { BookOutlined, CrownOutlined, EyeOutlined, FileTextOutlined, FormOutlined, LockOutlined, ProfileOutlined, ReadOutlined, RocketOutlined, UserOutlined } from '@ant-design/icons';
 import { Alert, Badge, Button, Card, Col, Divider, Empty, Form, Input, Layout, List, Menu, message, Radio, Row, Select, Space, Statistic, Tag, Typography } from 'antd';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { BrowserRouter, Link, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { createOrder, getAssignmentDetail, getAssignments, getHomeResources, getMajors, getMembershipPlans, getUserCourses, submitConsultationLead } from './api';
-import type { Assignment, AssignmentDetail, Course, Grade, Major, MajorCourse, MemberLevel, MembershipPlan, Profile } from './types';
+import { createOrder, getAssignmentDetail, getAssignments, getCourseResourceDetail, getCourseResources, getHomeResources, getMajors, getMembershipPlans, getUserCourses, submitConsultationLead } from './api';
+import type { Assignment, AssignmentDetail, Course, CourseResourceCategory, CourseResourceDetail, CourseResourceGroup, CourseResourceItem, Grade, Major, MajorCourse, MemberLevel, MembershipPlan, Profile } from './types';
 
 const { Header, Content, Footer } = Layout;
 const { Title, Paragraph, Text } = Typography;
@@ -84,8 +84,9 @@ function AppShell() {
       </Header>
       <Content className="content">
         <Routes>
-          <Route path="/" element={<Home isLoggedIn={isLoggedIn} profile={profile} />} />
+          <Route path="/" element={<Home isLoggedIn={isLoggedIn} profile={profile} memberLevel={memberLevel} />} />
           <Route path="/assignments/:id" element={<AssignmentPage memberLevel={memberLevel} profile={profile} isLoggedIn={isLoggedIn} />} />
+          <Route path="/resources/:id" element={<CourseResourceDetailPage memberLevel={memberLevel} profile={profile} isLoggedIn={isLoggedIn} />} />
           <Route path="/membership" element={<MembershipPage memberLevel={memberLevel} setMemberLevel={setMemberLevel} />} />
           <Route
             path="/profile"
@@ -116,7 +117,7 @@ function getSelectedNavKey(pathname: string) {
   return '';
 }
 
-function Home({ isLoggedIn, profile }: { isLoggedIn: boolean; profile: Profile }) {
+function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profile: Profile; memberLevel: MemberLevel }) {
   const [grades, setGrades] = useState<Grade[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [allAssignments, setAllAssignments] = useState<Assignment[]>([]);
@@ -212,6 +213,22 @@ function Home({ isLoggedIn, profile }: { isLoggedIn: boolean; profile: Profile }
     if (!unlockedSet) return new Set<string>();
     return new Set(scopedCourses.filter((c) => !unlockedSet.has(c.gradeId)).map((c) => c.id));
   }, [scopedCourses, unlockedSet]);
+
+  // 选中课程后拉取该课程下的 4 类资源
+  const [courseResourceGroups, setCourseResourceGroups] = useState<CourseResourceGroup[] | null>(null);
+  const [resourceLoading, setResourceLoading] = useState(false);
+
+  useEffect(() => {
+    if (!selectedCourse) {
+      setCourseResourceGroups(null);
+      return;
+    }
+    setResourceLoading(true);
+    getCourseResources(selectedCourse, memberLevel)
+      .then((res) => setCourseResourceGroups(res.data.groups))
+      .catch(() => setCourseResourceGroups([]))
+      .finally(() => setResourceLoading(false));
+  }, [selectedCourse, memberLevel]);
 
   const visibleCourses = useMemo(() => {
     let result = selectedGrade ? scopedCourses.filter((course) => course.gradeId === selectedGrade) : scopedCourses;
@@ -334,28 +351,175 @@ function Home({ isLoggedIn, profile }: { isLoggedIn: boolean; profile: Profile }
           <div className="cascade-column cascade-column-main">
             <div className="cascade-title">
               <span>课程资源</span>
-            </div>
-            <Input.Search className="resource-search" placeholder="搜索课程资源/课程" allowClear onSearch={setKeyword} onChange={(e) => !e.target.value && setKeyword('')} />
-            <List
-              loading={loading}
-              dataSource={scopedAssignments}
-              pagination={{
-                pageSize: 10,
-                hideOnSinglePage: true,
-                showSizeChanger: false
-              }}
-              locale={{ emptyText: <Empty description="暂无匹配资源" /> }}
-              renderItem={(assignment) => (
-                <AssignmentCard
-                  assignment={assignment}
-                  isLoggedIn={isLoggedIn}
-                  locked={lockedCourseIdSet.has(assignment.courseId)}
-                />
+              {selectedCourse && (
+                <Button size="small" onClick={() => setSelectedCourse(undefined)}>返回资源总览</Button>
               )}
-            />
+            </div>
+
+            {!selectedCourse ? (
+              <>
+                <Input.Search className="resource-search" placeholder="搜索课程资源/课程" allowClear onSearch={setKeyword} onChange={(e) => !e.target.value && setKeyword('')} />
+                <Alert
+                  style={{ marginBottom: 12 }}
+                  type="info"
+                  showIcon
+                  message="请先在左侧选择一门课程，查看「课件讲义 / 大作业 / 历年考试 / 职场展望」四类资源"
+                  description="未选课程时默认展示本专业/年级下的全部库存作业总览。"
+                />
+                <List
+                  loading={loading}
+                  dataSource={scopedAssignments}
+                  pagination={{ pageSize: 10, hideOnSinglePage: true, showSizeChanger: false }}
+                  locale={{ emptyText: <Empty description="暂无匹配资源" /> }}
+                  renderItem={(assignment) => (
+                    <AssignmentCard
+                      assignment={assignment}
+                      isLoggedIn={isLoggedIn}
+                      locked={lockedCourseIdSet.has(assignment.courseId)}
+                    />
+                  )}
+                />
+              </>
+            ) : (
+              <CourseResourceTabs
+                courseId={selectedCourse}
+                courseName={scopedCourses.find((c) => c.id === selectedCourse)?.name || ''}
+                gradeName={(() => {
+                  const c = scopedCourses.find((c) => c.id === selectedCourse);
+                  return c ? grades.find((g) => g.id === c.gradeId)?.name || '' : '';
+                })()}
+                courseLocked={lockedCourseIdSet.has(selectedCourse)}
+                groups={courseResourceGroups}
+                loading={resourceLoading}
+                memberLevel={memberLevel}
+                isLoggedIn={isLoggedIn}
+              />
+            )}
           </div>
         </div>
       </section>
+    </div>
+  );
+}
+
+// ==========================================
+// 课程资源平铺列表（不使用 Tabs，用颜色标签区分 4 类）
+// ==========================================
+const categoryMeta: Record<CourseResourceCategory, { label: string; icon: ReactNode; tagColor: string; level: MemberLevel }> = {
+  lecture:  { label: '课件讲义', icon: <ReadOutlined />,    tagColor: 'cyan',    level: 'free' },
+  homework: { label: '大作业解析', icon: <FormOutlined />,    tagColor: 'orange',  level: 'study' },
+  exam:     { label: '历年考试', icon: <FileTextOutlined />, tagColor: 'purple',  level: 'study' },
+  career:   { label: '职场展望', icon: <RocketOutlined />,  tagColor: 'magenta', level: 'career' },
+};
+
+const memberRankMap: Record<MemberLevel, number> = { free: 0, study: 1, career: 2 };
+
+function CourseResourceTabs({
+  courseId,
+  courseName,
+  gradeName,
+  courseLocked,
+  groups,
+  loading,
+  memberLevel,
+  isLoggedIn,
+}: {
+  courseId: string;
+  courseName: string;
+  gradeName: string;
+  courseLocked: boolean;
+  groups: CourseResourceGroup[] | null;
+  loading: boolean;
+  memberLevel: MemberLevel;
+  isLoggedIn: boolean;
+}) {
+  const navigate = useNavigate();
+  const orderedCats: CourseResourceCategory[] = ['lecture', 'homework', 'exam', 'career'];
+
+  // 将 4 类资源拍平为单一列表，按「讲义→大作业→考试→职场」顺序
+  const flatItems = useMemo(() => {
+    const map = new Map<CourseResourceCategory, CourseResourceItem[]>();
+    (groups || []).forEach((g) => map.set(g.category, g.items));
+    const out: CourseResourceItem[] = [];
+    orderedCats.forEach((c) => {
+      const items = map.get(c) || [];
+      out.push(...items);
+    });
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groups]);
+
+  const handleClickItem = (item: CourseResourceItem) => {
+    if (courseLocked) {
+      message.warning('该课程所在年级未解锁，无法查看资源详情。');
+      return;
+    }
+    if (!isLoggedIn) {
+      message.info('请先登录后再查看资源详情');
+      navigate('/profile');
+      return;
+    }
+    if (item.locked) {
+      const need = item.requiredLevel === 'study' ? '学业提升版' : '职场进阶版';
+      message.warning(`该资源需「${need}」会员，升级后可查看完整内容。`);
+      navigate(`/resources/${item.id}`);
+      return;
+    }
+    navigate(`/resources/${item.id}`);
+  };
+
+  return (
+    <div className="course-resource-flat">
+      <div style={{ marginBottom: 12, color: '#8c8c8c', fontSize: 13 }}>
+        当前课程：<Text strong>{courseName || courseId}</Text>
+        {courseLocked && <Tag icon={<LockOutlined />} color="default" style={{ marginLeft: 8 }}>年级锁定</Tag>}
+        <span style={{ marginLeft: 12 }}>共 {flatItems.length} 项资源</span>
+      </div>
+      <List
+        loading={loading}
+        dataSource={flatItems}
+        pagination={{ pageSize: 10, hideOnSinglePage: true, showSizeChanger: false }}
+        locale={{ emptyText: <Empty description="暂无资源" /> }}
+        renderItem={(item) => {
+          const meta = categoryMeta[item.category];
+          const isLocked = item.locked || courseLocked;
+          const levelText = item.requiredLevel === 'free' ? '免费' : item.requiredLevel === 'study' ? '学业提升版' : '职场进阶版';
+          const levelColor = item.requiredLevel === 'free' ? 'green' : item.requiredLevel === 'study' ? 'blue' : 'gold';
+          return (
+            <List.Item className={`assignment-list-item${isLocked ? ' assignment-list-item-locked' : ''}`}>
+              <div
+                className="assignment-item-main"
+                style={isLocked ? { cursor: 'not-allowed', opacity: 0.78 } : { cursor: 'pointer' }}
+                onClick={() => handleClickItem(item)}
+              >
+                <div className="assignment-item-left">
+                  <div className="assignment-item-header">
+                    <Space wrap size={[5, 4]}>
+                      <Tag color="geekblue">{gradeName}</Tag>
+                      <Tag>{courseName}</Tag>
+                      <Tag color={meta.tagColor} icon={meta.icon}>{meta.label}</Tag>
+                      <Tag color={levelColor}>{levelText}</Tag>
+                      {item.locked && !courseLocked && <Tag icon={<LockOutlined />} color="default">需升级</Tag>}
+                      {courseLocked && <Tag icon={<LockOutlined />} color="default">年级锁定</Tag>}
+                    </Space>
+                  </div>
+                  <Title level={4} className="assignment-item-title" style={isLocked ? { color: '#8c8c8c' } : undefined}>
+                    {item.title}
+                  </Title>
+                  {item.summary && (
+                    <Paragraph className="assignment-item-summary" ellipsis={{ rows: 2 }}>{item.summary}</Paragraph>
+                  )}
+                </div>
+                <div className="assignment-item-right">
+                  <Text type="secondary" className="assignment-view-count">
+                    <EyeOutlined style={{ marginRight: 4 }} /> {item.viewCount}
+                  </Text>
+                </div>
+              </div>
+            </List.Item>
+          );
+        }}
+      />
     </div>
   );
 }
@@ -527,6 +691,113 @@ function AssignmentPage({ memberLevel, profile, isLoggedIn }: { memberLevel: Mem
                         <Badge color={plan.level === memberLevel ? '#2563eb' : '#d9d9d9'} />
                         <Text strong>{plan.name}</Text>
                         <Text type="secondary">{plan.price === 0 ? '免费' : `${plan.price}元/${plan.period}`}</Text>
+                      </Space>
+                      <Text type="secondary">{plan.tagline}</Text>
+                    </Space>
+                  </List.Item>
+                )}
+              />
+              <Divider />
+              <Button block type="primary" onClick={() => navigate('/membership')}>查看会员权益</Button>
+            </Card>
+          </Col>
+        )}
+      </Row>
+    </div>
+  );
+}
+
+// ==========================================
+// 课程资源详情页
+// ==========================================
+function CourseResourceDetailPage({ memberLevel, profile, isLoggedIn }: { memberLevel: MemberLevel; profile: Profile; isLoggedIn: boolean }) {
+  const { id } = useParams();
+  const [detail, setDetail] = useState<CourseResourceDetail>();
+  const [unlockedGradeIds, setUnlockedGradeIds] = useState<string[] | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (id) getCourseResourceDetail(id, memberLevel).then(setDetail).catch(() => message.error('资源不存在或已下架'));
+  }, [id, memberLevel]);
+
+  useEffect(() => {
+    if (!isLoggedIn || !profile.phone) {
+      setUnlockedGradeIds(null);
+      return;
+    }
+    getUserCourses(profile.phone)
+      .then((res) => {
+        const list = res.data.user.unlockedGradeIds;
+        setUnlockedGradeIds(Array.isArray(list) && list.length > 0 ? list : null);
+      })
+      .catch(() => setUnlockedGradeIds(null));
+  }, [isLoggedIn, profile.phone]);
+
+  // URL 直达兑底拦截：资源所属年级未解锁则踢回首页
+  useEffect(() => {
+    if (!detail || !unlockedGradeIds) return;
+    if (!unlockedGradeIds.includes(detail.gradeId)) {
+      message.warning(`《${detail.gradeName}》年级未解锁，无法查看详情。`);
+      navigate('/', { replace: true });
+    }
+  }, [detail, unlockedGradeIds, navigate]);
+
+  if (!detail) return <Card loading />;
+
+  const meta = categoryMeta[detail.category];
+  const levelTagColor = detail.requiredLevel === 'free' ? 'green' : detail.requiredLevel === 'study' ? 'blue' : 'gold';
+  const levelText = detail.requiredLevel === 'free' ? '免费' : detail.requiredLevel === 'study' ? '学业提升版' : '职场进阶版';
+
+  return (
+    <div>
+      <Card className="detail-header">
+        <Space direction="vertical" size={8}>
+          <Space wrap>
+            <Tag color="geekblue">{detail.gradeName}</Tag>
+            <Tag>{detail.courseName}</Tag>
+            <Tag color="purple">{meta.label}</Tag>
+            <Tag color={levelTagColor}>{levelText}</Tag>
+            {detail.locked && <Tag icon={<LockOutlined />} color="default">需升级</Tag>}
+          </Space>
+          <Title>{detail.title}</Title>
+          {detail.summary && <Paragraph>{detail.summary}</Paragraph>}
+          <Text type="secondary"><EyeOutlined /> {detail.viewCount} 次浏览</Text>
+        </Space>
+      </Card>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} lg={detail.locked ? 16 : 24}>
+          <Card className="detail-module-card" title={<Space>{meta.icon} 资源内容</Space>}>
+            {detail.locked ? (
+              <Alert
+                type="warning"
+                showIcon
+                message={`升级到「${memberNames[detail.requiredLevel]}」解锁完整内容`}
+                description={`当前会员等级为「${memberNames[memberLevel]}」，该资源需「${levelText}」及以上。升级后可查看完整讲义、大作业拆解、考试分析与职场拓展。`}
+                action={<Button type="primary" onClick={() => navigate('/membership')}>立即升级</Button>}
+              />
+            ) : (
+              <Paragraph style={{ whiteSpace: 'pre-wrap' }}>{detail.content || '该资源尚未上传内容。'}</Paragraph>
+            )}
+            {!detail.locked && detail.url && (
+              <div style={{ marginTop: 12 }}>
+                <Button type="link" onClick={() => window.open(detail.url || '', '_blank')}>点此下载/查看原始资源</Button>
+              </div>
+            )}
+          </Card>
+        </Col>
+        {detail.locked && (
+          <Col xs={24} lg={8}>
+            <Card title="会员解锁路径" className="sticky-card">
+              <List
+                dataSource={detail.plans}
+                renderItem={(plan) => (
+                  <List.Item>
+                    <Space direction="vertical">
+                      <Space>
+                        <Badge color={plan.level === memberLevel ? '#2563eb' : '#d9d9d9'} />
+                        <Text strong>{plan.name}</Text>
+                        <Text type="secondary">{Number(plan.price) === 0 ? '免费' : `${plan.price}元/${plan.period}`}</Text>
                       </Space>
                       <Text type="secondary">{plan.tagline}</Text>
                     </Space>

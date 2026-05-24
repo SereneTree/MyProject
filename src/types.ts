@@ -93,3 +93,60 @@ export interface UserCoursesResponse {
   };
   courses: MajorCourse[];
 }
+
+/** 课程资源主分类 */
+export type CourseResourceCategory = 'lecture' | 'homework' | 'exam' | 'career';
+
+/** 课程资源表中所有可能的子类型 */
+export type CourseResourceSubType =
+  | 'handout'
+  | 'notes'
+  | 'project'
+  | 'practice_summary'
+  | 'paper'
+  | 'paper_analysis'
+  | 'career_extension';
+
+/** 列表项：课程资源 */
+export interface CourseResourceItem {
+  id: string;
+  courseId: string;
+  category: CourseResourceCategory;
+  subType: CourseResourceSubType;
+  title: string;
+  summary: string | null;
+  requiredLevel: MemberLevel;
+  locked: boolean;
+  viewCount: number;
+  sortOrder: number;
+}
+
+export interface CourseResourceGroup {
+  category: CourseResourceCategory;
+  items: CourseResourceItem[];
+}
+
+export interface CourseResourceListResponse {
+  data: {
+    course: { id: string; name: string; gradeId: string; gradeName: string };
+    groups: CourseResourceGroup[];
+  };
+}
+
+export interface CourseResourceDetail {
+  id: string;
+  courseId: string;
+  courseName: string;
+  gradeId: string;
+  gradeName: string;
+  category: CourseResourceCategory;
+  subType: CourseResourceSubType;
+  title: string;
+  summary: string | null;
+  requiredLevel: MemberLevel;
+  locked: boolean;
+  content: string | null;
+  url: string | null;
+  viewCount: number;
+  plans: MembershipPlan[];
+}

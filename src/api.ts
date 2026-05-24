@@ -1,4 +1,4 @@
-import type { Assignment, AssignmentDetail, Course, Grade, Major, MemberLevel, MembershipPlan, UserCoursesResponse } from './types';
+import type { Assignment, AssignmentDetail, Course, CourseResourceDetail, CourseResourceListResponse, Grade, Major, MemberLevel, MembershipPlan, UserCoursesResponse } from './types';
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, {
@@ -59,4 +59,14 @@ export function getMajors() {
 export function getUserCourses(phone: string) {
   const search = new URLSearchParams({ phone });
   return request<{ data: UserCoursesResponse }>(`/api/users/courses?${search.toString()}`);
+}
+
+/** 获取某门课程下的 4 类资源列表，带会员等级锁定状态 */
+export function getCourseResources(courseId: string, level: MemberLevel) {
+  return request<CourseResourceListResponse>(`/api/courses/${courseId}/resources?level=${level}`);
+}
+
+/** 获取资源详情，带会员等级过滤 */
+export function getCourseResourceDetail(id: string, level: MemberLevel) {
+  return request<CourseResourceDetail>(`/api/resources/${id}?level=${level}`);
 }
