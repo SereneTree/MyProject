@@ -735,6 +735,85 @@ app.post('/api/orders', async (req, res) => {
 });
 
 // ==========================================
+// 5.1 管理员接口：手动升绑会员等级
+// POST /api/admin/users/upgrade-membership
+// Header：X-Admin-Token: <与 .env 中 ADMIN_TOKEN 一致>
+// Body  ：{ phone: "13900000101", level: "career" | "study" | "free",
+//          durationDays?: number,           // 可选，自定义有效天数
+//          expiresAt?: "2027-05-31T00:00:00Z" }  // 可选，ISO 时间，优先级最高
+// 默认规则：free → 清空到期；study → 180 天；career → 365 天。
+// 不创建订单记录，仅修改 users.member_level / member_expires_at。
+// ==========================================
+function requireAdminToken(req, res, next) {
+  const expected = (process.env.ADMIN_TOKEN || '').trim();
+  if (!expected) {
+    console.error('[ADMIN] 未配置 ADMIN_TOKEN，管理接口默认禁用');
+    return res.status(503).json({ message: '服务未配置管理员凭据' });
+  }
+  const token = String(req.headers['x-admin-token'] || '').trim();
+  if (!token || token !== expected) {
+    return res.status(401).json({ message: '管理员凭据无效' });
+  }
+  return next();
+}
+
+app.post('/api/admin/users/upgrade-membership', requireAdminToken, async (req, res) => {
+  try {
+    const { phone, level, durationDays, expiresAt: expiresAtRaw } = req.body || {};
+
+    // 1) 参数校验
+    if (!isValidPhone(phone)) {
+      return res.status(400).json({ message: '请传入正确的 11 位手机号' });
+    }
+    const ALLOWED_LEVELS = ['free', 'study', 'career'];
+    if (!ALLOWED_LEVELS.includes(level)) {
+      return res.status(400).json({ message: `level 必须为以下之一：${ALLOWED_LEVELS.join(', ')}` });
+    }
+
+    // 2) 查找用户
+    const user = await prisma.user.findUnique({ where: { phone } });
+    if (!user) {
+      return res.status(404).json({ message: `手机号 ${phone} 对应用户不存在` });
+    }
+
+    // 3) 计算到期时间
+    let expiresAt = null;
+    if (level !== 'free') {
+      if (expiresAtRaw) {
+        const parsed = new Date(expiresAtRaw);
+        if (Number.isNaN(parsed.getTime())) {
+          return res.status(400).json({ message: 'expiresAt 不是合法的日期字符串' });
+        }
+        expiresAt = parsed;
+      } else if (durationDays !== undefined && durationDays !== null) {
+        const d = Number(durationDays);
+        if (!Number.isFinite(d) || d <= 0 || d > 36500) {
+          return res.status(400).json({ message: 'durationDays 必须为 1–36500 之间的数字' });
+        }
+        expiresAt = new Date(Date.now() + d * 24 * 3600 * 1000);
+      } else {
+        // 默认：study 180 天、career 365 天
+        const days = level === 'career' ? 365 : 180;
+        expiresAt = new Date(Date.now() + days * 24 * 3600 * 1000);
+      }
+    }
+
+    // 4) 更新
+    const updated = await prisma.user.update({
+      where: { phone },
+      data: { memberLevel: level, memberExpiresAt: expiresAt },
+      include: { majorRef: true, grade: true }
+    });
+
+    console.log(`[ADMIN] 升绑会员 phone=${phone} level=${level} expiresAt=${expiresAt ? expiresAt.toISOString() : 'null'}`);
+    return res.json({ data: await serializeUser(updated) });
+  } catch (error) {
+    console.error('[ADMIN upgrade-membership]', error);
+    return res.status(500).json({ message: '升绑会员失败' });
+  }
+});
+
+// ==========================================
 // 6. 提交咨询意向接口
 // ==========================================
 app.post('/api/consultation/leads', async (req, res) => {
