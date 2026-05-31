@@ -16,21 +16,56 @@ const port = process.env.PORT || 3001;
 // ==========================================
 // CORS 跨域配置
 // ==========================================
-// 通过环境变量 CORS_ORIGINS 配置允许的前端来源（逗号分隔）。
-// 示例：CORS_ORIGINS="https://example.com,https://www.example.com"
-// 未设置或设为 '*' 时，默认放行所有来源（仅开发环境推荐）。
+// 支持两种白名单方式，二者可同时生效：
+// 1. CORS_ORIGINS：逗号分隔的精确字符串列表（完全匹配 origin）
+//    示例：CORS_ORIGINS="https://example.com,https://www.example.com"
+//    设为 '*' 或为空时放行所有来源（仅开发环境）。
+// 2. CORS_ORIGIN_PATTERNS：逗号分隔的正则表达式源串（默认不区分大小写）
+//    示例：CORS_ORIGIN_PATTERNS="^https?://([a-z0-9-]+\.)*neowhale\.cn$"
+//    代码中还内置了一组默认正则，涵盖 *.neowhale.cn / localhost / 127.0.0.1。
+
 const allowedOriginsEnv = (process.env.CORS_ORIGINS || '*').trim();
 const allowAllOrigins = allowedOriginsEnv === '*' || allowedOriginsEnv === '';
 const allowedOrigins = allowAllOrigins
   ? null
   : allowedOriginsEnv.split(',').map((s) => s.trim()).filter(Boolean);
 
+// 内置默认正则白名单：
+// - http(s)://(任意子域.)neowhale.cn【作为主域名集中放行】
+// - http(s)://localhost(:端口)
+// - http(s)://127.0.0.1(:端口)
+const defaultOriginPatterns = [
+  /^https?:\/\/([a-z0-9-]+\.)*neowhale\.cn$/i,
+  /^https?:\/\/localhost(:\d+)?$/i,
+  /^https?:\/\/127\.0\.0\.1(:\d+)?$/i,
+];
+
+// 环境变量提供的额外正则白名单（可选）
+const envOriginPatterns = (process.env.CORS_ORIGIN_PATTERNS || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean)
+  .map((src) => {
+    try {
+      return new RegExp(src, 'i');
+    } catch (e) {
+      console.warn(`[CORS] 忽略非法正则: ${src} (${e.message})`);
+      return null;
+    }
+  })
+  .filter(Boolean);
+
+const originPatterns = [...defaultOriginPatterns, ...envOriginPatterns];
+
 const corsOptions = {
   origin(origin, callback) {
     // 同源请求、服务端互调、curl/Postman 等无 origin 场景一律放行
     if (!origin) return callback(null, true);
     if (allowAllOrigins) return callback(null, true);
+    // 1) 精确白名单
     if (allowedOrigins && allowedOrigins.includes(origin)) return callback(null, true);
+    // 2) 正则白名单（默认 + 环境变量补充）
+    if (originPatterns.some((re) => re.test(origin))) return callback(null, true);
     return callback(new Error(`CORS 拒绝：未授权的来源 ${origin}`));
   },
   credentials: true,
