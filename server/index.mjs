@@ -121,8 +121,10 @@ app.use('/files', (err, req, res, next) => {
 // ==========================================
 // 静态文件服务：学习笔记目录（markdown 在线预览，不强制下载）
 // ==========================================
-// server/public/notes/<courseId>/L<n>_*.md → GET /notes/<courseId>/<filename>
-const publicNotesDir = path.resolve(__dirname, 'public/notes');
+// 源文件位于仓库根目录的 public/notes/<courseId>/*.md，
+// 依靠 vite 构建时拷贝到 dist/notes/，生产环境由 nginx 直接服务。
+// 开发环境仍然由本处 express.static 提供，路径一致。
+const publicNotesDir = path.resolve(__dirname, '../public/notes');
 app.use(
   '/notes',
   express.static(publicNotesDir, {
@@ -523,7 +525,7 @@ app.get('/api/courses/:id/resources', async (req, res) => {
 // ==========================================
 // 3.7 课程学习笔记列表接口
 // GET /api/courses/:courseId/notes
-// 扫描 server/public/notes/<courseId>/ 下的所有 *.md 文件，
+// 扫描 <仓库>/public/notes/<courseId>/ 下的所有 *.md 文件，
 // 返回 [{ filename, title, summary, order, url }]。
 // 文件名不限定格式，L<n>_<title>.md 会被提取序号进行排序。
 // ==========================================
