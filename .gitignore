@@ -4,3 +4,6 @@ dist/
 .gh-config/
 *.tsbuildinfo
 .DS_Store
+
+# 课件下载包（不随仓库提交，生产环境手动上传）
+server/public/files/

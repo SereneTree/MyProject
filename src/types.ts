@@ -53,12 +53,29 @@ export interface MembershipPlan {
 }
 
 export interface Profile {
+  id?: string;
   nickname: string;
   phone?: string;
   school?: string;
   major?: string;
   majorId?: string;
   grade?: string;
+}
+
+/** 后端 /api/auth/login | /api/auth/me | PATCH /api/users/me 统一返回的用户信息 */
+export interface MeUser {
+  id: string;
+  phone: string;
+  nickname: string | null;
+  school: string | null;
+  major: string | null;
+  majorId: string | null;
+  majorName: string | null;
+  gradeId: string | null;
+  gradeName: string | null;
+  memberLevel: MemberLevel;
+  memberExpiresAt: string | null;
+  unlockedGradeIds: string[];
 }
 
 export interface Major {

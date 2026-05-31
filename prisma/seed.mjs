@@ -483,28 +483,30 @@ async function main() {
   const resourceTemplates = [
     // 讲义 (免费): 2 条
     { category: 'lecture', subType: 'handout',           requiredLevel: 'free',
-      titleFn: (n) => `《${n}》课件讲义 (完整版)`,
+      titleFn: (n) => `《${n}》课件讲义与学习笔记`,
       summaryFn: () => '涵盖本课程全部章节重点 PPT 与课堂讲义，按周次整理，适合预习/复习。',
-      contentFn: (n) => `# 《${n}》课件讲义\n\n本套讲义严格按照今学期主讲老师的预计进度整理，重点标注了：\n\n- 高频考点 / 考试范围\n- 上机与作业重复出现的例题\n- 本课程与后续课程的衔接点\n\n建议你阅读时重点看「本章小结」与「课后思考」两部分，能帮你节省大量复习时间。` },
-    { category: 'lecture', subType: 'notes',             requiredLevel: 'free',
-      titleFn: (n) => `《${n}》学习笔记与思维导图`,
-      summaryFn: () => '学长手写、后期整理的节点式笔记，含思维导图、例题总结、易错点提醒。',
-      contentFn: (n) => `# 《${n}》学习笔记\n\n## 学习路径\n1. 先掌握基础概念与术语\n2. 理解核心原理与推导\n3. 结合典型例题进行应用\n4. 总结并建立知识体系\n\n## 重点提示\n- 贯穿全课的主线是「从抽象到具象」\n- 高频出现的关键字需重点记忆\n\n## 易错点\n- 概念混淆：应区分术语的严格定义\n- 漏考点：例题收尾常被忽略`
-    },
+      // 下载链接约定：服务器上传课件压缩包到 server/public/files/lectures/<courseId>.zip 即可生效
+      urlFn: (id) => `/files/lectures/${id}.zip`,
+      contentFn: (n) => `# 《${n}》课件讲义\n\n本套讲义严格按照本学期主讲老师的预计进度整理，重点标注了：\n\n- 高频考点 / 考试范围\n- 上机与作业重复出现的例题\n- 本课程与后续课程的衔接点\n\n建议你阅读时重点看「本章小结」与「课后思考」两部分，能帮你节省大量复习时间。` },
+    // { category: 'lecture', subType: 'notes',             requiredLevel: 'free',
+    //   titleFn: (n) => `《${n}》学习笔记与思维导图`,
+    //   summaryFn: () => '学长手写、后期整理的节点式笔记，含思维导图、例题总结、易错点提醒。',
+    //   contentFn: (n) => `# 《${n}》学习笔记\n\n## 学习路径\n1. 先掌握基础概念与术语\n2. 理解核心原理与推导\n3. 结合典型例题进行应用\n4. 总结并建立知识体系\n\n## 重点提示\n- 贯穿全课的主线是「从抽象到具象」\n- 高频出现的关键字需重点记忆\n\n## 易错点\n- 概念混淆：应区分术语的严格定义\n- 漏考点：例题收尾常被忽略`
+    // },
     // 大作业 (study/career): 2 条
     { category: 'homework', subType: 'project',          requiredLevel: 'study',
       titleFn: (n) => `《${n}》期末大作业项目详解`,
       summaryFn: () => '面向期末大作业的完整项目拆解，含需求分析、架构设计、关键代码与提交资料。',
       contentFn: (n) => `# 《${n}》期末大作业项目\n\n## 项目背景\n本项目为《${n}》课程的期末代表性大作业，占总评记 30%。\n\n## 需求拆解\n- 功能点 1：...\n- 功能点 2：...\n- 功能点 3：...\n\n## 实现思路\n1. 定义数据结构\n2. 主流程实现\n3. 边界与异常处理\n4. 单元测试\n\n## 提交资料清单\n- 项目代码压缩包\n- 项目报告 (PDF)\n- 演示视频 (可选)`
     },
-    { category: 'homework', subType: 'practice_summary', requiredLevel: 'study',
-      titleFn: (n) => `《${n}》实操总结与踩坑记录`,
-      summaryFn: () => '资深学长在完成本课大作业过程中的踩坑记录、流程优化与快速调试技巧。',
-      contentFn: (n) => `# 《${n}》实操总结\n\n## 常见难点\n- 环境配置：依赖版本、路径问题\n- 理解偏差：概念与实现对不上\n- 调试费时：错误信息不明确\n\n## 调优踩坑技巧\n1. 先跑通最小可运行示例\n2. 逐步增加复杂度\n3. 使用调试器而非 print\n4. 在 git 中频繁提交以便回滚\n\n## 推荐资源\n- 官方文档章节参考\n- 社区高赞回答索引`
-    },
+    // { category: 'homework', subType: 'practice_summary', requiredLevel: 'study',
+    //   titleFn: (n) => `《${n}》实操总结与踩坑记录`,
+    //   summaryFn: () => '资深学长在完成本课大作业过程中的踩坑记录、流程优化与快速调试技巧。',
+    //   contentFn: (n) => `# 《${n}》实操总结\n\n## 常见难点\n- 环境配置：依赖版本、路径问题\n- 理解偏差：概念与实现对不上\n- 调试费时：错误信息不明确\n\n## 调优踩坑技巧\n1. 先跑通最小可运行示例\n2. 逐步增加复杂度\n3. 使用调试器而非 print\n4. 在 git 中频繁提交以便回滚\n\n## 推荐资源\n- 官方文档章节参考\n- 社区高赞回答索引`
+    // },
     // 历年考试 (study/career): 2 条
     { category: 'exam',     subType: 'paper',            requiredLevel: 'study',
-      titleFn: (n) => `《${n}》历年期末考试真题集 (近三年)`,
+      titleFn: (n) => `《${n}》近年期末考试真题集`,
       summaryFn: () => '整理近三年本课期末考试真题，附题型分布、难易度标注与考点领域。',
       contentFn: (n) => `# 《${n}》历年考试真题集\n\n## 试卷概述\n本资料包含近 3 年本课程期末考试真题 (PDF 扫描件)。\n\n## 题型分布\n| 题型 | 分值 | 占比 |\n|------|------|------|\n| 选择题 | 30 | 30% |\n| 填空题 | 20 | 20% |\n| 计算/分析 | 30 | 30% |\n| 综合题 | 20 | 20% |\n\n## 备考建议\n优先刷「计算/分析」与「综合题」两项，这是拉开分数的关键。`
     },
@@ -520,7 +522,7 @@ async function main() {
       contentFn: (n) => `# 《${n}》职场展望\n\n## 业务应用场景\n- 场景 A：订单系统中的运用\n- 场景 B：推荐系统中的运用\n- 场景 C：安全风控中的运用\n\n## 面试高频题\n1. 请以本课程为例说明 XX 原理。\n2. 在高并发场景下如何设计？\n3. 如何评估方案的优劣？\n\n## 学习路径建议\n- 课程原理 → 项目实战 → 社区贡献 → 实习上手`
     },
     { category: 'career',   subType: 'career_extension', requiredLevel: 'career',
-      titleFn: (n) => `《${n}》相关岗位简历包装与面试准备`,
+      titleFn: (n) => `《${n}》相关岗位背景提升与面试准备`,
       summaryFn: () => '从本课程出发拆解可包装的项目亮点，携带面试高频考点、快速复习报告与问答话术。',
       contentFn: (n) => `# 《${n}》简历与面试准备\n\n## 可包装的亮点\n- 课程项目→ 代码仓库纳入简历 GitHub\n- 作业详解 → 提炼为项目交付、报告、演示视频\n- 考试高分 → 体现本课加深品质\n\n## 面试高频问\n- 请谈谈你在本课项目中采用了什么设计？\n- 你踩过哪些坑？如何解决的？\n- 如果有机会重做，你会怎么调整？\n\n## 面试表达模板\nSTAR：场景 → 任务 → 动作 → 结果 (用数据证明价值)`
     },
@@ -540,6 +542,7 @@ async function main() {
           title: tpl.titleFn(c.name),
           summary: tpl.summaryFn(),
           content: tpl.contentFn(c.name),
+          url: tpl.urlFn ? tpl.urlFn(c.id) : null,
           requiredLevel: tpl.requiredLevel,
           viewCount: Math.floor(Math.random() * 2000) + 200,
           sortOrder: i + 1,

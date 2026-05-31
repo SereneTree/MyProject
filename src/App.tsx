@@ -1,10 +1,13 @@
-import { BookOutlined, CrownOutlined, EyeOutlined, FileTextOutlined, FormOutlined, LockOutlined, ProfileOutlined, ReadOutlined, RocketOutlined, UserOutlined } from '@ant-design/icons';
-import { Alert, Badge, Button, Card, Col, Divider, Empty, Form, Input, Layout, List, Menu, message, Radio, Row, Select, Space, Statistic, Tag, Typography } from 'antd';
+import { BookOutlined, CrownOutlined, DownloadOutlined, EyeOutlined, FileTextOutlined, FormOutlined, LockOutlined, ProfileOutlined, ReadOutlined, RocketOutlined, UserOutlined } from '@ant-design/icons';
+import { Alert, Badge, Button, Card, Col, Collapse, Divider, Empty, Form, Input, Layout, List, Menu, message, Radio, Row, Select, Space, Spin, Statistic, Tag, Typography } from 'antd';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { BrowserRouter, Link, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { createOrder, getAssignmentDetail, getAssignments, getCourseResourceDetail, getCourseResources, getHomeResources, getMajors, getMembershipPlans, getUserCourses, submitConsultationLead } from './api';
-import type { Assignment, AssignmentDetail, Course, CourseResourceCategory, CourseResourceDetail, CourseResourceGroup, CourseResourceItem, Grade, Major, MajorCourse, MemberLevel, MembershipPlan, Profile } from './types';
+import { createOrder, fetchMe, fetchNoteMarkdown, getAssignmentDetail, getAssignments, getCourseNotes, getCourseResourceDetail, getCourseResources, getHomeResources, getMajors, getMembershipPlans, getUserCourses, loginWithPhone, submitConsultationLead, updateMe } from './api';
+import type { CourseNoteItem } from './api';
+import type { Assignment, AssignmentDetail, Course, CourseResourceCategory, CourseResourceDetail, CourseResourceGroup, CourseResourceItem, Grade, Major, MajorCourse, MemberLevel, MembershipPlan, MeUser, Profile } from './types';
 
 const { Header, Content, Footer } = Layout;
 const { Title, Paragraph, Text } = Typography;
@@ -52,6 +55,7 @@ function AppShell() {
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useLocalState('isLoggedIn', false);
   const [memberLevel, setMemberLevel] = useLocalState<MemberLevel>('memberLevel', 'free');
+  const [memberExpiresAt, setMemberExpiresAt] = useLocalState<string | null>('memberExpiresAt', null);
   const [profile, setProfile] = useLocalState<Profile>('profile', {
     nickname: '未命名同学',
     phone: '',
@@ -59,6 +63,36 @@ function AppShell() {
     major: '',
     grade: undefined
   });
+
+  // 将后端 MeUser 同步到本地三块 state（profile / memberLevel / memberExpiresAt）
+  const syncFromMe = (me: MeUser) => {
+    setProfile({
+      id: me.id,
+      nickname: me.nickname || `同学${me.phone.slice(-4)}`,
+      phone: me.phone,
+      school: me.school || '',
+      major: me.majorName || me.major || '',
+      majorId: me.majorId || undefined,
+      grade: me.gradeId || undefined
+    });
+    setMemberLevel(me.memberLevel);
+    setMemberExpiresAt(me.memberExpiresAt);
+  };
+
+  // 启动 / 刷新页面时，若本地记录着登录状态 + 手机号，就去后端拉一次真实用户信息
+  useEffect(() => {
+    if (!isLoggedIn || !profile.phone) return;
+    fetchMe(profile.phone)
+      .then((res) => syncFromMe(res.data))
+      .catch((err) => {
+        console.warn('同步用户信息失败', err);
+        // 后端找不到该手机号，清除本地登录态
+        if (err && err.message && err.message.includes('用户不存在')) {
+          setIsLoggedIn(false);
+        }
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Layout className="app-shell">
@@ -87,7 +121,7 @@ function AppShell() {
           <Route path="/" element={<Home isLoggedIn={isLoggedIn} profile={profile} memberLevel={memberLevel} />} />
           <Route path="/assignments/:id" element={<AssignmentPage memberLevel={memberLevel} profile={profile} isLoggedIn={isLoggedIn} />} />
           <Route path="/resources/:id" element={<CourseResourceDetailPage memberLevel={memberLevel} profile={profile} isLoggedIn={isLoggedIn} />} />
-          <Route path="/membership" element={<MembershipPage memberLevel={memberLevel} setMemberLevel={setMemberLevel} />} />
+          <Route path="/membership" element={<MembershipPage memberLevel={memberLevel} profile={profile} syncFromMe={syncFromMe} />} />
           <Route
             path="/profile"
             element={(
@@ -95,9 +129,10 @@ function AppShell() {
                 profile={profile}
                 setProfile={setProfile}
                 memberLevel={memberLevel}
-                setMemberLevel={setMemberLevel}
+                memberExpiresAt={memberExpiresAt}
                 isLoggedIn={isLoggedIn}
                 setIsLoggedIn={setIsLoggedIn}
+                syncFromMe={syncFromMe}
               />
             )}
           />
@@ -235,6 +270,18 @@ function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profi
     // 按浏览量降序排序
     return [...result].sort((a, b) => b.viewCount - a.viewCount);
   }, [scopedCourses, selectedGrade]);
+
+  // 切换年级或课程数据变化时，自动选中课程列表的第一项；
+  // 若当前选中课程仍在新列表中则保持不变，避免无谓重渲染。
+  useEffect(() => {
+    if (visibleCourses.length === 0) {
+      if (selectedCourse !== undefined) setSelectedCourse(undefined);
+      return;
+    }
+    if (!selectedCourse || !visibleCourses.some((c) => c.id === selectedCourse)) {
+      setSelectedCourse(visibleCourses[0].id);
+    }
+  }, [visibleCourses, selectedCourse]);
   const selectedGradeName = selectedGrade ? grades.find((grade) => grade.id === selectedGrade)?.name || '年级' : '全部年级';
   const selectedCourseText = selectedCourse ? scopedCourses.find((course) => course.id === selectedCourse)?.name || '已选课程' : `${visibleCourses.length} 个课程`;
 
@@ -297,7 +344,7 @@ function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profi
               onChange={(event) => {
                 const v = event.target.value;
                 setSelectedGrade(v === 'all' ? undefined : v);
-                setSelectedCourse(undefined);
+                // 课程的自动选中交由上方 useEffect 统一处理
               }}
               className="grade-list"
             >
@@ -311,8 +358,8 @@ function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profi
                     className={locked ? 'grade-locked' : ''}
                     title={locked ? `《${grade.name}》未解锁：可查看列表，但不能进入详情` : undefined}
                   >
-                    {locked && <LockOutlined style={{ marginRight: 4, color: '#bfbfbf' }} />}
                     {grade.name}
+                    {locked && <LockOutlined style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#bfbfbf' }} />}
                   </Radio.Button>
                 );
               })}
@@ -708,6 +755,105 @@ function AssignmentPage({ memberLevel, profile, isLoggedIn }: { memberLevel: Mem
 }
 
 // ==========================================
+// 课件讲义 - 学习笔记目录组件（仅 lecture 类课件详情页使用）
+// 服务端扫描 server/public/notes/<courseId>/L*.md 后返回列表，
+// 前端采用懒加载：折叠面板展开时才拉取 markdown 源文件并渲染。
+// ==========================================
+function LectureNotesSection({ courseId }: { courseId: string }) {
+  const [notes, setNotes] = useState<CourseNoteItem[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [contents, setContents] = useState<Record<string, string>>({});
+  const [loadingKeys, setLoadingKeys] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getCourseNotes(courseId)
+      .then((res) => {
+        if (!cancelled) setNotes(res.data);
+      })
+      .catch(() => {
+        if (!cancelled) setNotes([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [courseId]);
+
+  const handleExpand = async (filenames: string | string[]) => {
+    const keys = Array.isArray(filenames) ? filenames : [filenames];
+    for (const key of keys) {
+      if (contents[key] || loadingKeys.has(key)) continue;
+      const note = notes?.find((n) => n.filename === key);
+      if (!note) continue;
+      setLoadingKeys((prev) => new Set(prev).add(key));
+      try {
+        const md = await fetchNoteMarkdown(note.url);
+        setContents((prev) => ({ ...prev, [key]: md }));
+      } catch {
+        setContents((prev) => ({ ...prev, [key]: '加载失败，请重试。' }));
+      } finally {
+        setLoadingKeys((prev) => {
+          const next = new Set(prev);
+          next.delete(key);
+          return next;
+        });
+      }
+    }
+  };
+
+  if (loading) return <Spin />;
+  if (!notes || notes.length === 0) {
+    return <Empty description="暂未上传本课程的学习笔记" />;
+  }
+
+  return (
+    <Collapse
+      accordion
+      onChange={handleExpand}
+      items={notes.map((note) => ({
+        key: note.filename,
+        label: (
+          <Space wrap>
+            <Tag color="blue">{Number.isFinite(note.order) ? (courseId === 'linear-programming' ? `第${note.order}章` : `L${note.order}`) : '-'}</Tag>
+            <Text strong>{note.title}</Text>
+            {note.summary && (
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {note.summary}
+              </Text>
+            )}
+          </Space>
+        ),
+        extra: (
+          <Button
+            type="link"
+            size="small"
+            icon={<DownloadOutlined />}
+            href={note.url}
+            download={note.filename}
+            onClick={(e) => e.stopPropagation()}
+          >
+            下载
+          </Button>
+        ),
+        children: loadingKeys.has(note.filename) ? (
+          <Spin />
+        ) : contents[note.filename] ? (
+          <div className="markdown-body">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{contents[note.filename]}</ReactMarkdown>
+          </div>
+        ) : (
+          <Text type="secondary">点击展开加载内容...</Text>
+        ),
+      }))}
+    />
+  );
+}
+
+// ==========================================
 // 课程资源详情页
 // ==========================================
 function CourseResourceDetailPage({ memberLevel, profile, isLoggedIn }: { memberLevel: MemberLevel; profile: Profile; isLoggedIn: boolean }) {
@@ -751,18 +897,35 @@ function CourseResourceDetailPage({ memberLevel, profile, isLoggedIn }: { member
   return (
     <div>
       <Card className="detail-header">
-        <Space direction="vertical" size={8}>
-          <Space wrap>
-            <Tag color="geekblue">{detail.gradeName}</Tag>
-            <Tag>{detail.courseName}</Tag>
-            <Tag color="purple">{meta.label}</Tag>
-            <Tag color={levelTagColor}>{levelText}</Tag>
-            {detail.locked && <Tag icon={<LockOutlined />} color="default">需升级</Tag>}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
+          <Space direction="vertical" size={8} style={{ flex: 1, minWidth: 0 }}>
+            <Space wrap>
+              <Tag color="geekblue">{detail.gradeName}</Tag>
+              <Tag>{detail.courseName}</Tag>
+              <Tag color="purple">{meta.label}</Tag>
+              <Tag color={levelTagColor}>{levelText}</Tag>
+              {detail.locked && <Tag icon={<LockOutlined />} color="default">需升级</Tag>}
+            </Space>
+            <Title>{detail.title}</Title>
+            {detail.summary && <Paragraph>{detail.summary}</Paragraph>}
+            <Text type="secondary"><EyeOutlined /> {detail.viewCount} 次浏览</Text>
           </Space>
-          <Title>{detail.title}</Title>
-          {detail.summary && <Paragraph>{detail.summary}</Paragraph>}
-          <Text type="secondary"><EyeOutlined /> {detail.viewCount} 次浏览</Text>
-        </Space>
+          {!detail.locked && detail.url && (
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <Button
+                type="primary"
+                size="large"
+                icon={<DownloadOutlined />}
+                href={detail.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+              >
+                {detail.category === 'lecture' ? '课件下载' : '下载原始资源'}
+              </Button>
+            </div>
+          )}
+        </div>
       </Card>
 
       <Row gutter={[16, 16]}>
@@ -777,14 +940,20 @@ function CourseResourceDetailPage({ memberLevel, profile, isLoggedIn }: { member
                 action={<Button type="primary" onClick={() => navigate('/membership')}>立即升级</Button>}
               />
             ) : (
-              <Paragraph style={{ whiteSpace: 'pre-wrap' }}>{detail.content || '该资源尚未上传内容。'}</Paragraph>
-            )}
-            {!detail.locked && detail.url && (
-              <div style={{ marginTop: 12 }}>
-                <Button type="link" onClick={() => window.open(detail.url || '', '_blank')}>点此下载/查看原始资源</Button>
+              <div className="markdown-body">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{detail.content || '该资源尚未上传内容。'}</ReactMarkdown>
               </div>
             )}
           </Card>
+          {!detail.locked && detail.category === 'lecture' && (
+            <Card
+              className="detail-module-card"
+              title={<Space><ReadOutlined /> 学习笔记目录</Space>}
+              style={{ marginTop: 16 }}
+            >
+              <LectureNotesSection courseId={detail.courseId} />
+            </Card>
+          )}
         </Col>
         {detail.locked && (
           <Col xs={24} lg={8}>
@@ -814,9 +983,10 @@ function CourseResourceDetailPage({ memberLevel, profile, isLoggedIn }: { member
   );
 }
 
-function MembershipPage({ memberLevel, setMemberLevel }: { memberLevel: MemberLevel; setMemberLevel: (level: MemberLevel) => void }) {
+function MembershipPage({ memberLevel, profile, syncFromMe }: { memberLevel: MemberLevel; profile: Profile; syncFromMe: (me: MeUser) => void }) {
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [buying, setBuying] = useState<MemberLevel>();
+  const navigate = useNavigate();
   const planOrder: Record<MemberLevel, number> = {
     free: 0,
     study: 1,
@@ -830,17 +1000,18 @@ function MembershipPage({ memberLevel, setMemberLevel }: { memberLevel: MemberLe
   }, []);
 
   async function buy(level: MemberLevel) {
-    if (level === 'free') {
-      setMemberLevel('free');
-      message.success('已切换到免费体验版');
+    if (!profile.phone) {
+      message.warning('请先登录后再购买会员');
+      navigate('/profile');
       return;
     }
-
     setBuying(level);
     try {
-      await createOrder(level);
-      setMemberLevel(level);
-      message.success('模拟支付成功，会员已生效');
+      const res = await createOrder(level, profile.phone);
+      syncFromMe(res.data.user);
+      message.success(level === 'free' ? '已切换到免费体验版' : '模拟支付成功，会员已生效');
+    } catch (err) {
+      message.error((err as Error).message || '操作失败');
     } finally {
       setBuying(undefined);
     }
@@ -897,22 +1068,27 @@ function ProfilePage({
   profile,
   setProfile,
   memberLevel,
-  setMemberLevel,
+  memberExpiresAt,
   isLoggedIn,
-  setIsLoggedIn
+  setIsLoggedIn,
+  syncFromMe
 }: {
   profile: Profile;
   setProfile: (profile: Profile) => void;
   memberLevel: MemberLevel;
-  setMemberLevel: (level: MemberLevel) => void;
+  memberExpiresAt: string | null;
   isLoggedIn: boolean;
   setIsLoggedIn: (value: boolean) => void;
+  syncFromMe: (me: MeUser) => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [activeProfileSection, setActiveProfileSection] = useState('profile');
   const [majors, setMajors] = useState<Major[]>([]);
   const [majorCourses, setMajorCourses] = useState<MajorCourse[]>([]);
   const [coursesLoading, setCoursesLoading] = useState(false);
+  const [loggingIn, setLoggingIn] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const navigate = useNavigate();
 
   // 拉取专业列表（供表单下拉使用）
@@ -930,38 +1106,60 @@ function ProfilePage({
     getUserCourses(profile.phone)
       .then((res) => {
         setMajorCourses(res.data.courses);
-        // 如果本地 profile 还未记录专业信息，以后端为准同步一份
-        if (res.data.user.majorId && profile.majorId !== res.data.user.majorId) {
-          setProfile({
-            ...profile,
-            major: res.data.user.majorName || res.data.user.major || profile.major,
-            majorId: res.data.user.majorId,
-            grade: res.data.user.gradeId || profile.grade
-          });
-        }
       })
       .catch(() => setMajorCourses([]))
       .finally(() => setCoursesLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, profile.phone]);
 
-  function login(values: { phone: string; code: string }) {
-    const matchedName = matchUserName(values.phone);
-    setProfile({
-      ...profile,
-      phone: values.phone,
-      nickname: profile.nickname && profile.nickname !== '未命名同学' ? profile.nickname : matchedName
-    });
-    setIsLoggedIn(true);
-    setIsEditing(true);
-    message.success(`登录成功，已为你匹配用户名：${matchedName}`);
-    navigate('/');
+  async function login(values: { phone: string; code: string }) {
+    setLoggingIn(true);
+    try {
+      const res = await loginWithPhone(values);
+      syncFromMe(res.data);
+      setIsLoggedIn(true);
+      message.success(`登录成功，欢迎${res.data.nickname ? ` ${res.data.nickname}` : ''}`);
+      navigate('/');
+    } catch (err) {
+      message.error((err as Error).message || '登录失败');
+    } finally {
+      setLoggingIn(false);
+    }
   }
 
-  function save(values: Profile) {
-    setProfile({ ...profile, ...values });
-    setIsEditing(false);
-    message.success('个人信息已保存');
+  async function save(values: { nickname?: string; school?: string; majorId?: string; grade?: string }) {
+    if (!profile.phone) return;
+    setSavingProfile(true);
+    try {
+      const res = await updateMe({
+        phone: profile.phone,
+        nickname: values.nickname,
+        school: values.school,
+        majorId: values.majorId,
+        gradeId: values.grade
+      });
+      syncFromMe(res.data);
+      setIsEditing(false);
+      message.success('个人资料已保存');
+    } catch (err) {
+      message.error((err as Error).message || '保存失败');
+    } finally {
+      setSavingProfile(false);
+    }
+  }
+
+  async function resetMembership() {
+    if (!profile.phone) return;
+    setResetting(true);
+    try {
+      const res = await createOrder('free', profile.phone);
+      syncFromMe(res.data.user);
+      message.success('已重置为免费体验版');
+    } catch (err) {
+      message.error((err as Error).message || '重置失败');
+    } finally {
+      setResetting(false);
+    }
   }
 
   if (!isLoggedIn) {
@@ -1012,7 +1210,7 @@ function ProfilePage({
                       onSearch={() => message.success('验证码已发送（演示环境可输入任意 6 位数字）')}
                     />
                   </Form.Item>
-                  <Button type="primary" size="large" block htmlType="submit">立即登录 / 注册</Button>
+                  <Button type="primary" size="large" block htmlType="submit" loading={loggingIn}>立即登录 / 注册</Button>
                 </Form>
               </Col>
             </Row>
@@ -1080,17 +1278,27 @@ function ProfilePage({
             ) : (
               <Space direction="vertical" size={20} className="full-width">
                 <Alert className="profile-guide" type="info" showIcon message="完善资料后，首页会默认展示更适合你年级的学习资源。" />
-                <Form layout="vertical" initialValues={profile} onFinish={(values) => save(values as Profile)}>
+                <Form
+                  layout="vertical"
+                  initialValues={{
+                    nickname: profile.nickname,
+                    phone: profile.phone,
+                    school: profile.school,
+                    majorId: profile.majorId,
+                    grade: profile.grade
+                  }}
+                  onFinish={(values) => save(values as { nickname?: string; school?: string; majorId?: string; grade?: string })}
+                >
                   <Row gutter={[24, 18]}>
                     <Col xs={24} md={12}><Form.Item className="profile-form-item" name="nickname" label="用户名"><Input size="large" /></Form.Item></Col>
                     <Col xs={24} md={12}><Form.Item className="profile-form-item" name="phone" label="手机号"><Input size="large" disabled /></Form.Item></Col>
                     <Col xs={24} md={12}><Form.Item className="profile-form-item" name="school" label="学校"><Input size="large" placeholder="请输入学校" /></Form.Item></Col>
-                    <Col xs={24} md={12}><Form.Item className="profile-form-item" name="major" label="专业"><Select size="large" placeholder="请选择专业" options={majors.map((m) => ({ value: m.name, label: m.name }))} /></Form.Item></Col>
-                    <Col xs={24} md={12}><Form.Item className="profile-form-item" name="grade" label="年级"><Select size="large" options={gradeOptions} /></Form.Item></Col>
+                    <Col xs={24} md={12}><Form.Item className="profile-form-item" name="majorId" label="专业"><Select size="large" placeholder="请选择专业" allowClear options={majors.map((m) => ({ value: m.id, label: m.name }))} /></Form.Item></Col>
+                    <Col xs={24} md={12}><Form.Item className="profile-form-item" name="grade" label="年级"><Select size="large" allowClear options={gradeOptions} /></Form.Item></Col>
                   </Row>
                   <div className="profile-section-actions">
                     <Button onClick={() => setIsEditing(false)}>取消编辑</Button>
-                    <Button type="primary" htmlType="submit">保存资料</Button>
+                    <Button type="primary" htmlType="submit" loading={savingProfile}>保存资料</Button>
                   </div>
                 </Form>
               </Space>
@@ -1138,13 +1346,14 @@ function ProfilePage({
               <ProfileInfoGrid
                 items={[
                   { label: '当前版本', value: <Tag color={memberColors[memberLevel]}>{memberNames[memberLevel]}</Tag> },
-                  { label: '付费周期', value: '按学期' },
-                  { label: '状态', value: 'MVP 模拟生效中' }
+                  { label: '付费周期', value: memberLevel === 'free' ? '—' : '按学期' },
+                  { label: '到期时间', value: memberExpiresAt ? new Date(memberExpiresAt).toLocaleDateString('zh-CN') : (memberLevel === 'free' ? '—' : '永久') },
+                  { label: '状态', value: memberLevel === 'free' ? '未开通付费会员' : (memberExpiresAt && new Date(memberExpiresAt) < new Date() ? '已过期' : '生效中') }
                 ]}
               />
               <div className="profile-section-actions">
                 <Link to="/membership"><Button type="primary">升级会员</Button></Link>
-                <Button onClick={() => setMemberLevel('free')}>重置为免费体验</Button>
+                <Button onClick={resetMembership} loading={resetting}>重置为免费体验</Button>
               </div>
             </Space>
           )}

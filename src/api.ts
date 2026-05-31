@@ -1,4 +1,4 @@
-import type { Assignment, AssignmentDetail, Course, CourseResourceDetail, CourseResourceListResponse, Grade, Major, MemberLevel, MembershipPlan, UserCoursesResponse } from './types';
+import type { Assignment, AssignmentDetail, Course, CourseResourceDetail, CourseResourceListResponse, Grade, Major, MemberLevel, MembershipPlan, MeUser, UserCoursesResponse } from './types';
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, {
@@ -18,6 +18,25 @@ export function getHomeResources() {
   return request<{ grades: Grade[]; courses: Course[]; assignments: Assignment[] }>('/api/resources/home');
 }
 
+export interface CourseNoteItem {
+  filename: string;
+  title: string;
+  summary: string;
+  order: number;
+  url: string;
+  size: number;
+}
+
+export function getCourseNotes(courseId: string) {
+  return request<{ data: CourseNoteItem[] }>(`/api/courses/${encodeURIComponent(courseId)}/notes`);
+}
+
+export async function fetchNoteMarkdown(url: string): Promise<string> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('笔记加载失败');
+  return res.text();
+}
+
 export function getAssignments(params: { gradeId?: string; courseId?: string; q?: string }) {
   const search = new URLSearchParams();
   if (params.gradeId) search.set('gradeId', params.gradeId);
@@ -34,10 +53,31 @@ export function getMembershipPlans() {
   return request<{ data: MembershipPlan[] }>('/api/membership/plans');
 }
 
-export function createOrder(level: MemberLevel) {
-  return request<{ data: { id: string; level: MemberLevel; planName: string; amount: number; status: string } }>('/api/orders', {
+export function createOrder(level: MemberLevel, phone: string) {
+  return request<{ data: { order: { id: string; planLevel: MemberLevel; planName: string; amount: string; status: string } | null; user: MeUser } }>('/api/orders', {
     method: 'POST',
-    body: JSON.stringify({ level })
+    body: JSON.stringify({ level, phone })
+  });
+}
+
+/** 手机号+验证码登录（演示环境：任意 6 位数字均可通过） */
+export function loginWithPhone(payload: { phone: string; code: string }) {
+  return request<{ data: MeUser }>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+/** 拉取当前登录用户完整信息（含会员状态、个人资料） */
+export function fetchMe(phone: string) {
+  return request<{ data: MeUser }>(`/api/auth/me?phone=${encodeURIComponent(phone)}`);
+}
+
+/** 更新当前用户资料 */
+export function updateMe(payload: { phone: string; nickname?: string; school?: string; majorId?: string; gradeId?: string }) {
+  return request<{ data: MeUser }>('/api/users/me', {
+    method: 'PATCH',
+    body: JSON.stringify(payload)
   });
 }
 
