@@ -2,6 +2,7 @@ import 'dotenv/config';
 import path from 'path';
 import fs from 'fs';
 import fsp from 'fs/promises';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
@@ -818,6 +819,60 @@ app.post('/api/admin/users/upgrade-membership', requireAdminToken, async (req, r
 // ==========================================
 // 6. 提交咨询意向接口
 // ==========================================
+
+// --- 钉钉群机器人通知 ---
+async function sendDingTalkNotification(lead) {
+  const webhookUrl = (process.env.DINGTALK_WEBHOOK_URL || '').trim();
+  if (!webhookUrl) return; // 未配置则静默跳过
+
+  const secret = (process.env.DINGTALK_WEBHOOK_SECRET || '').trim();
+  let url = webhookUrl;
+
+  // 加签模式：用 HmacSHA256 计算签名
+  if (secret) {
+    const timestamp = Date.now();
+    const stringToSign = `${timestamp}\n${secret}`;
+    const sign = encodeURIComponent(
+      crypto.createHmac('sha256', secret).update(stringToSign).digest('base64')
+    );
+    url += `&timestamp=${timestamp}&sign=${sign}`;
+  }
+
+  const now = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+  const markdown = [
+    '### 📨 新咨询意向',
+    '',
+    `- **姓名**: ${lead.name || '-'}`,
+    `- **联系方式**: ${lead.contact || '-'}`,
+    `- **学校**: ${lead.school || '-'}`,
+    `- **专业**: ${lead.major || '-'}`,
+    `- **年级**: ${lead.gradeId || '-'}`,
+    `- **咨询方向**: ${lead.goal || '-'}`,
+    `- **当前困惑**: ${lead.description || '-'}`,
+    `- **提交时间**: ${now}`,
+  ].join('\n');
+
+  const body = {
+    msgtype: 'markdown',
+    markdown: {
+      title: '新咨询意向',
+      text: markdown
+    }
+  };
+
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  const result = await resp.json();
+  if (result.errcode !== 0) {
+    throw new Error(`钉钉返回错误: errcode=${result.errcode} errmsg=${result.errmsg}`);
+  }
+  console.log('[DingTalk] 通知发送成功');
+}
+
 app.post('/api/consultation/leads', async (req, res) => {
   try {
     const { name, contact, school, major, gradeId, goal, description } = req.body;
@@ -838,6 +893,11 @@ app.post('/api/consultation/leads', async (req, res) => {
         description,
         status: 'new'
       }
+    });
+
+    // 异步发送钉钉通知（不阻塞响应）
+    sendDingTalkNotification({ name, contact, school, major, gradeId, goal, description }).catch((err) => {
+      console.error('[DingTalk] 通知发送失败:', err.message);
     });
 
     res.json({ data: lead });
