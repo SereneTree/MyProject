@@ -572,11 +572,13 @@ app.get('/api/courses/:courseId/notes', async (req, res) => {
         if (summary.length > 120) summary = summary.slice(0, 120) + '…';
 
         // 提取文件名前缀序号作为排序依据：
-        // - L1_xxx.md / 1-xxx.md → 1
         // - 第1章-xxx.md / 第 10 章xxx.md → 1 / 10
+        // - Lecture_01_xxx.md / Lec01_xxx.md → 1
+        // - L1_xxx.md / 1-xxx.md → 1
         // 未命中则为 Infinity，排在后面
         const orderMatch =
           filename.match(/^第\s*(\d+)\s*章/) ||
+          filename.match(/^Lec(?:ture)?[_\s]*(\d+)/i) ||
           filename.match(/^L?(\d+)[_\-\s]/i);
         const order = orderMatch ? Number(orderMatch[1]) : Number.POSITIVE_INFINITY;
 

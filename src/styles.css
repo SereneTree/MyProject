@@ -631,6 +631,19 @@ body {
   border-color: #1d4ed8;
 }
 
+/* 已解锁 / 当前版本：按钮disabled后仍保持醒目的深蓝底 + 白字 */
+.plan-action-button.ant-btn-primary[disabled],
+.plan-action-button.ant-btn-primary[disabled]:hover,
+.plan-action-button.ant-btn-primary[disabled]:focus,
+.plan-action-button.ant-btn-primary.ant-btn-disabled,
+.plan-action-button.ant-btn-primary.ant-btn-disabled:hover {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+  color: #ffffff !important;
+  opacity: 0.85;
+  cursor: not-allowed;
+}
+
 .login-page {
   padding: 28px 0;
 }

@@ -140,7 +140,7 @@ function AppShell() {
           <Route path="/about" element={<AboutPage />} />
         </Routes>
       </Content>
-      <Footer className="footer">MVP Demo · 内容用于学习参考和产品验证</Footer>
+      {/* <Footer className="footer">MVP Demo · 内容用于学习参考和产品验证</Footer> */}
     </Layout>
   );
 }
@@ -266,10 +266,25 @@ function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profi
   }, [selectedCourse, memberLevel]);
 
   const visibleCourses = useMemo(() => {
-    let result = selectedGrade ? scopedCourses.filter((course) => course.gradeId === selectedGrade) : scopedCourses;
-    // 按浏览量降序排序
-    return [...result].sort((a, b) => b.viewCount - a.viewCount);
-  }, [scopedCourses, selectedGrade]);
+    const result = selectedGrade ? scopedCourses.filter((course) => course.gradeId === selectedGrade) : scopedCourses;
+    // 年级顺序映射：以 grades 数组顺序为准（大一上→大四下）
+    const gradeOrder = new Map<string, number>();
+    grades.forEach((g, i) => gradeOrder.set(g.id, i));
+    return [...result].sort((a, b) => {
+      // 1) 已解锁课程优先（locked=1 排后）
+      const lockedA = lockedCourseIdSet.has(a.id) ? 1 : 0;
+      const lockedB = lockedCourseIdSet.has(b.id) ? 1 : 0;
+      if (lockedA !== lockedB) return lockedA - lockedB;
+      // 2) 未选中具体年级时，按年级顺序升序；已选中年级则同一年级跳过此项
+      if (!selectedGrade) {
+        const orderA = gradeOrder.get(a.gradeId) ?? Number.MAX_SAFE_INTEGER;
+        const orderB = gradeOrder.get(b.gradeId) ?? Number.MAX_SAFE_INTEGER;
+        if (orderA !== orderB) return orderA - orderB;
+      }
+      // 3) 同状态同年级下，按浏览量降序
+      return b.viewCount - a.viewCount;
+    });
+  }, [scopedCourses, selectedGrade, grades, lockedCourseIdSet]);
 
   // 切换年级或课程数据变化时，自动选中课程列表的第一项；
   // 若当前选中课程仍在新列表中则保持不变，避免无谓重渲染。
@@ -388,7 +403,15 @@ function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profi
                       <Text strong={course.id === selectedCourse} style={locked ? { color: '#8c8c8c' } : undefined}>
                         {course.name}
                       </Text>
-                      {course.isHot && <Tag color="red">热门</Tag>}
+                      {(() => {
+                        // 按学期分色：年级顺序与 grades 一致，索引取色
+                        const gradeColors = ['green', 'cyan', 'blue', 'geekblue', 'purple', 'magenta', 'orange', 'volcano'];
+                        const idx = grades.findIndex((g) => g.id === course.gradeId);
+                        const grade = idx >= 0 ? grades[idx] : null;
+                        if (!grade) return null;
+                        const color = idx >= 0 ? gradeColors[idx % gradeColors.length] : 'default';
+                        return <Tag color={color}>{grade.name}</Tag>;
+                      })()}
                     </Space>
                   </List.Item>
                 );
@@ -818,7 +841,7 @@ function LectureNotesSection({ courseId }: { courseId: string }) {
         key: note.filename,
         label: (
           <Space wrap>
-            <Tag color="blue">{Number.isFinite(note.order) ? (courseId === 'linear-programming' ? `第${note.order}章` : `L${note.order}`) : '-'}</Tag>
+            <Tag color="blue">{Number.isFinite(note.order) ? (['linear-programming', 'diff-equation', 'dsp-fundamentals', 'graph-theory', 'data-structure'].includes(courseId) ? `第${note.order}章` : `L${note.order}`) : '-'}</Tag>
             <Text strong>{note.title}</Text>
             {note.summary && (
               <Text type="secondary" style={{ fontSize: 12 }}>
@@ -1019,25 +1042,51 @@ function MembershipPage({ memberLevel, profile, syncFromMe }: { memberLevel: Mem
 
   return (
     <div>
-      <Title>会员与付费</Title>
-      <Paragraph>按学期付费，分别满足看懂方向、提升绩点、提升职业竞争力的不同需求。</Paragraph>
+      <Title>会员与权益</Title>
+      <Paragraph>按学期拆分，分别满足看懂方向、提升绩点、提升职业竞争力的不同需求。</Paragraph>
       <Row gutter={[16, 16]}>
-        {plans.map((plan) => (
-          <Col xs={24} md={8} key={plan.level} className="plan-card-column">
-            <Card className={plan.level === memberLevel ? 'plan-card current-plan' : 'plan-card'} title={<Space><CrownOutlined />{plan.name}</Space>}>
-              <div className="plan-card-content">
-                <Title level={2}>{plan.price === 0 ? '免费' : `¥${plan.price}`}<Text className="price-period"> / {plan.period}</Text></Title>
-                <Paragraph className="plan-tagline">{plan.tagline}</Paragraph>
-                <List dataSource={plan.benefits} renderItem={(item) => <List.Item>✓ {item}</List.Item>} />
-                <div className="plan-card-action">
-                  <Button block type="primary" className="plan-action-button" loading={buying === plan.level} onClick={() => buy(plan.level)}>
-                    {plan.level === memberLevel ? '当前版本' : plan.price === 0 ? '切换体验' : '模拟购买'}
-                  </Button>
+        {plans.map((plan) => {
+          const currentRank = planOrder[memberLevel] ?? 0;
+          const planRank = planOrder[plan.level] ?? 0;
+          const isCurrent = plan.level === memberLevel;
+          // 当前版本以下的付费等级随高等级自动解锁（位于下方），按钮不可点
+          const isUnlocked = !isCurrent && planRank < currentRank;
+          // 高于当前等级的付费版本才需要“模拟购买”
+          const isHigher = planRank > currentRank;
+          let buttonText = '模拟购买';
+          if (isCurrent) buttonText = '当前版本';
+          else if (isUnlocked) buttonText = '已解锁';
+          else if (plan.price === 0) buttonText = '切换体验';
+          const buttonDisabled = isCurrent || isUnlocked;
+          const cardClassName = isCurrent
+            ? 'plan-card current-plan'
+            : isUnlocked
+              ? 'plan-card unlocked-plan'
+              : 'plan-card';
+          return (
+            <Col xs={24} md={8} key={plan.level} className="plan-card-column">
+              <Card className={cardClassName} title={<Space><CrownOutlined />{plan.name}</Space>}>
+                <div className="plan-card-content">
+                  <Title level={2}>{plan.price === 0 ? '免费' : `¥${plan.price}`}<Text className="price-period"> / {plan.period}</Text></Title>
+                  <Paragraph className="plan-tagline">{plan.tagline}</Paragraph>
+                  <List dataSource={plan.benefits} renderItem={(item) => <List.Item>✓ {item}</List.Item>} />
+                  <div className="plan-card-action">
+                    <Button
+                      block
+                      type="primary"
+                      className="plan-action-button"
+                      loading={buying === plan.level}
+                      disabled={buttonDisabled}
+                      onClick={() => { if (isHigher || (plan.price === 0 && !isUnlocked && !isCurrent)) buy(plan.level); }}
+                    >
+                      {buttonText}
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </Card>
-          </Col>
-        ))}
+              </Card>
+            </Col>
+          );
+        })}
       </Row>
     </div>
   );
