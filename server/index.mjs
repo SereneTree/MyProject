@@ -145,6 +145,172 @@ app.use('/notes', (err, req, res, next) => {
   return next(err);
 });
 
+// ==========================================
+// 静态文件服务：互联网大厂实际应用 / 岗位背景提升与面试准备
+// 源文件位于 public/<section>/<courseId>/*.md
+// section: practical | interview
+// ==========================================
+const publicPracticalDir = path.resolve(__dirname, '../public/practical');
+const publicInterviewDir = path.resolve(__dirname, '../public/interview');
+for (const [route, dir] of [
+  ['/practical', publicPracticalDir],
+  ['/interview', publicInterviewDir],
+]) {
+  app.use(
+    route,
+    express.static(dir, {
+      fallthrough: false,
+      maxAge: '1h',
+      setHeaders(res, filePath) {
+        if (filePath.endsWith('.md')) {
+          res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+        }
+      },
+    }),
+  );
+  app.use(route, (err, req, res, next) => {
+    if (err && err.statusCode === 404) {
+      return res.status(404).json({ message: '文档不存在' });
+    }
+    return next(err);
+  });
+}
+
+// ==========================================
+// 通用 markdown 文档目录扫描工具
+// 给定根目录下的某课程子目录，提取每个 *.md 的标题、摘要、序号
+// ==========================================
+async function scanCourseDocs(rootDir, urlPrefix, courseId) {
+  const dir = path.join(rootDir, courseId);
+  if (!fs.existsSync(dir)) return [];
+  const entries = await fsp.readdir(dir, { withFileTypes: true });
+  const mdFiles = entries
+    .filter((e) => e.isFile() && e.name.toLowerCase().endsWith('.md'))
+    .map((e) => e.name);
+
+  const items = await Promise.all(
+    mdFiles.map(async (filename) => {
+      const fullPath = path.join(dir, filename);
+      const stat = await fsp.stat(fullPath);
+      const fd = await fsp.open(fullPath, 'r');
+      const buf = Buffer.alloc(Math.min(stat.size, 4096));
+      await fd.read(buf, 0, buf.length, 0);
+      await fd.close();
+      const head = buf.toString('utf-8');
+      const h1 = head.match(/^#\s+(.+?)\s*$/m);
+      const title = h1 ? h1[1].trim() : filename.replace(/\.md$/i, '');
+
+      const lines = head.split(/\r?\n/);
+      let summary = '';
+      for (const line of lines) {
+        const t = line.trim();
+        if (!t || t.startsWith('#') || t.startsWith('>') || t.startsWith('```')) continue;
+        summary = t.replace(/^[-*]\s+/, '').replace(/[*_`]/g, '');
+        if (summary.length > 0) break;
+      }
+      if (summary.length > 120) summary = summary.slice(0, 120) + '…';
+
+      // 文件名前缀 01-xxx.md / 第1章xxx.md / Lec01_xxx.md / 1-xxx.md → 1
+      const orderMatch =
+        filename.match(/^第\s*(\d+)\s*章/) ||
+        filename.match(/^Lec(?:ture)?[_\s]*(\d+)/i) ||
+        filename.match(/^(\d+)[\-_\s]/);
+      const order = orderMatch ? Number(orderMatch[1]) : Number.POSITIVE_INFINITY;
+
+      // README 单独排到最前
+      const isReadme = /^readme\.md$/i.test(filename);
+
+      return {
+        filename,
+        title,
+        summary,
+        order: isReadme ? -1 : order,
+        isReadme,
+        url: `${urlPrefix}/${encodeURIComponent(courseId)}/${encodeURIComponent(filename)}`,
+        size: stat.size,
+      };
+    }),
+  );
+
+  items.sort((a, b) => a.order - b.order || a.filename.localeCompare(b.filename));
+  return items;
+}
+
+// 课程 ID → 中文名称映射（用于二级页面课程卡片展示）
+// 后续新增课程子目录时，在此追加映射即可。
+const DOCS_COURSE_NAME_MAP = {
+  database: '数据库',
+};
+
+// ==========================================
+// GET /api/docs/:section/courses
+// 列出 public/<section> 下所有课程子目录（每个目录视作一门课程）
+// section ∈ {practical, interview}
+// ==========================================
+app.get('/api/docs/:section/courses', async (req, res) => {
+  try {
+    const { section } = req.params;
+    const rootMap = { practical: publicPracticalDir, interview: publicInterviewDir };
+    const root = rootMap[section];
+    if (!root) return res.status(400).json({ message: '非法 section' });
+    if (!fs.existsSync(root)) return res.json({ data: [] });
+
+    const entries = await fsp.readdir(root, { withFileTypes: true });
+    const dirs = entries.filter((e) => e.isDirectory()).map((e) => e.name);
+
+    const items = await Promise.all(
+      dirs.map(async (courseId) => {
+        const sub = await fsp.readdir(path.join(root, courseId), { withFileTypes: true });
+        const count = sub.filter(
+          (e) => e.isFile() && e.name.toLowerCase().endsWith('.md') && !/^readme\.md$/i.test(e.name),
+        ).length;
+        return {
+          courseId,
+          name: DOCS_COURSE_NAME_MAP[courseId] || courseId,
+          count,
+        };
+      }),
+    );
+    items.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
+    res.json({ data: items });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: '获取课程列表失败' });
+  }
+});
+
+// ==========================================
+// GET /api/docs/:section/courses/:courseId
+// 返回某课程目录下的所有 markdown 文档列表
+// ==========================================
+app.get('/api/docs/:section/courses/:courseId', async (req, res) => {
+  try {
+    const { section, courseId } = req.params;
+    if (!/^[A-Za-z0-9_-]+$/.test(courseId)) {
+      return res.status(400).json({ message: '非法课程 ID' });
+    }
+    const rootMap = {
+      practical: { dir: publicPracticalDir, prefix: '/practical' },
+      interview: { dir: publicInterviewDir, prefix: '/interview' },
+    };
+    const cfg = rootMap[section];
+    if (!cfg) return res.status(400).json({ message: '非法 section' });
+
+    const items = await scanCourseDocs(cfg.dir, cfg.prefix, courseId);
+    res.json({
+      data: {
+        section,
+        courseId,
+        courseName: DOCS_COURSE_NAME_MAP[courseId] || courseId,
+        items,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: '获取文档列表失败' });
+  }
+});
+
 const memberRank = { free: 0, study: 1, career: 2 };
 
 // ==========================================

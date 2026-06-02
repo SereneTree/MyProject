@@ -4,9 +4,9 @@ import { Fragment, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { BrowserRouter, Link, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { createOrder, fetchMe, fetchNoteMarkdown, getAssignmentDetail, getAssignments, getCourseNotes, getCourseResourceDetail, getCourseResources, getHomeResources, getMajors, getMembershipPlans, getUserCourses, loginWithPhone, submitConsultationLead, updateMe } from './api';
-import type { CourseNoteItem } from './api';
+import { BrowserRouter, Link, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { createOrder, fetchDocMarkdown, fetchMe, fetchNoteMarkdown, getAssignmentDetail, getAssignments, getCourseNotes, getCourseResourceDetail, getCourseResources, getDocsByCourse, getHomeResources, getMajors, getMembershipPlans, getUserCourses, loginWithPhone, submitConsultationLead, updateMe } from './api';
+import type { CourseNoteItem, DocItem, DocSection } from './api';
 import type { Assignment, AssignmentDetail, Course, CourseResourceCategory, CourseResourceDetail, CourseResourceGroup, CourseResourceItem, Grade, Major, MajorCourse, MemberLevel, MembershipPlan, MeUser, Profile } from './types';
 
 const { Header, Content, Footer } = Layout;
@@ -153,13 +153,20 @@ function getSelectedNavKey(pathname: string) {
 }
 
 function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profile: Profile; memberLevel: MemberLevel }) {
+  // 学习资源页的“年级 + 课程”选择状态与 URL 查询参数同步，
+  // 使用户从资源详情页点击浏览器 back 后仍能回到原选中的课程，也便于链接分享。
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialGrade = searchParams.get('grade') || undefined;
+  const initialCourse = searchParams.get('course') || undefined;
+  const initialKeyword = searchParams.get('q') || '';
+
   const [grades, setGrades] = useState<Grade[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [allAssignments, setAllAssignments] = useState<Assignment[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [selectedGrade, setSelectedGrade] = useState<string>();
-  const [selectedCourse, setSelectedCourse] = useState<string>();
-  const [keyword, setKeyword] = useState('');
+  const [selectedGrade, setSelectedGrade] = useState<string | undefined>(initialGrade);
+  const [selectedCourse, setSelectedCourse] = useState<string | undefined>(initialCourse);
+  const [keyword, setKeyword] = useState(initialKeyword);
   const [loading, setLoading] = useState(false);
   // 当前用户的专业课程范围（仅登录且已绑定专业时生效）
   const [majorCourseIds, setMajorCourseIds] = useState<string[] | null>(null);
@@ -288,7 +295,9 @@ function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profi
 
   // 切换年级或课程数据变化时，自动选中课程列表的第一项；
   // 若当前选中课程仍在新列表中则保持不变，避免无谓重渲染。
+  // 注意：初始加载未完成时（courses 为空）不调整，避免覆盖 URL 携带的 course 初值。
   useEffect(() => {
+    if (courses.length === 0) return;
     if (visibleCourses.length === 0) {
       if (selectedCourse !== undefined) setSelectedCourse(undefined);
       return;
@@ -296,7 +305,23 @@ function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profi
     if (!selectedCourse || !visibleCourses.some((c) => c.id === selectedCourse)) {
       setSelectedCourse(visibleCourses[0].id);
     }
-  }, [visibleCourses, selectedCourse]);
+  }, [courses.length, visibleCourses, selectedCourse]);
+
+  // 选择变化时同步到 URL 查询参数（replace 避免污染历史栈）
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    if (selectedGrade) next.set('grade', selectedGrade);
+    else next.delete('grade');
+    if (selectedCourse) next.set('course', selectedCourse);
+    else next.delete('course');
+    if (keyword) next.set('q', keyword);
+    else next.delete('q');
+    if (next.toString() !== searchParams.toString()) {
+      setSearchParams(next, { replace: true });
+    }
+    // 仅依赖选择状态变化；不将 setSearchParams/searchParams 加入依赖避免循环
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedGrade, selectedCourse, keyword]);
   const selectedGradeName = selectedGrade ? grades.find((grade) => grade.id === selectedGrade)?.name || '年级' : '全部年级';
   const selectedCourseText = selectedCourse ? scopedCourses.find((course) => course.id === selectedCourse)?.name || '已选课程' : `${visibleCourses.length} 个课程`;
 
@@ -520,7 +545,8 @@ function CourseResourceTabs({
   }, [groups]);
 
   const handleClickItem = (item: CourseResourceItem) => {
-    if (courseLocked) {
+    const isFree = item.requiredLevel === 'free';
+    if (courseLocked && !isFree) {
       message.warning('该课程所在年级未解锁，无法查看资源详情。');
       return;
     }
@@ -552,9 +578,10 @@ function CourseResourceTabs({
         locale={{ emptyText: <Empty description="暂无资源" /> }}
         renderItem={(item) => {
           const meta = categoryMeta[item.category];
-          const isLocked = item.locked || courseLocked;
-          const levelText = item.requiredLevel === 'free' ? '免费' : item.requiredLevel === 'study' ? '学业提升版' : '职场进阶版';
-          const levelColor = item.requiredLevel === 'free' ? 'green' : item.requiredLevel === 'study' ? 'blue' : 'gold';
+          const isFree = item.requiredLevel === 'free';
+          const isLocked = item.locked || (courseLocked && !isFree);
+          const levelText = isFree ? '免费' : item.requiredLevel === 'study' ? '学业提升版' : '职场进阶版';
+          const levelColor = isFree ? 'green' : item.requiredLevel === 'study' ? 'blue' : 'gold';
           return (
             <List.Item className={`assignment-list-item${isLocked ? ' assignment-list-item-locked' : ''}`}>
               <div
@@ -570,7 +597,7 @@ function CourseResourceTabs({
                       <Tag color={meta.tagColor} icon={meta.icon}>{meta.label}</Tag>
                       <Tag color={levelColor}>{levelText}</Tag>
                       {item.locked && !courseLocked && <Tag icon={<LockOutlined />} color="default">需升级</Tag>}
-                      {courseLocked && <Tag icon={<LockOutlined />} color="default">年级锁定</Tag>}
+                      {courseLocked && !isFree && <Tag icon={<LockOutlined />} color="default">年级锁定</Tag>}
                     </Space>
                   </div>
                   <Title level={4} className="assignment-item-title" style={isLocked ? { color: '#8c8c8c' } : undefined}>
@@ -877,6 +904,115 @@ function LectureNotesSection({ courseId }: { courseId: string }) {
 }
 
 // ==========================================
+// 课程资源详情页中用于嵌入展示 markdown 文档列表的子组件
+// section: practical = 互联网大厂的实际应用 / interview = 相关岗位背景提升与面试准备
+// 后端扫描 public/<section>/<courseId>/*.md 后以折叠面板呈现。
+// ==========================================
+function CourseDocsList({ section, courseId }: { section: DocSection; courseId: string }) {
+  const [items, setItems] = useState<DocItem[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [contents, setContents] = useState<Record<string, string>>({});
+  const [loadingKeys, setLoadingKeys] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getDocsByCourse(section, courseId)
+      .then((res) => {
+        if (!cancelled) setItems(res.data.items);
+      })
+      .catch(() => {
+        if (!cancelled) setItems([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [section, courseId]);
+
+  const handleExpand = async (filenames: string | string[]) => {
+    const keys = Array.isArray(filenames) ? filenames : [filenames];
+    for (const key of keys) {
+      if (contents[key] || loadingKeys.has(key)) continue;
+      const it = items?.find((n) => n.filename === key);
+      if (!it) continue;
+      setLoadingKeys((prev) => new Set(prev).add(key));
+      try {
+        const md = await fetchDocMarkdown(it.url);
+        setContents((prev) => ({ ...prev, [key]: md }));
+      } catch {
+        setContents((prev) => ({ ...prev, [key]: '加载失败，请重试。' }));
+      } finally {
+        setLoadingKeys((prev) => {
+          const next = new Set(prev);
+          next.delete(key);
+          return next;
+        });
+      }
+    }
+  };
+
+  const tagColor = section === 'practical' ? 'volcano' : 'geekblue';
+  const emptyText = section === 'practical' ? '暂未上传本课程的大厂实践案例' : '暂未上传本课程的面试复习资料';
+
+  if (loading) return <Spin />;
+  if (!items || items.length === 0) return <Empty description={emptyText} />;
+
+  return (
+    <Collapse
+      accordion
+      onChange={handleExpand}
+      items={items.map((it) => ({
+        key: it.filename,
+        label: (
+          <Space wrap>
+            {it.isReadme ? (
+              <Tag color="green">总览</Tag>
+            ) : Number.isFinite(it.order) ? (
+              <Tag color={tagColor}>第 {it.order} 篇</Tag>
+            ) : (
+              <Tag>文档</Tag>
+            )}
+            <Text strong>{it.title}</Text>
+            {it.summary && (
+              <Text type="secondary" style={{ fontSize: 12 }}>{it.summary}</Text>
+            )}
+          </Space>
+        ),
+        extra: (
+          <Button
+            type="link"
+            size="small"
+            icon={<DownloadOutlined />}
+            href={it.url}
+            download={it.filename}
+            onClick={(e) => e.stopPropagation()}
+          >下载</Button>
+        ),
+        children: loadingKeys.has(it.filename) ? (
+          <Spin />
+        ) : contents[it.filename] ? (
+          <div className="markdown-body">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{contents[it.filename]}</ReactMarkdown>
+          </div>
+        ) : (
+          <Text type="secondary">点击展开加载内容...</Text>
+        ),
+      }))}
+    />
+  );
+}
+
+// 根据资源标题推断其是否为两个特殊职场展望资源，返回对应的 docs section。
+function inferDocsSection(title: string): DocSection | null {
+  if (/在互联网大厂的实际应用/.test(title)) return 'practical';
+  if (/相关岗位背景提升与面试准备/.test(title)) return 'interview';
+  return null;
+}
+
+// ==========================================
 // 课程资源详情页
 // ==========================================
 function CourseResourceDetailPage({ memberLevel, profile, isLoggedIn }: { memberLevel: MemberLevel; profile: Profile; isLoggedIn: boolean }) {
@@ -916,6 +1052,8 @@ function CourseResourceDetailPage({ memberLevel, profile, isLoggedIn }: { member
   const meta = categoryMeta[detail.category];
   const levelTagColor = detail.requiredLevel === 'free' ? 'green' : detail.requiredLevel === 'study' ? 'blue' : 'gold';
   const levelText = detail.requiredLevel === 'free' ? '免费' : detail.requiredLevel === 'study' ? '学业提升版' : '职场进阶版';
+  // 两个特殊职场展望资源：检测后在详情页嵌入 markdown 文档列表
+  const docsSection = detail.subType === 'career_extension' ? inferDocsSection(detail.title) : null;
 
   return (
     <div>
@@ -975,6 +1113,20 @@ function CourseResourceDetailPage({ memberLevel, profile, isLoggedIn }: { member
               style={{ marginTop: 16 }}
             >
               <LectureNotesSection courseId={detail.courseId} />
+            </Card>
+          )}
+          {!detail.locked && docsSection && (
+            <Card
+              className="detail-module-card"
+              title={(
+                <Space>
+                  {docsSection === 'practical' ? <RocketOutlined /> : <ProfileOutlined />}
+                  {docsSection === 'practical' ? '互联网大厂实际应用文档' : '面试复习资料目录'}
+                </Space>
+              )}
+              style={{ marginTop: 16 }}
+            >
+              <CourseDocsList section={docsSection} courseId={detail.courseId} />
             </Card>
           )}
         </Col>
@@ -1454,7 +1606,7 @@ function ConsultationPage({ profile }: { profile: Profile }) {
     try {
       await submitConsultationLead(values);
       form.resetFields();
-      message.success('咨询意向已提交，我们会尽快联系你');
+      message.success('提交成功！我们已收到你的咨询意向，将尽快与你联系，请保持手机畅通。');
     } finally {
       setSubmitting(false);
     }
@@ -1466,7 +1618,7 @@ function ConsultationPage({ profile }: { profile: Profile }) {
         <Card className="consult-card">
           <Tag className="consult-badge">1 对 1 成长规划</Tag>
           <Title level={2}>把课程表现、项目经历和未来选择连成一条清晰路径</Title>
-          <Paragraph>不只回答“该选哪条路”，而是结合你的课程基础、绩点目标、项目经历和家庭规划，拆出可执行的升学、留学、实习与职业发展方案。</Paragraph>
+          <Paragraph>二十年生涯规划经验，结合你的课程基础、绩点目标、项目经历和家庭背景，拆出可执行的升学、留学、实习与职业发展方案。</Paragraph>
           <div className="consult-feature-list">
             {['定位适合你的升学/留学/就业路径', '梳理课程成绩、项目和简历竞争力', '拆解短期学习计划与长期申请节奏', '给出下一步可执行的行动清单'].map((item) => (
               <div className="consult-feature" key={item}>✓ {item}</div>

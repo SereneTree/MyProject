@@ -37,6 +37,41 @@ export async function fetchNoteMarkdown(url: string): Promise<string> {
   return res.text();
 }
 
+// 互联网大厂实际应用 / 岗位背景提升与面试准备 两个二级页面公用接口
+export type DocSection = 'practical' | 'interview';
+
+export interface DocCourseSummary {
+  courseId: string;
+  name: string;
+  count: number;
+}
+
+export interface DocItem {
+  filename: string;
+  title: string;
+  summary: string;
+  order: number;
+  isReadme: boolean;
+  url: string;
+  size: number;
+}
+
+export function getDocsCourses(section: DocSection) {
+  return request<{ data: DocCourseSummary[] }>(`/api/docs/${section}/courses`);
+}
+
+export function getDocsByCourse(section: DocSection, courseId: string) {
+  return request<{ data: { section: DocSection; courseId: string; courseName: string; items: DocItem[] } }>(
+    `/api/docs/${section}/courses/${encodeURIComponent(courseId)}`,
+  );
+}
+
+export async function fetchDocMarkdown(url: string): Promise<string> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('文档加载失败');
+  return res.text();
+}
+
 export function getAssignments(params: { gradeId?: string; courseId?: string; q?: string }) {
   const search = new URLSearchParams();
   if (params.gradeId) search.set('gradeId', params.gradeId);
