@@ -22,6 +22,7 @@
     "@prisma/client": "5.22.0",
     "@vitejs/plugin-react": "latest",
     "antd": "^5.29.3",
+    "archiver": "^8.0.0",
     "concurrently": "latest",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",

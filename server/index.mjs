@@ -4,9 +4,13 @@ import fs from 'fs';
 import fsp from 'fs/promises';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 import express from 'express';
 import cors from 'cors';
 import prisma from './lib/prisma.mjs';
+
+const require = createRequire(import.meta.url);
+const archiver = require('archiver');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -240,6 +244,7 @@ async function scanCourseDocs(rootDir, urlPrefix, courseId) {
 // 后续新增课程子目录时，在此追加映射即可。
 const DOCS_COURSE_NAME_MAP = {
   database: '数据库',
+  dl: '深度学习',
 };
 
 // ==========================================
@@ -628,6 +633,51 @@ app.get('/api/assignments/:id', async (req, res) => {
 });
 
 // ==========================================
+// 3.6 大作业资料打包下载
+// GET /api/resources/material/download/:courseId
+// 将 public/assignment/<courseId>/material 下所有文件打包为 zip 流式下载
+// ==========================================
+app.get('/api/resources/material/download/:courseId', async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const materialDir = path.resolve(__dirname, `../public/assignment/${courseId}/material`);
+
+    // 安全检查：防止路径穿越
+    const publicAssignDir = path.resolve(__dirname, '../public/assignment');
+    if (!materialDir.startsWith(publicAssignDir)) {
+      return res.status(400).json({ message: '非法路径' });
+    }
+
+    if (!fs.existsSync(materialDir)) {
+      return res.status(404).json({ message: '该课程暂无可下载资料' });
+    }
+
+    const files = await fsp.readdir(materialDir);
+    if (files.length === 0) {
+      return res.status(404).json({ message: '该课程暂无可下载资料' });
+    }
+
+    // 设置响应头
+    const zipName = `${courseId}-material.zip`;
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(zipName)}"`);
+
+    // 创建 zip 流
+    const archive = archiver('zip', { zlib: { level: 6 } });
+    archive.on('error', (err) => {
+      console.error('Archiver error:', err);
+      if (!res.headersSent) res.status(500).json({ message: '打包失败' });
+    });
+    archive.pipe(res);
+    archive.directory(materialDir, false);
+    await archive.finalize();
+  } catch (error) {
+    console.error(error);
+    if (!res.headersSent) res.status(500).json({ message: '下载失败' });
+  }
+});
+
+// ==========================================
 // 3.5 课程资源列表（按 4 类分组返回）
 // GET /api/courses/:id/resources?level=free|study|career
 // ==========================================
@@ -793,6 +843,16 @@ app.get('/api/resources/:id', async (req, res) => {
 
     const allowed = currentRank >= (memberRank[resource.requiredLevel] || 0);
 
+    // 检查该课程是否有可下载的大作业资料
+    let hasMaterial = false;
+    if (resource.category === 'homework' && resource.subType === 'project') {
+      const materialDir = path.resolve(__dirname, `../public/assignment/${resource.courseId}/material`);
+      try {
+        const files = await fsp.readdir(materialDir);
+        hasMaterial = files.length > 0;
+      } catch { hasMaterial = false; }
+    }
+
     const plans = await prisma.membershipPlan.findMany({ where: { isActive: true } });
 
     res.json({
@@ -810,6 +870,7 @@ app.get('/api/resources/:id', async (req, res) => {
       content: allowed ? resource.content : null,
       url: allowed ? resource.url : null,
       viewCount: resource.viewCount,
+      hasMaterial,
       plans,
     });
   } catch (error) {
@@ -979,6 +1040,167 @@ app.post('/api/admin/users/upgrade-membership', requireAdminToken, async (req, r
   } catch (error) {
     console.error('[ADMIN upgrade-membership]', error);
     return res.status(500).json({ message: '升绑会员失败' });
+  }
+});
+
+// ==========================================
+// 5.2 管理员接口：解锁 / 锁定年级
+// POST /api/admin/users/unlock-grades
+// Header：X-Admin-Token
+// Body  ：{ phone, gradeIds: ["junior_spring", ...], action?: "add" | "set" | "remove" }
+//   action="add" (默认)：在现有基础上追加
+//   action="set"：替换为传入的 gradeIds
+//   action="remove"：从现有列表中移除指定 gradeIds
+// ==========================================
+app.post('/api/admin/users/unlock-grades', requireAdminToken, async (req, res) => {
+  try {
+    const { phone, gradeIds, action = 'add' } = req.body || {};
+
+    if (!isValidPhone(phone)) {
+      return res.status(400).json({ message: '请传入正确的 11 位手机号' });
+    }
+    if (!Array.isArray(gradeIds) || gradeIds.length === 0) {
+      return res.status(400).json({ message: 'gradeIds 必须为非空数组，如 ["junior_spring"]' });
+    }
+    const VALID_ACTIONS = ['add', 'set', 'remove'];
+    if (!VALID_ACTIONS.includes(action)) {
+      return res.status(400).json({ message: `action 必须为以下之一：${VALID_ACTIONS.join(', ')}` });
+    }
+
+    // 校验 gradeIds 合法性
+    const validGrades = await prisma.grade.findMany({ select: { id: true } });
+    const validIds = new Set(validGrades.map(g => g.id));
+    const invalid = gradeIds.filter(id => !validIds.has(id));
+    if (invalid.length > 0) {
+      return res.status(400).json({ message: `以下年级ID不合法：${invalid.join(', ')}。可用值：${[...validIds].join(', ')}` });
+    }
+
+    const user = await prisma.user.findUnique({ where: { phone } });
+    if (!user) {
+      return res.status(404).json({ message: `手机号 ${phone} 对应用户不存在` });
+    }
+
+    // 计算最终的年级列表
+    const current = Array.isArray(user.accessibleGradeIds) ? user.accessibleGradeIds : [];
+    let finalGrades;
+    if (action === 'set') {
+      finalGrades = [...new Set(gradeIds)];
+    } else if (action === 'remove') {
+      const removeSet = new Set(gradeIds);
+      finalGrades = current.filter(id => !removeSet.has(id));
+    } else {
+      // add
+      finalGrades = [...new Set([...current, ...gradeIds])];
+    }
+
+    const updated = await prisma.user.update({
+      where: { phone },
+      data: { accessibleGradeIds: finalGrades },
+      include: { majorRef: true, grade: true }
+    });
+
+    console.log(`[ADMIN] 年级解锁 phone=${phone} action=${action} gradeIds=${JSON.stringify(finalGrades)}`);
+    return res.json({ data: await serializeUser(updated) });
+  } catch (error) {
+    console.error('[ADMIN unlock-grades]', error);
+    return res.status(500).json({ message: '年级解锁操作失败' });
+  }
+});
+
+// ==========================================
+// 5.3 管理员接口：综合更新用户信息
+// POST /api/admin/users/update
+// Header：X-Admin-Token
+// Body  ：{ phone, level?, durationDays?, expiresAt?,
+//          gradeIds?, gradeAction?, nickname?, school?, majorId?, gradeId? }
+// 一次调用可同时更新会员等级 + 解锁年级 + 基本信息
+// ==========================================
+app.post('/api/admin/users/update', requireAdminToken, async (req, res) => {
+  try {
+    const { phone, level, durationDays, expiresAt: expiresAtRaw,
+            gradeIds, gradeAction = 'add',
+            nickname, school, majorId, gradeId } = req.body || {};
+
+    if (!isValidPhone(phone)) {
+      return res.status(400).json({ message: '请传入正确的 11 位手机号' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { phone } });
+    if (!user) {
+      return res.status(404).json({ message: `手机号 ${phone} 对应用户不存在` });
+    }
+
+    const data = {};
+
+    // 1) 会员等级
+    if (level !== undefined) {
+      const ALLOWED_LEVELS = ['free', 'study', 'career'];
+      if (!ALLOWED_LEVELS.includes(level)) {
+        return res.status(400).json({ message: `level 必须为以下之一：${ALLOWED_LEVELS.join(', ')}` });
+      }
+      data.memberLevel = level;
+
+      if (level === 'free') {
+        data.memberExpiresAt = null;
+      } else if (expiresAtRaw) {
+        const parsed = new Date(expiresAtRaw);
+        if (Number.isNaN(parsed.getTime())) {
+          return res.status(400).json({ message: 'expiresAt 不是合法的日期字符串' });
+        }
+        data.memberExpiresAt = parsed;
+      } else if (durationDays !== undefined && durationDays !== null) {
+        const d = Number(durationDays);
+        if (!Number.isFinite(d) || d <= 0 || d > 36500) {
+          return res.status(400).json({ message: 'durationDays 必须为 1–36500 之间的数字' });
+        }
+        data.memberExpiresAt = new Date(Date.now() + d * 24 * 3600 * 1000);
+      } else {
+        const days = level === 'career' ? 365 : 180;
+        data.memberExpiresAt = new Date(Date.now() + days * 24 * 3600 * 1000);
+      }
+    }
+
+    // 2) 解锁年级
+    if (Array.isArray(gradeIds) && gradeIds.length > 0) {
+      const validGrades = await prisma.grade.findMany({ select: { id: true } });
+      const validIds = new Set(validGrades.map(g => g.id));
+      const invalid = gradeIds.filter(id => !validIds.has(id));
+      if (invalid.length > 0) {
+        return res.status(400).json({ message: `以下年级ID不合法：${invalid.join(', ')}` });
+      }
+
+      const current = Array.isArray(user.accessibleGradeIds) ? user.accessibleGradeIds : [];
+      if (gradeAction === 'set') {
+        data.accessibleGradeIds = [...new Set(gradeIds)];
+      } else if (gradeAction === 'remove') {
+        const removeSet = new Set(gradeIds);
+        data.accessibleGradeIds = current.filter(id => !removeSet.has(id));
+      } else {
+        data.accessibleGradeIds = [...new Set([...current, ...gradeIds])];
+      }
+    }
+
+    // 3) 基本信息
+    if (nickname !== undefined) data.nickname = String(nickname);
+    if (school !== undefined) data.school = String(school);
+    if (majorId !== undefined) data.majorId = majorId || null;
+    if (gradeId !== undefined) data.gradeId = gradeId || null;
+
+    if (Object.keys(data).length === 0) {
+      return res.status(400).json({ message: '请至少传入一个需要更新的字段' });
+    }
+
+    const updated = await prisma.user.update({
+      where: { phone },
+      data,
+      include: { majorRef: true, grade: true }
+    });
+
+    console.log(`[ADMIN] 综合更新 phone=${phone} fields=${Object.keys(data).join(', ')}`);
+    return res.json({ data: await serializeUser(updated) });
+  } catch (error) {
+    console.error('[ADMIN users/update]', error);
+    return res.status(500).json({ message: '更新用户信息失败' });
   }
 });
 

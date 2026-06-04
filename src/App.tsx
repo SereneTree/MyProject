@@ -1086,6 +1086,19 @@ function CourseResourceDetailPage({ memberLevel, profile, isLoggedIn }: { member
               </Button>
             </div>
           )}
+          {!detail.locked && detail.hasMaterial && (
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <Button
+                type="primary"
+                size="large"
+                icon={<DownloadOutlined />}
+                href={`/api/resources/material/download/${detail.courseId}`}
+                download
+              >
+                资料打包下载
+              </Button>
+            </div>
+          )}
         </div>
       </Card>
 
