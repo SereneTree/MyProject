@@ -1,12 +1,12 @@
 import { BookOutlined, CrownOutlined, DownloadOutlined, EyeOutlined, FileTextOutlined, FormOutlined, LockOutlined, ProfileOutlined, ReadOutlined, RocketOutlined, UserOutlined } from '@ant-design/icons';
-import { Alert, Badge, Button, Card, Col, Collapse, Divider, Empty, Form, Input, Layout, List, Menu, message, Radio, Row, Select, Space, Spin, Statistic, Tag, Typography } from 'antd';
+import { Alert, Badge, Button, Card, Col, Collapse, Divider, Empty, Form, Input, Layout, List, Menu, message, Radio, Row, Select, Space, Spin, Statistic, Table, Tag, Typography } from 'antd';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { BrowserRouter, Link, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { createOrder, fetchDocMarkdown, fetchMe, fetchNoteMarkdown, getAssignmentDetail, getAssignments, getAssignmentSolutions, getCourseNotes, getCourseResourceDetail, getCourseResources, getDocsByCourse, getHomeResources, getMajors, getMembershipPlans, getUserCourses, loginWithPhone, submitConsultationLead, updateMe } from './api';
-import type { CourseNoteItem, DocItem, DocSection } from './api';
+import { createOrder, fetchDocMarkdown, fetchMe, fetchNoteMarkdown, getAssignmentDetail, getAssignments, getAssignmentSolutions, getCourseNotes, getCourseResourceDetail, getCourseResources, getDocsByCourse, getHomeResources, getMajors, getMembershipPlans, getTestMaterials, getTestSolutions, getUserCourses, loginWithPhone, submitConsultationLead, updateMe } from './api';
+import type { CourseNoteItem, DocItem, DocSection, TestMaterialItem } from './api';
 import type { Assignment, AssignmentDetail, Course, CourseResourceCategory, CourseResourceDetail, CourseResourceGroup, CourseResourceItem, Grade, Major, MajorCourse, MemberLevel, MembershipPlan, MeUser, Profile } from './types';
 
 const { Header, Content, Footer } = Layout;
@@ -1108,6 +1108,132 @@ function AssignmentSolutionsList({ courseId }: { courseId: string }) {
 }
 
 // ==========================================
+// 考试真题集展示组件（表格 + 下载）
+// ==========================================
+function ExamPapersList({ courseId }: { courseId: string }) {
+  const [items, setItems] = useState<TestMaterialItem[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getTestMaterials(courseId)
+      .then((res) => { if (!cancelled) setItems(res.data.items); })
+      .catch(() => { if (!cancelled) setItems([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [courseId]);
+
+  if (loading) return <Spin />;
+  if (items.length === 0) return <Empty description="暂无历史试卷" />;
+
+  const columns = [
+    {
+      title: '试卷名称',
+      dataIndex: 'filename',
+      key: 'filename',
+      render: (text: string) => <Text strong>{text.replace(/\.pdf$/i, '')}</Text>,
+    },
+    {
+      title: '文件大小',
+      dataIndex: 'size',
+      key: 'size',
+      width: 120,
+      render: (size: number) => size > 1024 * 1024 ? `${(size / 1024 / 1024).toFixed(1)} MB` : `${(size / 1024).toFixed(0)} KB`,
+    },
+    {
+      title: '操作',
+      key: 'action',
+      width: 120,
+      render: (_: unknown, record: TestMaterialItem) => (
+        <Button type="primary" size="small" icon={<DownloadOutlined />} href={record.url} download={record.filename}>下载</Button>
+      ),
+    },
+  ];
+
+  return <Table dataSource={items} columns={columns} rowKey="filename" pagination={false} size="middle" />;
+}
+
+// ==========================================
+// 考试题型分析与高频考点展示组件（solutions 渲染）
+// ==========================================
+function ExamSolutionsList({ courseId }: { courseId: string }) {
+  const [items, setItems] = useState<DocItem[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [contents, setContents] = useState<Record<string, string>>({});
+  const [loadingKeys, setLoadingKeys] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getTestSolutions(courseId)
+      .then((res) => { if (!cancelled) setItems(res.data.items); })
+      .catch(() => { if (!cancelled) setItems([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [courseId]);
+
+  const handleExpand = async (filenames: string | string[]) => {
+    const keys = Array.isArray(filenames) ? filenames : [filenames];
+    for (const key of keys) {
+      if (contents[key] || loadingKeys.has(key)) continue;
+      const it = items?.find((n) => n.filename === key);
+      if (!it) continue;
+      setLoadingKeys((prev) => new Set(prev).add(key));
+      try {
+        const md = await fetchDocMarkdown(it.url);
+        setContents((prev) => ({ ...prev, [key]: md }));
+      } catch {
+        setContents((prev) => ({ ...prev, [key]: '加载失败，请重试。' }));
+      } finally {
+        setLoadingKeys((prev) => {
+          const next = new Set(prev);
+          next.delete(key);
+          return next;
+        });
+      }
+    }
+  };
+
+  if (loading) return <Spin />;
+  if (!items || items.length === 0) return <Empty description="暂无考试解析" />;
+
+  return (
+    <Collapse
+      accordion
+      onChange={handleExpand}
+      items={items.map((it) => ({
+        key: it.filename,
+        label: (
+          <Space wrap>
+            {it.isReadme ? (
+              <Tag color="green">总览</Tag>
+            ) : Number.isFinite(it.order) ? (
+              <Tag color="orange">考点 {it.order}</Tag>
+            ) : (
+              <Tag>文档</Tag>
+            )}
+            <Text strong>{it.title}</Text>
+            {it.summary && (
+              <Text type="secondary" style={{ fontSize: 12 }}>{it.summary}</Text>
+            )}
+          </Space>
+        ),
+        children: loadingKeys.has(it.filename) ? (
+          <Spin />
+        ) : contents[it.filename] ? (
+          <div className="markdown-body">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{contents[it.filename]}</ReactMarkdown>
+          </div>
+        ) : (
+          <Text type="secondary">点击展开加载内容...</Text>
+        ),
+      }))}
+    />
+  );
+}
+
+// ==========================================
 // 课程资源详情页
 // ==========================================
 function CourseResourceDetailPage({ memberLevel, profile, isLoggedIn }: { memberLevel: MemberLevel; profile: Profile; isLoggedIn: boolean }) {
@@ -1244,6 +1370,24 @@ function CourseResourceDetailPage({ memberLevel, profile, isLoggedIn }: { member
               style={{ marginTop: 16 }}
             >
               <AssignmentSolutionsList courseId={detail.courseId} />
+            </Card>
+          )}
+          {!detail.locked && detail.hasTestMaterial && (
+            <Card
+              className="detail-module-card"
+              title={<Space><FileTextOutlined /> 考试真题集</Space>}
+              style={{ marginTop: 16 }}
+            >
+              <ExamPapersList courseId={detail.courseId} />
+            </Card>
+          )}
+          {!detail.locked && detail.hasTestSolutions && (
+            <Card
+              className="detail-module-card"
+              title={<Space><FormOutlined /> 考试题型分析与高频考点</Space>}
+              style={{ marginTop: 16 }}
+            >
+              <ExamSolutionsList courseId={detail.courseId} />
             </Card>
           )}
         </Col>

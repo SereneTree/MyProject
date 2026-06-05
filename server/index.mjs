@@ -655,6 +655,61 @@ app.get('/api/assignment/:courseId/solutions', async (req, res) => {
 });
 
 // ==========================================
+// 3.6b 考试试卷材料列表
+// GET /api/test/:courseId/materials
+// 扫描 public/test/<courseId>/material/ 下的所有文件（PDF等）
+// ==========================================
+app.get('/api/test/:courseId/materials', async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    if (/[\/\\.]/.test(courseId)) {
+      return res.status(400).json({ message: '非法 courseId' });
+    }
+    const dir = path.resolve(__dirname, `../public/test/${courseId}/material`);
+    if (!fs.existsSync(dir)) {
+      return res.json({ data: { courseId, items: [] } });
+    }
+    const entries = await fsp.readdir(dir, { withFileTypes: true });
+    const items = [];
+    for (const entry of entries) {
+      if (!entry.isFile()) continue;
+      const fullPath = path.join(dir, entry.name);
+      const stat = await fsp.stat(fullPath);
+      items.push({
+        filename: entry.name,
+        url: `/test/${encodeURIComponent(courseId)}/material/${encodeURIComponent(entry.name)}`,
+        size: stat.size,
+      });
+    }
+    res.json({ data: { courseId, items } });
+  } catch (error) {
+    console.error('[test materials]', error);
+    res.status(500).json({ message: '获取考试试卷列表失败' });
+  }
+});
+
+// ==========================================
+// 3.6c 考试题目解析列表
+// GET /api/test/:courseId/solutions
+// 扫描 public/test/<courseId>/solutions/ 下的 markdown 文件
+// ==========================================
+app.get('/api/test/:courseId/solutions', async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    if (/[\/\\.]/.test(courseId)) {
+      return res.status(400).json({ message: '非法 courseId' });
+    }
+    const rootDir = path.resolve(__dirname, '../public/test', courseId);
+    const urlPrefix = `/test/${encodeURIComponent(courseId)}`;
+    const items = await scanCourseDocs(rootDir, urlPrefix, 'solutions');
+    res.json({ data: { courseId, items } });
+  } catch (error) {
+    console.error('[test solutions]', error);
+    res.status(500).json({ message: '获取考试题目解析失败' });
+  }
+});
+
+// ==========================================
 // 3.7 大作业资料打包下载
 // GET /api/resources/material/download/:courseId
 // 将 public/assignment/<courseId>/material 下所有文件打包为 zip 流式下载
@@ -735,9 +790,9 @@ app.get('/api/courses/:id/resources', async (req, res) => {
       hasHomeworkMaterial = matExists || solExists;
     } catch { hasHomeworkMaterial = false; }
 
-    // 检查该课程是否有真实的考试资料
+    // 检查该课程是否有真实的考试资料 (在 public/test/<courseId>/material 目录)
     let hasExamMaterial = false;
-    const examDir = path.resolve(__dirname, `../public/exam/${courseId}`);
+    const examDir = path.resolve(__dirname, `../public/test/${courseId}/material`);
     try {
       const files = await fsp.readdir(examDir);
       hasExamMaterial = files.length > 0;
@@ -904,6 +959,22 @@ app.get('/api/resources/:id', async (req, res) => {
       } catch { hasSolutions = false; }
     }
 
+    // 检查该课程是否有考试资料（试卷 + 解析）
+    let hasTestMaterial = false;
+    let hasTestSolutions = false;
+    if (resource.category === 'exam') {
+      const testMatDir = path.resolve(__dirname, `../public/test/${resource.courseId}/material`);
+      try {
+        const files = await fsp.readdir(testMatDir);
+        hasTestMaterial = files.length > 0;
+      } catch { hasTestMaterial = false; }
+      const testSolDir = path.resolve(__dirname, `../public/test/${resource.courseId}/solutions`);
+      try {
+        const files = await fsp.readdir(testSolDir);
+        hasTestSolutions = files.filter(f => f.toLowerCase().endsWith('.md')).length > 0;
+      } catch { hasTestSolutions = false; }
+    }
+
     const plans = await prisma.membershipPlan.findMany({ where: { isActive: true } });
 
     res.json({
@@ -923,6 +994,8 @@ app.get('/api/resources/:id', async (req, res) => {
       viewCount: resource.viewCount,
       hasMaterial,
       hasSolutions,
+      hasTestMaterial,
+      hasTestSolutions,
       plans,
     });
   } catch (error) {

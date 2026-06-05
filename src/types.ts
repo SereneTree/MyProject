@@ -167,5 +167,7 @@ export interface CourseResourceDetail {
   viewCount: number;
   hasMaterial: boolean;
   hasSolutions: boolean;
+  hasTestMaterial: boolean;
+  hasTestSolutions: boolean;
   plans: MembershipPlan[];
 }

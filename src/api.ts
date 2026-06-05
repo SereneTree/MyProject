@@ -78,6 +78,24 @@ export function getAssignmentSolutions(courseId: string) {
   );
 }
 
+export interface TestMaterialItem {
+  filename: string;
+  url: string;
+  size: number;
+}
+
+export function getTestMaterials(courseId: string) {
+  return request<{ data: { courseId: string; items: TestMaterialItem[] } }>(
+    `/api/test/${encodeURIComponent(courseId)}/materials`,
+  );
+}
+
+export function getTestSolutions(courseId: string) {
+  return request<{ data: { courseId: string; items: DocItem[] } }>(
+    `/api/test/${encodeURIComponent(courseId)}/solutions`,
+  );
+}
+
 export function getAssignments(params: { gradeId?: string; courseId?: string; q?: string }) {
   const search = new URLSearchParams();
   if (params.gradeId) search.set('gradeId', params.gradeId);
