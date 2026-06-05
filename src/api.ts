@@ -72,6 +72,12 @@ export async function fetchDocMarkdown(url: string): Promise<string> {
   return res.text();
 }
 
+export function getAssignmentSolutions(courseId: string) {
+  return request<{ data: { courseId: string; items: DocItem[] } }>(
+    `/api/assignment/${encodeURIComponent(courseId)}/solutions`,
+  );
+}
+
 export function getAssignments(params: { gradeId?: string; courseId?: string; q?: string }) {
   const search = new URLSearchParams();
   if (params.gradeId) search.set('gradeId', params.gradeId);

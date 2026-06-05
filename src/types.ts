@@ -166,5 +166,6 @@ export interface CourseResourceDetail {
   url: string | null;
   viewCount: number;
   hasMaterial: boolean;
+  hasSolutions: boolean;
   plans: MembershipPlan[];
 }

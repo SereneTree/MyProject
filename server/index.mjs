@@ -633,7 +633,29 @@ app.get('/api/assignments/:id', async (req, res) => {
 });
 
 // ==========================================
-// 3.6 大作业资料打包下载
+// 3.6 大作业题目解析列表
+// GET /api/assignment/:courseId/solutions
+// 扫描 public/assignment/<courseId>/solutions/ 下的 markdown 文件
+// ==========================================
+app.get('/api/assignment/:courseId/solutions', async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    // 安全校验
+    if (/[\/\\\.]/.test(courseId)) {
+      return res.status(400).json({ message: '非法 courseId' });
+    }
+    const rootDir = path.resolve(__dirname, '../public/assignment', courseId);
+    const urlPrefix = `/assignment/${encodeURIComponent(courseId)}`;
+    const items = await scanCourseDocs(rootDir, urlPrefix, 'solutions');
+    res.json({ data: { courseId, items } });
+  } catch (error) {
+    console.error('[assignment solutions]', error);
+    res.status(500).json({ message: '获取题目解析失败' });
+  }
+});
+
+// ==========================================
+// 3.7 大作业资料打包下载
 // GET /api/resources/material/download/:courseId
 // 将 public/assignment/<courseId>/material 下所有文件打包为 zip 流式下载
 // ==========================================
@@ -700,11 +722,34 @@ app.get('/api/courses/:id/resources', async (req, res) => {
       orderBy: [{ category: 'asc' }, { sortOrder: 'asc' }],
     });
 
+    // 检查该课程是否有真实的大作业资料（material 或 solutions 目录）
+    let hasHomeworkMaterial = false;
+    const assignmentBase = path.resolve(__dirname, `../public/assignment/${courseId}`);
+    try {
+      const matDir = path.join(assignmentBase, 'material');
+      const solDir = path.join(assignmentBase, 'solutions');
+      const [matExists, solExists] = await Promise.all([
+        fsp.readdir(matDir).then(f => f.length > 0).catch(() => false),
+        fsp.readdir(solDir).then(f => f.filter(x => x.toLowerCase().endsWith('.md')).length > 0).catch(() => false),
+      ]);
+      hasHomeworkMaterial = matExists || solExists;
+    } catch { hasHomeworkMaterial = false; }
+
+    // 检查该课程是否有真实的考试资料
+    let hasExamMaterial = false;
+    const examDir = path.resolve(__dirname, `../public/exam/${courseId}`);
+    try {
+      const files = await fsp.readdir(examDir);
+      hasExamMaterial = files.length > 0;
+    } catch { hasExamMaterial = false; }
+
     const categories = ['lecture', 'homework', 'exam', 'career'];
     const groups = categories.map((cat) => {
-      const items = resources
-        .filter((r) => r.category === cat)
-        .map((r) => {
+      let filtered = resources.filter((r) => r.category === cat);
+      // 如果没有实际资料，过滤掉对应分类的资源
+      if (cat === 'homework' && !hasHomeworkMaterial) filtered = [];
+      if (cat === 'exam' && !hasExamMaterial) filtered = [];
+      const items = filtered.map((r) => {
           const allowed = currentRank >= (memberRank[r.requiredLevel] || 0);
           return {
             id: r.id,
@@ -845,12 +890,18 @@ app.get('/api/resources/:id', async (req, res) => {
 
     // 检查该课程是否有可下载的大作业资料
     let hasMaterial = false;
+    let hasSolutions = false;
     if (resource.category === 'homework' && resource.subType === 'project') {
       const materialDir = path.resolve(__dirname, `../public/assignment/${resource.courseId}/material`);
       try {
         const files = await fsp.readdir(materialDir);
         hasMaterial = files.length > 0;
       } catch { hasMaterial = false; }
+      const solutionsDir = path.resolve(__dirname, `../public/assignment/${resource.courseId}/solutions`);
+      try {
+        const files = await fsp.readdir(solutionsDir);
+        hasSolutions = files.filter(f => f.toLowerCase().endsWith('.md')).length > 0;
+      } catch { hasSolutions = false; }
     }
 
     const plans = await prisma.membershipPlan.findMany({ where: { isActive: true } });
@@ -871,6 +922,7 @@ app.get('/api/resources/:id', async (req, res) => {
       url: allowed ? resource.url : null,
       viewCount: resource.viewCount,
       hasMaterial,
+      hasSolutions,
       plans,
     });
   } catch (error) {

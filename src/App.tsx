@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { BrowserRouter, Link, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { createOrder, fetchDocMarkdown, fetchMe, fetchNoteMarkdown, getAssignmentDetail, getAssignments, getCourseNotes, getCourseResourceDetail, getCourseResources, getDocsByCourse, getHomeResources, getMajors, getMembershipPlans, getUserCourses, loginWithPhone, submitConsultationLead, updateMe } from './api';
+import { createOrder, fetchDocMarkdown, fetchMe, fetchNoteMarkdown, getAssignmentDetail, getAssignments, getAssignmentSolutions, getCourseNotes, getCourseResourceDetail, getCourseResources, getDocsByCourse, getHomeResources, getMajors, getMembershipPlans, getUserCourses, loginWithPhone, submitConsultationLead, updateMe } from './api';
 import type { CourseNoteItem, DocItem, DocSection } from './api';
 import type { Assignment, AssignmentDetail, Course, CourseResourceCategory, CourseResourceDetail, CourseResourceGroup, CourseResourceItem, Grade, Major, MajorCourse, MemberLevel, MembershipPlan, MeUser, Profile } from './types';
 
@@ -1013,6 +1013,101 @@ function inferDocsSection(title: string): DocSection | null {
 }
 
 // ==========================================
+// 大作业题目解析展示组件
+// ==========================================
+function AssignmentSolutionsList({ courseId }: { courseId: string }) {
+  const [items, setItems] = useState<DocItem[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [contents, setContents] = useState<Record<string, string>>({});
+  const [loadingKeys, setLoadingKeys] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getAssignmentSolutions(courseId)
+      .then((res) => {
+        if (!cancelled) setItems(res.data.items);
+      })
+      .catch(() => {
+        if (!cancelled) setItems([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [courseId]);
+
+  const handleExpand = async (filenames: string | string[]) => {
+    const keys = Array.isArray(filenames) ? filenames : [filenames];
+    for (const key of keys) {
+      if (contents[key] || loadingKeys.has(key)) continue;
+      const it = items?.find((n) => n.filename === key);
+      if (!it) continue;
+      setLoadingKeys((prev) => new Set(prev).add(key));
+      try {
+        const md = await fetchDocMarkdown(it.url);
+        setContents((prev) => ({ ...prev, [key]: md }));
+      } catch {
+        setContents((prev) => ({ ...prev, [key]: '加载失败，请重试。' }));
+      } finally {
+        setLoadingKeys((prev) => {
+          const next = new Set(prev);
+          next.delete(key);
+          return next;
+        });
+      }
+    }
+  };
+
+  if (loading) return <Spin />;
+  if (!items || items.length === 0) return <Empty description="暂无题目解析" />;
+
+  return (
+    <Collapse
+      accordion
+      onChange={handleExpand}
+      items={items.map((it) => ({
+        key: it.filename,
+        label: (
+          <Space wrap>
+            {it.isReadme ? (
+              <Tag color="green">总览</Tag>
+            ) : Number.isFinite(it.order) ? (
+              <Tag color="cyan">第 {it.order} 篇</Tag>
+            ) : (
+              <Tag>文档</Tag>
+            )}
+            <Text strong>{it.title}</Text>
+            {it.summary && (
+              <Text type="secondary" style={{ fontSize: 12 }}>{it.summary}</Text>
+            )}
+          </Space>
+        ),
+        extra: (
+          <Button
+            type="link"
+            size="small"
+            icon={<DownloadOutlined />}
+            href={it.url}
+            download={it.filename}
+            onClick={(e) => e.stopPropagation()}
+          >下载</Button>
+        ),
+        children: loadingKeys.has(it.filename) ? (
+          <Spin />
+        ) : contents[it.filename] ? (
+          <div className="markdown-body">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{contents[it.filename]}</ReactMarkdown>
+          </div>
+        ) : (
+          <Text type="secondary">点击展开加载内容...</Text>
+        ),
+      }))}
+    />
+  );
+}
+
+// ==========================================
 // 课程资源详情页
 // ==========================================
 function CourseResourceDetailPage({ memberLevel, profile, isLoggedIn }: { memberLevel: MemberLevel; profile: Profile; isLoggedIn: boolean }) {
@@ -1140,6 +1235,15 @@ function CourseResourceDetailPage({ memberLevel, profile, isLoggedIn }: { member
               style={{ marginTop: 16 }}
             >
               <CourseDocsList section={docsSection} courseId={detail.courseId} />
+            </Card>
+          )}
+          {!detail.locked && detail.hasSolutions && (
+            <Card
+              className="detail-module-card"
+              title={<Space><FormOutlined /> 题目解析与知识点讲解</Space>}
+              style={{ marginTop: 16 }}
+            >
+              <AssignmentSolutionsList courseId={detail.courseId} />
             </Card>
           )}
         </Col>
