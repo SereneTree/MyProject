@@ -1259,10 +1259,10 @@ function CourseResourceDetailPage({ memberLevel, profile, isLoggedIn }: { member
       .catch(() => setUnlockedGradeIds(null));
   }, [isLoggedIn, profile.phone]);
 
-  // URL 直达兑底拦截：资源所属年级未解锁则踢回首页
+  // URL 直达兑底拦截：资源所属年级未解锁则踢回首页（免费资源除外）
   useEffect(() => {
     if (!detail || !unlockedGradeIds) return;
-    if (!unlockedGradeIds.includes(detail.gradeId)) {
+    if (!unlockedGradeIds.includes(detail.gradeId) && detail.requiredLevel !== 'free') {
       message.warning(`《${detail.gradeName}》年级未解锁，无法查看详情。`);
       navigate('/', { replace: true });
     }
