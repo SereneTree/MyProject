@@ -332,7 +332,7 @@ function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profi
     <div>
       <section className="hero">
         <div>
-          <Title level={1}>将每一次课程作业，<br /><span>变成绩点提升和未来职业竞争力</span></Title>
+          <Title level={1}>将每一门课程，<br /><span>变成绩点提升和未来职业竞争力</span></Title>
           <Paragraph>覆盖计算机专业核心课程，从参考解析、知识点提炼，到企业应用和 AI 实现，帮学生真正理解、掌握并迁移到未来发展。</Paragraph>
         </div>
         <Card className="hero-card">
