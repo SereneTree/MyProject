@@ -1,5 +1,5 @@
-import { BookOutlined, CrownOutlined, DownloadOutlined, EyeOutlined, FileTextOutlined, FormOutlined, LockOutlined, ProfileOutlined, ReadOutlined, RocketOutlined, UserOutlined } from '@ant-design/icons';
-import { Alert, Badge, Button, Card, Col, Collapse, Divider, Empty, Form, Input, Layout, List, Menu, message, Radio, Row, Select, Space, Spin, Statistic, Table, Tag, Typography } from 'antd';
+import { BookOutlined, CrownOutlined, DownloadOutlined, EyeOutlined, FileTextOutlined, FormOutlined, LockOutlined, ProfileOutlined, ReadOutlined, RocketOutlined, TeamOutlined, TrophyOutlined, UserOutlined } from '@ant-design/icons';
+import { Alert, Badge, Button, Card, Col, Collapse, Divider, Empty, Form, Input, Layout, List, Menu, message, Radio, Row, Select, Space, Spin, Statistic, Table, Tabs, Tag, Timeline, Typography } from 'antd';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -103,6 +103,7 @@ function AppShell() {
         </Link>
         <Menu mode="horizontal" className="nav" selectedKeys={[getSelectedNavKey(location.pathname)]} items={[
           { key: 'home', label: <Link to="/">学习资源</Link> },
+          { key: 'career-planning', label: <Link to="/career-planning">生涯规划</Link> },
           { key: 'consultation', label: <Link to="/consultation">咨询服务</Link> }
         ]} />
         <Space className="header-actions" size={10}>
@@ -136,6 +137,7 @@ function AppShell() {
               />
             )}
           />
+          <Route path="/career-planning" element={<CareerPlanningPage />} />
           <Route path="/consultation" element={<ConsultationPage profile={profile} />} />
           <Route path="/about" element={<AboutPage />} />
         </Routes>
@@ -147,6 +149,7 @@ function AppShell() {
 
 function getSelectedNavKey(pathname: string) {
   if (pathname === '/' || pathname.startsWith('/assignments')) return 'home';
+  if (pathname.startsWith('/career-planning')) return 'career-planning';
   if (pathname.startsWith('/consultation')) return 'consultation';
   if (pathname.startsWith('/about')) return 'about';
   return '';
@@ -1856,6 +1859,170 @@ function maskPhone(phone?: string) {
 function formatGrade(grade?: string) {
   if (!grade) return '待完善';
   return gradeOptions.find((item) => item.value === grade)?.label || '待完善';
+}
+
+/* ======================== 生涯规划页面 ======================== */
+function CareerPlanningPage() {
+  const navigate = useNavigate();
+
+  const postgraduateData = [
+    { title: '保研时间线全攻略', desc: '从大一到大三的完整保研规划路径，包括成绩、科研、竞赛准备节点', tag: '规划', color: 'blue' },
+    { title: '保研材料清单与写作指导', desc: '个人陈述、推荐信、简历等核心材料的模板与撰写技巧', tag: '材料', color: 'green' },
+    { title: '夏令营/预推免申请策略', desc: '如何选择目标院校、提高入营率、面试表现加分项', tag: '申请', color: 'purple' },
+    { title: '计算机方向保研面试高频问题', desc: '数据结构、操作系统、项目经验等面试常见问题梳理', tag: '面试', color: 'orange' },
+    { title: '保研信息差速递（持续更新）', desc: '各校夏令营开放时间、往年数据、最新政策变动汇总', tag: '动态', color: 'red' },
+  ];
+
+  const studyAbroadData = [
+    { title: '留学选校定位方法论', desc: '根据GPA、科研、实习等背景，科学定位冲刺/主申/保底院校', tag: '定位', color: 'blue' },
+    { title: 'CS方向留学申请时间线', desc: '从标化考试到文书提交的完整时间规划（美/英/港/新）', tag: '规划', color: 'green' },
+    { title: '文书写作与CV打造', desc: 'SOP/PS撰写逻辑框架、CV排版技巧、推荐人选择策略', tag: '文书', color: 'purple' },
+    { title: 'GRE/TOEFL/IELTS备考指南', desc: '高效备考方法、资料推荐和分数目标设定', tag: '标化', color: 'orange' },
+    { title: '最新留学申请动态', desc: '各校Deadline更新、录取数据分析、政策变化解读', tag: '动态', color: 'red' },
+  ];
+
+  const graduateExamData = [
+    { title: '考研院校与方向选择', desc: '结合自身实力与目标，科学选择目标院校和研究方向', tag: '择校', color: 'blue' },
+    { title: '408统考全年复习规划', desc: '数据结构/组成原理/操作系统/计算机网络四科时间分配与阶段目标', tag: '规划', color: 'green' },
+    { title: '数学与英语备考策略', desc: '高数/线代/概率+英语一/英语二 分阶段备考方法与资料推荐', tag: '公共课', color: 'purple' },
+    { title: '考研复试准备指南', desc: '机试训练、专业面试、英语口试的准备方法', tag: '复试', color: 'orange' },
+    { title: '考研最新资讯', desc: '报名时间、大纲变化、各校复试线预测等实时更新', tag: '动态', color: 'red' },
+  ];
+
+  const internshipData = [
+    { title: '大厂实习申请全流程', desc: '从简历投递到Offer接收的完整链路，含时间节点与注意事项', tag: '流程', color: 'blue' },
+    { title: '技术面试准备路线图', desc: '算法/系统设计/项目深挖的分阶段准备策略', tag: '面试', color: 'green' },
+    { title: '简历与项目包装指南', desc: '如何用STAR法则描述项目经历，突出技术亮点', tag: '简历', color: 'purple' },
+    { title: '互联网行业岗位解读', desc: '后端/前端/算法/数据/测试等岗位要求、发展路径分析', tag: '岗位', color: 'orange' },
+    { title: '实习招聘日历', desc: '各大厂春招/秋招/日常实习时间线与内推渠道汇总', tag: '动态', color: 'red' },
+  ];
+
+  const studentCases = [
+    { name: '张同学', school: '某211计算机', achievement: '成功保研至清华大学计算机系', period: '2023届', story: '大二开始规划，GPA排名前5%，两段科研经历+一篇论文，夏令营拿到清华、北大、浙大offer。', avatar: '🎓' },
+    { name: '李同学', school: '某双非软件工程', achievement: '拿到CMU MSCS全奖录取', period: '2023届', story: '从双非起步，通过科研实习+高质量推荐信+精准选校策略，逆袭拿到CMU全奖。', avatar: '🌏' },
+    { name: '王同学', school: '某985信息学院', achievement: '秋招拿到字节跳动SP Offer', period: '2024届', story: '大三两段大厂实习，系统化刷题+项目沉淀，最终斩获字节、腾讯、阿里多个SP。', avatar: '💼' },
+    { name: '赵同学', school: '某211数学系', achievement: '跨考上岸浙大计算机', period: '2024届', story: '数学系转码，408零基础用8个月系统备考，初试400+，复试机试满分。', avatar: '📚' },
+    { name: '陈同学', school: '某普通一本CS', achievement: '香港科技大学MSc录取', period: '2024届', story: '普通一本背景，通过高GPA+实习经历+精心打磨的文书，成功申请港科大。', avatar: '🏆' },
+  ];
+
+  const renderResourceList = (data: typeof postgraduateData) => (
+    <List
+      dataSource={data}
+      renderItem={(item) => (
+        <List.Item>
+          <Card className="career-resource-card" hoverable>
+            <div className="career-resource-header">
+              <Tag color={item.color}>{item.tag}</Tag>
+              <Text className="career-resource-title" strong>{item.title}</Text>
+            </div>
+            <Paragraph type="secondary" className="career-resource-desc">{item.desc}</Paragraph>
+          </Card>
+        </List.Item>
+      )}
+    />
+  );
+
+  const tabItems = [
+    {
+      key: 'postgraduate',
+      label: <span><TrophyOutlined /> 保研专区</span>,
+      children: (
+        <div className="career-tab-content">
+          <div className="career-section-header">
+            <Title level={4}>保研专区</Title>
+            <Paragraph type="secondary">为目标保研的同学提供从规划到录取的全链路资料与信息</Paragraph>
+          </div>
+          {renderResourceList(postgraduateData)}
+        </div>
+      ),
+    },
+    {
+      key: 'abroad',
+      label: <span><RocketOutlined /> 留学专区</span>,
+      children: (
+        <div className="career-tab-content">
+          <div className="career-section-header">
+            <Title level={4}>留学专区</Title>
+            <Paragraph type="secondary">涵盖选校定位、标化备考、文书打造到申请提交的全流程指导</Paragraph>
+          </div>
+          {renderResourceList(studyAbroadData)}
+        </div>
+      ),
+    },
+    {
+      key: 'exam',
+      label: <span><ReadOutlined /> 考研专区</span>,
+      children: (
+        <div className="career-tab-content">
+          <div className="career-section-header">
+            <Title level={4}>考研专区</Title>
+            <Paragraph type="secondary">从择校到复试的一站式考研规划与备考资料</Paragraph>
+          </div>
+          {renderResourceList(graduateExamData)}
+        </div>
+      ),
+    },
+    {
+      key: 'internship',
+      label: <span><ProfileOutlined /> 实习专区</span>,
+      children: (
+        <div className="career-tab-content">
+          <div className="career-section-header">
+            <Title level={4}>实习专区</Title>
+            <Paragraph type="secondary">助你拿到心仪的大厂实习Offer，积累核心竞争力</Paragraph>
+          </div>
+          {renderResourceList(internshipData)}
+        </div>
+      ),
+    },
+    {
+      key: 'followup',
+      label: <span><TeamOutlined /> 长期随访</span>,
+      children: (
+        <div className="career-tab-content">
+          <div className="career-section-header">
+            <Title level={4}>长期随访 · 学员成长故事</Title>
+            <Paragraph type="secondary">记录每一位同学的规划与成长历程，见证努力到收获的完整链路</Paragraph>
+          </div>
+          <Row gutter={[16, 16]}>
+            {studentCases.map((c) => (
+              <Col xs={24} md={12} key={c.name}>
+                <Card className="career-case-card" hoverable>
+                  <div className="career-case-header">
+                    <span className="career-case-avatar">{c.avatar}</span>
+                    <div>
+                      <Text strong>{c.name}</Text>
+                      <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>{c.school} · {c.period}</Text>
+                    </div>
+                  </div>
+                  <div className="career-case-achievement">
+                    <Tag color="blue">{c.achievement}</Tag>
+                  </div>
+                  <Paragraph type="secondary" className="career-case-story">{c.story}</Paragraph>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+          <Card className="career-followup-cta" style={{ marginTop: 24 }}>
+            <div style={{ textAlign: 'center' }}>
+              <Title level={5}>想了解更多学员案例或获取专属规划？</Title>
+              <Button type="primary" size="large" onClick={() => navigate('/consultation')}>立即预约 1v1 咨询</Button>
+            </div>
+          </Card>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <div className="career-planning-page">
+      <div className="career-hero">
+        <Title level={2}>生涯规划</Title>
+        <Paragraph>无论你选择保研、留学、考研还是就业，这里都有为你量身整理的路径资料与真实案例</Paragraph>
+      </div>
+      <Tabs defaultActiveKey="postgraduate" items={tabItems} className="career-tabs" size="large" />
+    </div>
+  );
 }
 
 function ConsultationPage({ profile }: { profile: Profile }) {
