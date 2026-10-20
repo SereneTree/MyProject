@@ -318,6 +318,10 @@ app.get('/api/docs/:section/courses/:courseId', async (req, res) => {
 
 const memberRank = { free: 0, study: 1, career: 2 };
 
+// 免费开放模式：true 时所有资源接口不做会员等级过滤，locked 恒为 false、内容全量返回（与前端 App.tsx 的 FREE_OPEN_MODE 对应）。
+// 如需恢复会员付费模式，将其改回 false 即可。
+const FREE_OPEN_MODE = true;
+
 // ==========================================
 // 用户对象统一序列化（登录/me/profile/orders 统一返回这一份字段）
 // ==========================================
@@ -346,7 +350,7 @@ async function serializeUser(user) {
     gradeName,
     memberLevel: user.memberLevel,
     memberExpiresAt: user.memberExpiresAt,
-    unlockedGradeIds: Array.isArray(user.accessibleGradeIds) ? user.accessibleGradeIds : []
+    unlockedGradeIds: FREE_OPEN_MODE ? [] : (Array.isArray(user.accessibleGradeIds) ? user.accessibleGradeIds : [])
   };
 }
 
@@ -565,7 +569,7 @@ app.get('/api/assignments/:id', async (req, res) => {
   try {
     const assignmentId = req.params.id;
     const level = String(req.query.level || 'free');
-    const currentRank = memberRank[level] ?? 0;
+    const currentRank = FREE_OPEN_MODE ? Number.POSITIVE_INFINITY : (memberRank[level] ?? 0);
 
     // 获取作业基础信息
     const assignment = await prisma.assignment.findUnique({
@@ -762,7 +766,7 @@ app.get('/api/courses/:id/resources', async (req, res) => {
   try {
     const courseId = req.params.id;
     const level = String(req.query.level || 'free');
-    const currentRank = memberRank[level] ?? 0;
+    const currentRank = FREE_OPEN_MODE ? Number.POSITIVE_INFINITY : (memberRank[level] ?? 0);
 
     const course = await prisma.course.findUnique({
       where: { id: courseId },
@@ -926,7 +930,7 @@ app.get('/api/resources/:id', async (req, res) => {
   try {
     const resourceId = req.params.id;
     const level = String(req.query.level || 'free');
-    const currentRank = memberRank[level] ?? 0;
+    const currentRank = FREE_OPEN_MODE ? Number.POSITIVE_INFINITY : (memberRank[level] ?? 0);
 
     const resource = await prisma.courseResource.findUnique({
       where: { id: resourceId },
@@ -1514,7 +1518,7 @@ app.get('/api/users/courses', async (req, res) => {
             majorName: null,
             gradeId: user.gradeId,
             gradeName: user.grade?.name || null,
-            unlockedGradeIds: Array.isArray(user.accessibleGradeIds) ? user.accessibleGradeIds : []
+            unlockedGradeIds: FREE_OPEN_MODE ? [] : (Array.isArray(user.accessibleGradeIds) ? user.accessibleGradeIds : [])
           },
           courses: []
         }
@@ -1552,7 +1556,7 @@ app.get('/api/users/courses', async (req, res) => {
           majorName: user.majorRef?.name || user.major || null,
           gradeId: user.gradeId,
           gradeName: user.grade?.name || null,
-          unlockedGradeIds: Array.isArray(user.accessibleGradeIds) ? user.accessibleGradeIds : []
+          unlockedGradeIds: FREE_OPEN_MODE ? [] : (Array.isArray(user.accessibleGradeIds) ? user.accessibleGradeIds : [])
         },
         courses
       }

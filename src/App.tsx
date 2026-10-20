@@ -24,6 +24,10 @@ const memberColors: Record<MemberLevel, string> = {
   career: 'gold'
 };
 
+// 免费开放模式：所有学习资料无需登录注册即可免费查看（登录验证、会员等级、年级锁定全部放行）。
+// 如需恢复会员付费模式，将其改回 false 即可，原登录/会员/年级权限逻辑均已保留。
+const FREE_OPEN_MODE = true;
+
 const gradeOptions = [
   { value: 'freshman_fall', label: '大一上' },
   { value: 'freshman_spring', label: '大一下' },
@@ -53,8 +57,11 @@ function useLocalState<T>(key: string, fallback: T) {
 
 function AppShell() {
   const location = useLocation();
-  const [isLoggedIn, setIsLoggedIn] = useLocalState('isLoggedIn', false);
-  const [memberLevel, setMemberLevel] = useLocalState<MemberLevel>('memberLevel', 'free');
+  const [isLoggedInRaw, setIsLoggedIn] = useLocalState('isLoggedIn', false);
+  const [memberLevelRaw, setMemberLevel] = useLocalState<MemberLevel>('memberLevel', 'free');
+  // 免费开放模式下，登录状态与会员等级强制放行（全站视为已登录的职场进阶版用户）
+  const isLoggedIn = FREE_OPEN_MODE ? true : isLoggedInRaw;
+  const memberLevel: MemberLevel = FREE_OPEN_MODE ? 'career' : memberLevelRaw;
   const [memberExpiresAt, setMemberExpiresAt] = useLocalState<string | null>('memberExpiresAt', null);
   const [profile, setProfile] = useLocalState<Profile>('profile', {
     nickname: '未命名同学',
@@ -113,7 +120,7 @@ function AppShell() {
           </Link>
           <Link to="/membership" className={`member-pill member-pill-${memberLevel}`}>
             <CrownOutlined />
-            <span>{memberNames[memberLevel]}</span>
+            <span>{FREE_OPEN_MODE ? '全站资料免费开放' : memberNames[memberLevel]}</span>
           </Link>
         </Space>
       </Header>
@@ -188,7 +195,7 @@ function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profi
 
   // 登录后拉取当前用户的专业课程范围
   useEffect(() => {
-    if (!isLoggedIn || !profile.phone) {
+    if (FREE_OPEN_MODE || !isLoggedIn || !profile.phone) {
       setMajorCourseIds(null);
       setMajorName('');
       setUnlockedGradeIds(null);
@@ -682,7 +689,7 @@ function AssignmentPage({ memberLevel, profile, isLoggedIn }: { memberLevel: Mem
 
   // 拉取年级访问权限（仅登录后）
   useEffect(() => {
-    if (!isLoggedIn || !profile.phone) {
+    if (FREE_OPEN_MODE || !isLoggedIn || !profile.phone) {
       setUnlockedGradeIds(null);
       return;
     }
@@ -1250,7 +1257,7 @@ function CourseResourceDetailPage({ memberLevel, profile, isLoggedIn }: { member
   }, [id, memberLevel]);
 
   useEffect(() => {
-    if (!isLoggedIn || !profile.phone) {
+    if (FREE_OPEN_MODE || !isLoggedIn || !profile.phone) {
       setUnlockedGradeIds(null);
       return;
     }
@@ -1456,6 +1463,21 @@ function MembershipPage({ memberLevel, profile, syncFromMe }: { memberLevel: Mem
     }
   }
 
+  // 免费开放模式下，会员体系暂停，展示开放说明
+  if (FREE_OPEN_MODE) {
+    return (
+      <div>
+        <Title>会员与权益</Title>
+        <Alert
+          type="success"
+          showIcon
+          message="全站资料免费开放"
+          description="平台所有学习资料（课件讲义、大作业解析、历年考试、职场展望、课程笔记与面试资料）无需登录注册、无需购买会员，可直接免费查看。原会员体系已暂停。"
+        />
+      </div>
+    );
+  }
+
   return (
     <div>
       <Title>会员与权益</Title>
@@ -1563,7 +1585,7 @@ function ProfilePage({
 
   // 登录后，根据手机号拉取该用户专业下的课程
   useEffect(() => {
-    if (!isLoggedIn || !profile.phone) {
+    if (FREE_OPEN_MODE || !isLoggedIn || !profile.phone) {
       setMajorCourses([]);
       return;
     }
@@ -1625,6 +1647,21 @@ function ProfilePage({
     } finally {
       setResetting(false);
     }
+  }
+
+  // 免费开放模式下，个人中心简化为开放说明页（登录/资料/会员代码保留，恢复模式后自动可用）
+  if (FREE_OPEN_MODE) {
+    return (
+      <Row justify="center" className="login-page">
+        <Col xs={24} md={20} lg={16}>
+          <Card className="login-card">
+            <Title level={3}>全站资料免费开放</Title>
+            <Paragraph>平台所有学习资料无需登录注册即可免费查看。个性化资料与课程推荐等功能将在登录体系恢复后开放。</Paragraph>
+            <Button type="primary" size="large" onClick={() => navigate('/')}>去查看学习资源</Button>
+          </Card>
+        </Col>
+      </Row>
+    );
   }
 
   if (!isLoggedIn) {
@@ -2017,8 +2054,16 @@ function CareerPlanningPage() {
   return (
     <div className="career-planning-page">
       <div className="career-hero">
-        <Title level={2}>生涯规划</Title>
+        <div className="career-hero-badge">🎯 生涯规划中心</div>
+        <Title level={2}>为你的未来，<span className="career-hero-highlight">量身定制路径</span></Title>
         <Paragraph>无论你选择保研、留学、考研还是就业，这里都有为你量身整理的路径资料与真实案例</Paragraph>
+        <div className="career-hero-stats">
+          <div className="career-hero-stat"><span className="career-hero-stat-num">5</span><span className="career-hero-stat-label">规划方向</span></div>
+          <div className="career-hero-stat-divider" />
+          <div className="career-hero-stat"><span className="career-hero-stat-num">200+</span><span className="career-hero-stat-label">精选资料</span></div>
+          <div className="career-hero-stat-divider" />
+          <div className="career-hero-stat"><span className="career-hero-stat-num">50+</span><span className="career-hero-stat-label">成功案例</span></div>
+        </div>
       </div>
       <Tabs defaultActiveKey="postgraduate" items={tabItems} className="career-tabs" size="large" />
     </div>

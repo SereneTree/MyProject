@@ -1,0 +1,343 @@
+{
+  "exportedAt": "2026-10-20T12:39:05.834Z",
+  "reason": "免费开放模式：清除用户账户数据（登录/权限验证/账户记录）",
+  "users": [
+    {
+      "id": "1158cde5-e965-49d6-b00d-689ed05b4049",
+      "phone": "13900000101",
+      "nickname": "信息小赵",
+      "school": "海南大学",
+      "major": "信息与计算科学",
+      "majorId": "info_computing",
+      "gradeId": "junior_fall",
+      "memberLevel": "career",
+      "memberExpiresAt": "2027-05-30T16:54:01.000Z",
+      "createdAt": "2026-05-24T06:44:49.523Z",
+      "updatedAt": "2026-06-04T06:26:37.461Z",
+      "deletedAt": null,
+      "accessibleGradeIds": [
+        "junior_fall",
+        "sophomore_fall"
+      ]
+    },
+    {
+      "id": "16095088-db1c-42e9-a3cc-630ebd105cf2",
+      "phone": "13900000202",
+      "nickname": "媒体小郑",
+      "school": "海南师范大学",
+      "major": "数字媒体",
+      "majorId": "digital_media",
+      "gradeId": "sophomore_fall",
+      "memberLevel": "free",
+      "memberExpiresAt": null,
+      "createdAt": "2026-05-24T06:44:49.528Z",
+      "updatedAt": "2026-06-04T06:26:37.469Z",
+      "deletedAt": null,
+      "accessibleGradeIds": [
+        "sophomore_fall",
+        "freshman_spring",
+        "freshman_fall",
+        "senior_fall"
+      ]
+    },
+    {
+      "id": "177baccc-7ca4-4172-9cac-7eeb3d43e62b",
+      "phone": "13900000305",
+      "nickname": "电子小韩",
+      "school": "海南大学",
+      "major": "电子信息工程",
+      "majorId": "electronic_info",
+      "gradeId": "sophomore_spring",
+      "memberLevel": "free",
+      "memberExpiresAt": null,
+      "createdAt": "2026-05-24T06:44:49.533Z",
+      "updatedAt": "2026-06-04T06:26:37.479Z",
+      "deletedAt": null,
+      "accessibleGradeIds": [
+        "sophomore_spring",
+        "sophomore_fall"
+      ]
+    },
+    {
+      "id": "1964e94d-e8e6-40c0-a5d8-dbe32db70195",
+      "phone": "13900000304",
+      "nickname": "电子小沈",
+      "school": "海口经济学院",
+      "major": "电子信息工程",
+      "majorId": "electronic_info",
+      "gradeId": "senior_fall",
+      "memberLevel": "free",
+      "memberExpiresAt": null,
+      "createdAt": "2026-05-24T06:44:49.533Z",
+      "updatedAt": "2026-06-04T06:26:37.478Z",
+      "deletedAt": null,
+      "accessibleGradeIds": [
+        "senior_fall",
+        "freshman_fall",
+        "junior_fall",
+        "sophomore_fall"
+      ]
+    },
+    {
+      "id": "1b3cf81b-1693-40a6-8f04-5789ff1b6846",
+      "phone": "13900000103",
+      "nickname": "信息小孙",
+      "school": "海南热带海洋学院",
+      "major": "信息与计算科学",
+      "majorId": "info_computing",
+      "gradeId": "junior_spring",
+      "memberLevel": "free",
+      "memberExpiresAt": null,
+      "createdAt": "2026-05-24T06:44:49.525Z",
+      "updatedAt": "2026-06-04T06:26:37.465Z",
+      "deletedAt": null,
+      "accessibleGradeIds": [
+        "junior_spring",
+        "freshman_fall"
+      ]
+    },
+    {
+      "id": "22bc3584-dc74-4ebe-b3c6-a5b6de634590",
+      "phone": "13900000104",
+      "nickname": "信息小李",
+      "school": "海南医学院",
+      "major": "信息与计算科学",
+      "majorId": "info_computing",
+      "gradeId": "senior_fall",
+      "memberLevel": "free",
+      "memberExpiresAt": null,
+      "createdAt": "2026-05-24T06:44:49.526Z",
+      "updatedAt": "2026-06-04T06:26:37.466Z",
+      "deletedAt": null,
+      "accessibleGradeIds": [
+        "senior_fall",
+        "freshman_spring"
+      ]
+    },
+    {
+      "id": "3cec75c0-431d-45fd-be30-633fc1b7e703",
+      "phone": "13900000303",
+      "nickname": "电子小蒋",
+      "school": "海南热带海洋学院",
+      "major": "电子信息工程",
+      "majorId": "electronic_info",
+      "gradeId": "junior_spring",
+      "memberLevel": "free",
+      "memberExpiresAt": null,
+      "createdAt": "2026-05-24T06:44:49.532Z",
+      "updatedAt": "2026-06-04T06:26:37.476Z",
+      "deletedAt": null,
+      "accessibleGradeIds": [
+        "junior_spring",
+        "senior_fall",
+        "junior_fall",
+        "senior_spring"
+      ]
+    },
+    {
+      "id": "45cbb311-51f6-48a8-b0fb-6c5840d95051",
+      "phone": "13900000105",
+      "nickname": "信息小周",
+      "school": "海南大学",
+      "major": "信息与计算科学",
+      "majorId": "info_computing",
+      "gradeId": "sophomore_spring",
+      "memberLevel": "free",
+      "memberExpiresAt": null,
+      "createdAt": "2026-05-24T06:44:49.526Z",
+      "updatedAt": "2026-06-04T06:26:37.467Z",
+      "deletedAt": null,
+      "accessibleGradeIds": [
+        "sophomore_spring",
+        "senior_spring",
+        "freshman_fall",
+        "junior_spring"
+      ]
+    },
+    {
+      "id": "50dda4ef-3dba-486f-a210-e3dc718cc688",
+      "phone": "13900000301",
+      "nickname": "电子小褚",
+      "school": "海南大学",
+      "major": "电子信息工程",
+      "majorId": "electronic_info",
+      "gradeId": "junior_fall",
+      "memberLevel": "free",
+      "memberExpiresAt": null,
+      "createdAt": "2026-05-24T06:44:49.531Z",
+      "updatedAt": "2026-06-04T06:26:37.474Z",
+      "deletedAt": null,
+      "accessibleGradeIds": [
+        "junior_fall",
+        "freshman_fall",
+        "senior_spring",
+        "senior_fall"
+      ]
+    },
+    {
+      "id": "6a17d1ea-523d-47ec-ad24-890f1b8611d8",
+      "phone": "13900000205",
+      "nickname": "媒体小陈",
+      "school": "海南大学",
+      "major": "数字媒体",
+      "majorId": "digital_media",
+      "gradeId": "freshman_spring",
+      "memberLevel": "free",
+      "memberExpiresAt": null,
+      "createdAt": "2026-05-24T06:44:49.530Z",
+      "updatedAt": "2026-06-04T06:26:37.472Z",
+      "deletedAt": null,
+      "accessibleGradeIds": [
+        "freshman_spring",
+        "freshman_fall",
+        "junior_spring"
+      ]
+    },
+    {
+      "id": "75db5e39-dae1-4146-83d6-8a1c3a4ee79f",
+      "phone": "13900000302",
+      "nickname": "电子小卫",
+      "school": "海南师范大学",
+      "major": "电子信息工程",
+      "majorId": "electronic_info",
+      "gradeId": "sophomore_fall",
+      "memberLevel": "free",
+      "memberExpiresAt": null,
+      "createdAt": "2026-05-24T06:44:49.531Z",
+      "updatedAt": "2026-06-04T06:26:37.475Z",
+      "deletedAt": null,
+      "accessibleGradeIds": [
+        "sophomore_fall",
+        "senior_fall",
+        "junior_spring",
+        "senior_spring"
+      ]
+    },
+    {
+      "id": "81777d7d-3cd2-45f8-bc42-2456fd174eeb",
+      "phone": "13900000203",
+      "nickname": "媒体小王",
+      "school": "海南科技职业学院",
+      "major": "数字媒体",
+      "majorId": "digital_media",
+      "gradeId": "junior_spring",
+      "memberLevel": "free",
+      "memberExpiresAt": null,
+      "createdAt": "2026-05-24T06:44:49.528Z",
+      "updatedAt": "2026-06-04T06:26:37.470Z",
+      "deletedAt": null,
+      "accessibleGradeIds": [
+        "junior_spring",
+        "senior_fall",
+        "sophomore_fall"
+      ]
+    },
+    {
+      "id": "a316f7e5-18b7-4e31-a257-1bb769173fc5",
+      "phone": "13900000204",
+      "nickname": "媒体小冯",
+      "school": "三亚学院",
+      "major": "数字媒体",
+      "majorId": "digital_media",
+      "gradeId": "senior_fall",
+      "memberLevel": "free",
+      "memberExpiresAt": null,
+      "createdAt": "2026-05-24T06:44:49.529Z",
+      "updatedAt": "2026-06-04T06:26:37.471Z",
+      "deletedAt": null,
+      "accessibleGradeIds": [
+        "senior_fall",
+        "junior_fall",
+        "freshman_fall",
+        "junior_spring"
+      ]
+    },
+    {
+      "id": "c2626de4-f418-4b39-8091-830902373cad",
+      "phone": "13900000102",
+      "nickname": "信息小钱",
+      "school": "海南师范大学",
+      "major": "信息与计算科学",
+      "majorId": "info_computing",
+      "gradeId": "sophomore_fall",
+      "memberLevel": "free",
+      "memberExpiresAt": null,
+      "createdAt": "2026-05-24T06:44:49.524Z",
+      "updatedAt": "2026-06-04T06:26:37.464Z",
+      "deletedAt": null,
+      "accessibleGradeIds": [
+        "sophomore_fall",
+        "freshman_fall",
+        "senior_spring",
+        "junior_spring"
+      ]
+    },
+    {
+      "id": "dace94de-1399-4ad5-9a84-d25deb9aff93",
+      "phone": "13900000201",
+      "nickname": "媒体小吴",
+      "school": "海南大学",
+      "major": "数字媒体",
+      "majorId": "digital_media",
+      "gradeId": "junior_fall",
+      "memberLevel": "free",
+      "memberExpiresAt": null,
+      "createdAt": "2026-05-24T06:44:49.527Z",
+      "updatedAt": "2026-06-04T06:26:37.468Z",
+      "deletedAt": null,
+      "accessibleGradeIds": [
+        "junior_fall",
+        "senior_fall",
+        "freshman_spring",
+        "junior_spring"
+      ]
+    }
+  ],
+  "orders": [],
+  "favorites": [],
+  "loginRecords": [],
+  "consultationLeads": [
+    {
+      "id": "lead-1792498545481",
+      "userId": null,
+      "name": "信息小赵",
+      "contact": "13900000101",
+      "school": "海南大学",
+      "major": "信息与计算科学",
+      "gradeId": null,
+      "goal": "实习与就业",
+      "description": "111",
+      "status": "new",
+      "createdAt": "2026-10-20T12:15:45.482Z",
+      "updatedAt": "2026-10-20T12:15:45.482Z"
+    },
+    {
+      "id": "lead-1792498560770",
+      "userId": null,
+      "name": "信息小赵",
+      "contact": "13900000101",
+      "school": "海南大学",
+      "major": "信息与计算科学",
+      "gradeId": null,
+      "goal": "其他",
+      "description": "11111",
+      "status": "new",
+      "createdAt": "2026-10-20T12:16:00.772Z",
+      "updatedAt": "2026-10-20T12:16:00.772Z"
+    },
+    {
+      "id": "lead-1792498621579",
+      "userId": null,
+      "name": "信息小赵",
+      "contact": "13900000101",
+      "school": "海南大学",
+      "major": "信息与计算科学",
+      "gradeId": null,
+      "goal": "留学",
+      "description": "1",
+      "status": "new",
+      "createdAt": "2026-10-20T12:17:01.580Z",
+      "updatedAt": "2026-10-20T12:17:01.580Z"
+    }
+  ]
+}
