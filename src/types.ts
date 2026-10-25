@@ -52,6 +52,16 @@ export interface MembershipPlan {
   benefits: string[];
 }
 
+export interface XhsArticle {
+  title: string;
+  summary: string;
+  date: string;
+  likes: number;
+  collects: number;
+  cover?: string;
+  url?: string;
+}
+
 export interface Profile {
   id?: string;
   nickname: string;

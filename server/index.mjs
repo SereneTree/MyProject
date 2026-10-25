@@ -248,6 +248,26 @@ const DOCS_COURSE_NAME_MAP = {
 };
 
 // ==========================================
+// GET /api/xhs-articles
+// 读取 server/data/xhs-articles.json，返回小红书文章列表（按发布时间倒序）
+// 数据由人工维护：发布新笔记后向该 JSON 追加一条即可
+// ==========================================
+const xhsArticlesFile = path.resolve(__dirname, 'data/xhs-articles.json');
+app.get('/api/xhs-articles', async (req, res) => {
+  try {
+    if (!fs.existsSync(xhsArticlesFile)) return res.json({ data: [] });
+    const raw = await fsp.readFile(xhsArticlesFile, 'utf-8');
+    const articles = JSON.parse(raw);
+    if (!Array.isArray(articles)) return res.json({ data: [] });
+    articles.sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+    res.json({ data: articles });
+  } catch (error) {
+    console.error('[xhs-articles]', error);
+    res.status(500).json({ message: '获取小红书文章失败' });
+  }
+});
+
+// ==========================================
 // GET /api/docs/:section/courses
 // 列出 public/<section> 下所有课程子目录（每个目录视作一门课程）
 // section ∈ {practical, interview}

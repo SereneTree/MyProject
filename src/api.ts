@@ -1,4 +1,4 @@
-import type { Assignment, AssignmentDetail, Course, CourseResourceDetail, CourseResourceListResponse, Grade, Major, MemberLevel, MembershipPlan, MeUser, UserCoursesResponse } from './types';
+import type { Assignment, AssignmentDetail, Course, CourseResourceDetail, CourseResourceListResponse, Grade, Major, MemberLevel, MembershipPlan, MeUser, UserCoursesResponse, XhsArticle } from './types';
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, {
@@ -168,4 +168,9 @@ export function getCourseResources(courseId: string, level: MemberLevel) {
 /** 获取资源详情，带会员等级过滤 */
 export function getCourseResourceDetail(id: string, level: MemberLevel) {
   return request<CourseResourceDetail>(`/api/resources/${id}?level=${level}`);
+}
+
+/** 获取小红书文章列表（后端已按发布时间倒序） */
+export function getXhsArticles() {
+  return request<{ data: XhsArticle[] }>('/api/xhs-articles');
 }
