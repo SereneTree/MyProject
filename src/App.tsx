@@ -1,4 +1,4 @@
-import { ArrowLeftOutlined, BookOutlined, CrownOutlined, DownloadOutlined, FileTextOutlined, FormOutlined, LockOutlined, ProfileOutlined, ReadOutlined, RocketOutlined, TeamOutlined, TrophyOutlined, UserOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, BookOutlined, CrownOutlined, DownloadOutlined, FileTextOutlined, FormOutlined, LockOutlined, ProfileOutlined, ReadOutlined, RocketOutlined, TeamOutlined, TrophyOutlined } from '@ant-design/icons';
 import { Alert, Badge, Button, Card, Col, Collapse, Divider, Empty, Form, Input, Layout, List, Menu, message, Radio, Row, Select, Space, Spin, Statistic, Table, Tabs, Tag, Timeline, Typography } from 'antd';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -121,10 +121,6 @@ function AppShell() {
           { key: 'consultation', label: <Link to="/consultation">咨询服务</Link> }
         ]} />
         <Space className="header-actions" size={10}>
-          <Link to="/profile" className="profile-entry">
-            <UserOutlined />
-            <span>{isLoggedIn ? '个人中心' : '登录/注册'}</span>
-          </Link>
           <Link to="/membership" className={`member-pill member-pill-${memberLevel}`}>
             <CrownOutlined />
             <span>{FREE_OPEN_MODE ? '全站资料免费开放' : memberNames[memberLevel]}</span>
@@ -2529,7 +2525,7 @@ function ApplicationGuidePage() {
   const navigate = useNavigate();
   return (
     <div className="career-planning-page">
-      <Button style={{ marginBottom: 16 }} onClick={() => navigate('/career-planning')}>← 返回生涯规划</Button>
+      <Button type="primary" style={{ marginBottom: 16 }} onClick={() => navigate('/career-planning')}>← 返回生涯规划</Button>
       <div className="career-hero">
         <div className="career-hero-badge">🚀 求职专区 · 申请全流程</div>
         <Title level={2}>大厂申请<span className="career-hero-highlight">全流程</span></Title>
@@ -2548,7 +2544,7 @@ function ApplicationGuidePage() {
   );
 }
 
-type CoachingStep = { title: string; detail: string; color: string };
+type CoachingStep = { title: string; detail: string; color: string; bullets?: string[] };
 
 type CoachingTrack = {
   key: string;
@@ -2558,6 +2554,10 @@ type CoachingTrack = {
   focus: string[];
   steps: CoachingStep[];
   deliverables: string[];
+  stepsTitle?: string;
+  origin?: string;
+  pains?: string[];
+  bonus?: { title: string; desc: string };
 };
 
 // 1V1 全流程辅导：研发 / 商科两个方向的陪跑环节拆解
@@ -2565,18 +2565,55 @@ const coachingTracks: CoachingTrack[] = [
   {
     key: 'rd',
     label: '💻 研发',
-    audience: '后端 / 前端 / 算法 / 客户端 / 测试 / 安全等技术岗',
-    intro: '以“能不能上手写、能不能讲清楚”为验收标准，评测到复盘六个环节全部围绕技术岗面试真实链路展开。',
-    focus: ['算法与八股', '项目深挖', '手撕代码', '系统设计'],
-    steps: [
-      { title: '① 职业性格评测', color: 'green', detail: 'MBTI + 技术方向倾向双测评，结合语言偏好、debug 耐心度与协作方式，收敛出 2-3 个最匹配的细分方向（服务端 / 前端 / 算法 / 客户端），避免盲目跟风投递。' },
-      { title: '② 个人能力摸底', color: 'green', detail: '算法题量、八股掌握度、项目复杂度、工程素养四项打分，定位当前处在“能投 / 能面 / 能拿 offer”哪一档，并输出可量化的差距清单与补齐周期。' },
-      { title: '③ 背景&简历提升', color: 'blue', detail: '简历按 STAR + 量化指标重写，把“参与开发”改成“负责什么模块、解决什么问题、带来什么指标”；缺项目时规划 6-8 周可交付的实战项目（含技术选型与验收标准），规避课程设计式项目。' },
-      { title: '④ 模拟面试', color: 'blue', detail: '中文技术面 + 手撕算法 + 系统设计三件套，全程录音逐题点评，重点纠表达结构与边界意识（先说思路再写代码、主动谈复杂度与场景权衡）。' },
-      { title: '⑤ 真实面试复盘', color: 'orange', detail: '每场真实面试当日复盘，区分“不会”与“没讲好”，沉淀高频题、卡点与答崩原因，逐步形成自己的题库与话术，越面越稳。' },
-      { title: '⑥ 流程跟进', color: 'red', detail: '投递节奏规划、内推资源匹配、多场面试排期冲突处理、Offer 横向比较与谈薪策略，全程推送进展到结案。' },
+    audience: 'CS 本科 / 研究生为主，AI 产品、运营、解决方案方向同样适用',
+    intro: '三阶段陪跑：精准诊断 → 系统赋能与实战演练 → 成果落地。目标是带着一个能讲深的 AI Agent 项目，稳稳拿到大厂 AI 岗的实习 / 校招 Offer。',
+    focus: ['AI Agent 项目', 'RAG 与 Context Engineering', 'Agent 框架', '大模型原理', '系统设计', '算法八股'],
+    stepsTitle: '三阶段陪跑流程',
+    origin: '做陪跑的初衷：如果时间倒退回研究生未毕业甚至更早，那时若有学长带自己，或许能少走很多弯路、拿到更有竞争力的 Offer。现在把这条路上的经验，直接交到你手里。',
+    pains: [
+      '🛑 实习 / 校招投了简历没反馈',
+      '📉 面试一问项目细节就卡壳',
+      '🤖 人人在说大模型、Agent，你连项目都无',
     ],
-    deliverables: ['能力雷达图', '简历诊断与改稿', '模拟面试录音复盘', '个人高频题库', '投递进度跟踪表'],
+    steps: [
+      {
+        title: '① 一阶段 · 精准诊断',
+        color: 'green',
+        detail: '1v1 线上深度面试 60 分钟，扫描知识盲区、制定陪跑计划，并结合 AI 行业趋势锁定你适合的具体企业与岗位。',
+        bullets: [
+          '深度面试：60 分钟线上 1v1，完整走一遍简历、项目与基础三轮，先看清当前处在能投 / 能面 / 能拿 Offer 哪一档',
+          '能力雷达图：算法、工程、项目深度、领域知识、表达五项打分，明确差距与补齐周期',
+          '目标锁定：结合 AI 行业趋势、城市与院校背景，收敛出可投递的企业与岗位清单',
+        ],
+      },
+      {
+        title: '② 二阶段 · 系统赋能 + 实战演练',
+        color: 'blue',
+        detail: '四大模块并行推进，把「做过」推到「精通」，从项目、叙事、考点、压力四个方面同时补齐。',
+        bullets: [
+          '硬核技术重构：在导师指导下从 0 到 1 独立设计与实现一个具备完整业务闭环的 AI Agent 应用——需求分析与场景定义（智能客服 / 代码审查 / 数据分析 Agent 等）、架构设计（任务规划、工具调用、记忆机制、多轮推理）、大模型 API 接入与 Context Engineering、前后端搭建与部署上线，最终沉淀为带完整技术文档的 GitHub 开源项目，作为求职的强敲门砖',
+          '项目价值升华：用 STAR 法则重构项目叙事，深挖每个技术决策背后的取舍，把平淡的功能描述变成体现架构力与业务洞察的技术故事',
+          '高频考点狙击：构建系统化的计算机知识图谱，对大模型原理、RAG、Agent 框架、分布式系统、算法八股等高频题做「剥洋葱」式深挖',
+          '高压模拟面试：1:1 还原大厂 AI 岗面试场景（在线编程、系统设计、项目深挖、压力面），每次模拟后详细复盘、针对性改进，直至形成肌肉记忆',
+        ],
+      },
+      {
+        title: '③ 三阶段 · 成果收获',
+        color: 'orange',
+        detail: '陪跑结束时，这些成果可以直接带进面试考场：',
+        bullets: [
+          '系统化的 AI 技术认知体系',
+          '一个从 0 到 1 的 AI Agent 实战项目 + 完整技术文档 + 可演示 Demo',
+          '能讲出有深度的项目故事，面试不再被问倒',
+          '从容应对高压深挖，显著提升大厂 AI Offer 获取率',
+        ],
+      },
+    ],
+    deliverables: ['能力雷达图', '可投递企业岗位清单', 'GitHub 开源 Agent 项目', '技术文档与演示 Demo', 'STAR 项目叙事稿', '个人高频题库', '模拟面试复盘记录'],
+    bonus: {
+      title: '🎁 福利：免费领取 1 次 1v1 背景诊断（60 分钟）',
+      desc: '名额有限，优质陪伴需要投入；全程由学长本人亲自沟通。',
+    },
   },
   {
     key: 'biz',
@@ -2596,22 +2633,51 @@ const coachingTracks: CoachingTrack[] = [
   },
 ];
 
+// 研发方向配图：招募海报、三阶段总览、项目库、成果收获（图片放在 public/coaching）
+const coachingMedia: Record<string, { hero?: string; stages?: string; projects?: string; results?: string }> = {
+  rd: {
+    hero: '/coaching/hero-offer.jpg',
+    stages: '/coaching/three-stages.jpg',
+    projects: '/coaching/project-library.png',
+    results: '/coaching/results.jpg',
+  },
+};
+
 function CoachingTrackPanel({ track, onConsult }: { track: CoachingTrack; onConsult: () => void }) {
+  const media = coachingMedia[track.key] || {};
   return (
     <div>
       <Alert
         type="info"
         showIcon
-        style={{ marginBottom: 24 }}
+        style={{ marginBottom: 16 }}
         message={`适合方向：${track.audience}`}
         description={track.intro}
       />
+      {media.hero && (
+        <figure className="coaching-figure">
+          <img src={media.hero} alt="AI 应用开发 Offer 陪跑 1V1：3 个月 3 个阶段" loading="lazy" />
+        </figure>
+      )}
+      {track.origin && <div className="coaching-origin">{track.origin}</div>}
+      {track.pains && (
+        <Card className="career-resource-card" title="你是不是也有这种焦虑" size="small" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {track.pains.map((p) => <Text key={p}>{p}</Text>)}
+          </div>
+        </Card>
+      )}
       <Card className="career-resource-card" title="考察重点" size="small" style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {track.focus.map((f) => <Tag key={f} color="blue">{f}</Tag>)}
         </div>
       </Card>
-      <Card className="career-resource-card" title="六步陪跑流程" style={{ marginBottom: 16 }}>
+      {media.stages && (
+        <Card className="career-resource-card" title="三阶段总览" size="small" style={{ marginBottom: 16 }}>
+          <img className="coaching-wide-img coaching-img-narrow" src={media.stages} alt="三阶段陪跑：从写简历到拿大厂 AI Offer" loading="lazy" />
+        </Card>
+      )}
+      <Card className="career-resource-card" title={track.stepsTitle || '六步陪跑流程'} style={{ marginBottom: 16 }}>
         <Timeline
           items={track.steps.map((s) => ({
             color: s.color,
@@ -2619,16 +2685,40 @@ function CoachingTrackPanel({ track, onConsult }: { track: CoachingTrack; onCons
               <>
                 <Text strong>{s.title}</Text>
                 <Paragraph type="secondary" style={{ marginBottom: 0 }}>{s.detail}</Paragraph>
+                {s.bullets && (
+                  <ul className="coaching-step-bullets">
+                    {s.bullets.map((b) => <li key={b}>{b}</li>)}
+                  </ul>
+                )}
               </>
             ),
           }))}
         />
       </Card>
+      {media.projects && (
+        <Card className="career-resource-card" title="项目库覆盖" style={{ marginBottom: 16 }}>
+          <Paragraph type="secondary" style={{ marginBottom: 12 }}>
+            主线项目从持续维护的实战项目库中挑选，覆盖行业 AI Coding、Agent 架构、MCP / RAG / Context Engineering、主流 AI 编程工具与框架等主题，再按你的目标岗位匹配一个作为主线。
+          </Paragraph>
+          <img className="coaching-wide-img" src={media.projects} alt="实战项目库：行业 AI Coding、Agent、MCP、RAG 等主题" loading="lazy" />
+        </Card>
+      )}
       <Card className="career-resource-card" title="服务交付物" size="small" style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {track.deliverables.map((d) => <Tag key={d} color="green">{d}</Tag>)}
         </div>
       </Card>
+      {media.results && (
+        <Card className="career-resource-card" title="成果收获 · 看得见的蜕变" size="small" style={{ marginBottom: 16 }}>
+          <img className="coaching-wide-img coaching-img-narrow" src={media.results} alt="成果收获：4 项核心资产" loading="lazy" />
+        </Card>
+      )}
+      {track.bonus && (
+        <Card className="career-resource-card coaching-bonus" style={{ marginBottom: 16 }}>
+          <Text strong style={{ display: 'block', marginBottom: 6 }}>{track.bonus.title}</Text>
+          <Text type="secondary">{track.bonus.desc}</Text>
+        </Card>
+      )}
       <Card className="career-resource-card career-followup-cta">
         <div style={{ textAlign: 'center' }}>
           <Title level={5}>想先看看自己现在处在哪一档？</Title>
@@ -2644,7 +2734,7 @@ function CoachingPage() {
   const navigate = useNavigate();
   return (
     <div className="career-planning-page">
-      <Button style={{ marginBottom: 16 }} onClick={() => navigate('/career-planning')}>← 返回求职专区</Button>
+      <Button type="primary" style={{ marginBottom: 16 }} onClick={() => navigate('/career-planning')}>← 返回求职专区</Button>
       <div className="career-hero">
         <div className="career-hero-badge">🎯 求职专区 · 全流程陪跑</div>
         <Title level={2}>1V1<span className="career-hero-highlight">全流程辅导</span></Title>
@@ -2664,6 +2754,9 @@ function CoachingPage() {
   );
 }
 
+// 小红书封面：真实数据是图片 URL，早期手填数据用的是 emoji 占位
+const XHS_COVER_IMAGE = /^https?:\/\//;
+
 function TechArticlesPage() {
   const navigate = useNavigate();
   const [articles, setArticles] = useState<XhsArticle[]>([]);
@@ -2676,13 +2769,68 @@ function TechArticlesPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // 只保留点赞+收藏热度最高的前 12 条，其余不在页面展示
+  const topArticles = useMemo(() => {
+    const heat = (a: XhsArticle) => (a.likes || 0) + (a.collects || 0);
+    const byDate = (a: XhsArticle, b: XhsArticle) => String(b.date || '').localeCompare(String(a.date || ''));
+    return [...articles].sort((a, b) => heat(b) - heat(a) || byDate(a, b)).slice(0, 12);
+  }, [articles]);
+
+  const renderArticleCard = (a: XhsArticle, locked = false) => (
+    <Col xs={24} sm={12} lg={8} key={a.url || a.title}>
+      <Card
+        className="career-resource-card"
+        hoverable
+        style={{ height: '100%' }}
+        onClick={a.url && !locked ? () => window.open(a.url, '_blank', 'noopener,noreferrer') : undefined}
+      >
+        {a.cover && XHS_COVER_IMAGE.test(a.cover) ? (
+          <div className="xhs-cover">
+            <img src={a.cover} alt={a.title} loading="lazy" referrerPolicy="no-referrer" />
+          </div>
+        ) : (
+          <div style={{ fontSize: 32, marginBottom: 8 }}>{a.cover || '📄'}</div>
+        )}
+        <Text className="career-resource-title" strong style={{ display: 'block', lineHeight: 1.5 }}>{a.title}</Text>
+        {a.summary ? <Paragraph type="secondary" className="career-resource-desc">{a.summary}</Paragraph> : null}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+          <Text type="secondary" style={{ fontSize: 12 }}>{a.date}</Text>
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            ❤️ {a.likes}{a.collects > 0 ? ` · ⭐ ${a.collects}` : ''}
+          </Text>
+        </div>
+      </Card>
+    </Col>
+  );
+
+  // 扫码浮层：宽度较大，用 fixed 跟随按钮定位，上方放不下时自动贴底，避免被视口裁掉
+  const [scanPop, setScanPop] = useState<{ top: number; left: number } | null>(null);
+  const scanHintRef = useRef<HTMLSpanElement | null>(null);
+
+  const showScanPop = () => {
+    const el = scanHintRef.current;
+    if (!el) return;
+    const SCAN_POP_W = 320;
+    const SCAN_POP_H = 436;
+    const gap = 12;
+    const rect = el.getBoundingClientRect();
+    const above = rect.top - gap - SCAN_POP_H;
+    setScanPop({
+      top: above >= gap ? above : Math.max(gap, window.innerHeight - SCAN_POP_H - gap),
+      left: Math.min(
+        Math.max(gap, rect.left + rect.width / 2 - SCAN_POP_W / 2),
+        window.innerWidth - SCAN_POP_W - gap,
+      ),
+    });
+  };
+
   return (
     <div className="career-planning-page">
-      <Button style={{ marginBottom: 16 }} onClick={() => navigate('/career-planning')}>← 返回生涯规划</Button>
+      <Button type="primary" style={{ marginBottom: 16 }} onClick={() => navigate('/career-planning')}>← 返回生涯规划</Button>
       <div className="career-hero">
         <div className="career-hero-badge">📕 小红书 · 技术干货</div>
         <Title level={2}>技术干货<span className="career-hero-highlight">抢先读</span></Title>
-        <Paragraph>小红书过往发表文章合集，涵盖求职、保研、留学与前沿技术干货，持续更新中</Paragraph>
+        <Paragraph>大厂 AI Agent 开发与面试干货合集，涵盖 RAG、MCP、Function Call、多 Agent 架构与框架源码解析，持续更新中</Paragraph>
       </div>
       <Card className="career-resource-card" style={{ marginBottom: 24 }}>
         <div style={{ display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -2700,26 +2848,34 @@ function TechArticlesPage() {
       </Card>
       <Spin spinning={loading}>
         <Row gutter={[16, 16]}>
-          {articles.map((a) => (
-            <Col xs={24} sm={12} lg={8} key={a.title}>
-              <Card
-                className="career-resource-card"
-                hoverable
-                onClick={a.url ? () => window.open(a.url, '_blank', 'noopener,noreferrer') : undefined}
-              >
-                <div style={{ fontSize: 32, marginBottom: 8 }}>{a.cover || '📄'}</div>
-                <Text className="career-resource-title" strong>{a.title}</Text>
-                <Paragraph type="secondary" className="career-resource-desc">{a.summary}</Paragraph>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>{a.date}</Text>
-                  <Text type="secondary" style={{ fontSize: 12 }}>❤️ {a.likes} · ⭐ {a.collects}</Text>
-                </div>
-              </Card>
-            </Col>
-          ))}
+          {topArticles.slice(0, 9).map((a) => renderArticleCard(a))}
         </Row>
+        {topArticles.length > 9 && (
+          <div className="xhs-locked-row">
+            <Row gutter={[16, 16]}>
+              {topArticles.slice(9).map((a) => renderArticleCard(a, true))}
+            </Row>
+            {/* 横跨整行底部的虚化带，只放一个引导按钮 */}
+            <div className="xhs-bottom-fade">
+              <span
+                className="xhs-scan-hint"
+                ref={scanHintRef}
+                onMouseEnter={showScanPop}
+                onMouseLeave={() => setScanPop(null)}
+                onWheel={() => setScanPop(null)}
+              >
+                更多内容关注请扫码关注哦～
+              </span>
+            </div>
+          </div>
+        )}
         {!loading && articles.length === 0 && <Empty description="暂无文章，期待第一篇笔记发布" />}
       </Spin>
+      {scanPop && (
+        <div className="xhs-scan-pop" style={{ top: scanPop.top, left: scanPop.left }}>
+          <img src="/xhs-card.jpg" alt="小红书扫码关注：大厂 AI 直通车" />
+        </div>
+      )}
     </div>
   );
 }
@@ -3277,7 +3433,7 @@ function CareerPlanningPage() {
   if (jobsBoardOpen) {
     return (
       <div className="career-planning-page">
-        <Button style={{ marginBottom: 16 }} onClick={() => setJobsBoardOpen(false)}>← 返回求职专区</Button>
+        <Button type="primary" style={{ marginBottom: 16 }} onClick={() => setJobsBoardOpen(false)}>← 返回求职专区</Button>
         <div className="career-hero">
           <div className="career-hero-badge">💼 求职专区 · 岗位集结号</div>
           <Title level={2}>实习岗位<span className="career-hero-highlight">集结号</span></Title>

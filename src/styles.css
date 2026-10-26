@@ -1235,6 +1235,61 @@ body {
   margin-bottom: 4px;
 }
 
+/* 1V1 陪跑：初衷引用块、阶段要点列表、福利卡 */
+.coaching-origin {
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  background: #f8fafc;
+  border-left: 4px solid #2563eb;
+  border-radius: 8px;
+  color: #334155;
+  line-height: 1.8;
+}
+
+.coaching-step-bullets {
+  margin: 10px 0 0;
+  padding-left: 20px;
+  color: #64748b;
+  line-height: 1.9;
+}
+
+.coaching-step-bullets li + li {
+  margin-top: 6px;
+}
+
+/* 1V1 陪跑配图：顶部招募海报居中，三阶段/项目库/成果为大图 */
+.coaching-figure {
+  margin: 0 0 16px;
+}
+
+.coaching-figure img {
+  display: block;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+}
+
+.coaching-wide-img {
+  display: block;
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid #eef2f7;
+  background: #ffffff;
+}
+
+/* 竖版长图限宽居中，避免铺满后单张图占据一两屏高度 */
+.coaching-img-narrow {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.coaching-bonus {
+  background: linear-gradient(135deg, #eff6ff, #ffffff);
+  border: 1px solid #bfdbfe;
+}
+
 .career-resource-card {
   width: 100%;
   border-radius: 12px;
@@ -1259,6 +1314,100 @@ body {
 .career-resource-desc {
   margin-bottom: 0 !important;
   font-size: 13px;
+}
+
+/* 技术干货卡片：封面 + 下方 1/3 虚化与扫码引导 */
+.xhs-cover {
+  position: relative;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f1f5f9;
+  aspect-ratio: 3 / 4;
+}
+
+.xhs-cover > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* 末尾锁定行：横跨整行的底部虚化带 + 单个引导按钮 */
+.xhs-locked-row {
+  position: relative;
+  margin-top: 16px;
+}
+
+.xhs-bottom-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 57%;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.9));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  /* 上边直角与下方封面自然衔接，下边圆角贴合卡片底边 */
+  border-radius: 0 0 12px 12px;
+  /* 右边缘与卡片右边界存在亚像素差，最右 1px 渐隐避免出现一条白线 */
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 1px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 calc(100% - 1px), transparent 100%);
+}
+
+.xhs-scan-hint {
+  position: relative;
+  display: inline-block;
+  padding: 7px 18px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #ffffff;
+  white-space: nowrap;
+  background: #2563eb;
+  border: 1px solid #2563eb;
+  border-radius: 999px;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.28);
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+
+.xhs-scan-hint:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.xhs-scan-pop {
+  position: fixed;
+  z-index: 1200;
+  width: 320px;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.22);
+  pointer-events: none;
+  animation: xhs-pop-in 0.16s ease-out;
+}
+
+@keyframes xhs-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.xhs-scan-pop img {
+  display: block;
+  width: 100%;
+  border-radius: 8px;
 }
 
 .career-tab-content .ant-list-item {

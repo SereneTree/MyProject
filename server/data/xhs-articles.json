@@ -1,56 +1,272 @@
 [
   {
-    "title": "大厂实习怎么找？一张图讲清春招/日常实习全节奏",
-    "summary": "从简历投递、笔试、面试到Offer的完整时间线，附各大厂招聘窗口期一览",
+    "title": "大厂面试问 如何做 Agent 评测&归因？附图",
+    "summary": "",
+    "date": "2026-09-27",
+    "likes": 8,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/d1c26eea6f3326f394ab9f9b7155e5cb/spectrum/1040g34o325b4p2ka44105p564g948buhnot9kqo!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6aaf92df000000000b0002b1?xsec_token=ABbSDgvibdo1DLabloq87rgk2WmcWB1WXwSL1NdFBGwN8=&xsec_source=pc_collect"
+  },
+  {
+    "title": "大厂面试总结 Reflection 是什么？附链路图",
+    "summary": "",
+    "date": "2026-09-26",
+    "likes": 8,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/3fd882ada1026cee74e884b66788a9a0/spectrum/1040g34o325b39bkp44105p564g948buhel15dv0!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6aaf86b7000000002a02c493?xsec_token=ABbSDgvibdo1DLabloq87rgnM9G7ZlCrfia0oBjG6wvng=&xsec_source=pc_collect"
+  },
+  {
+    "title": "大厂面试总结：一文了解 LlamaIndex & RAG",
+    "summary": "",
+    "date": "2026-09-25",
+    "likes": 6,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/6b33324be40cbd7402cb8253a818a6fc/spectrum/1040g0k03259rro3558005p564g948buhsvu51d8!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6aae433e000000002601e045?xsec_token=ABFF-_Emc5NGNmofWMqhFR9wycDakTZMN8GXvZBI2M-74=&xsec_source=pc_collect"
+  },
+  {
+    "title": "大厂总结：一文了解 Memory 面试要点",
+    "summary": "",
+    "date": "2026-09-24",
+    "likes": 2,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/6f57486fa23bfcfd0136e5cf9b84bec7/spectrum/1040g0k03259pvdnnk6005p564g948buh9vqjlj0!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6aae3418000000002a02d14f?xsec_token=ABFF-_Emc5NGNmofWMqhFR9-jYnClTq3OHRC3j9bmCfbg=&xsec_source=pc_collect"
+  },
+  {
+    "title": "大厂面试总结：LangChain 🆚 LangGraph",
+    "summary": "",
+    "date": "2026-09-23",
+    "likes": 11,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/83c900701cb5da9e051e623794b75770/spectrum/1040g34o3259oi51o44105p564g948buhj61l29o!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6aad0a1d0000000011034cb4?xsec_token=ABb6ON_KCAQZpfTEqf9OVhRqK6VJqsODQp6Z7r2tAUMY4=&xsec_source=pc_collect"
+  },
+  {
+    "title": "大厂面试总结 Agent 开发框架(如LangChain)",
+    "summary": "",
+    "date": "2026-09-22",
+    "likes": 8,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/18953c38bd23aceedfced0b93a0618b1/spectrum/1040g34o3259iluv4k40g5p564g948buhfbl43n0!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6aad065a000000002603a70b?xsec_token=ABb6ON_KCAQZpfTEqf9OVhRgRJ_3bTrj-x7RLw9pp_mCw=&xsec_source=pc_collect"
+  },
+  {
+    "title": "AI 新岗位 FDE 是什么？传统开发区别？",
+    "summary": "",
+    "date": "2026-09-21",
+    "likes": 1,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/84410fdc7eeb64de0c50387801943e05/spectrum/1040g0k03258jmg1c46005p564g948buhsf14em8!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6aacfa2f000000002900cdce?xsec_token=ABQsbcxak6TTBJ4d1ySJUY7subbJre7QU_woyLpqvrirM=&xsec_source=pc_collect"
+  },
+  {
+    "title": "面试问：多 Agent 系统怎么设计？附链路图",
+    "summary": "",
+    "date": "2026-09-20",
+    "likes": 30,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/6bb8f210758d98069272c006f472dd9e/spectrum/1040g0k03257alsgr44005p564g948buhl613dfo!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6aaba45b0000000026032afb?xsec_token=ABTibRLVQx7ijHBc8gnw66julU-o1_i3dodsTKgdeOMKs=&xsec_source=pc_collect"
+  },
+  {
+    "title": "大厂面试总结 Agent Memory 记忆怎么设计？",
+    "summary": "",
+    "date": "2026-09-19",
+    "likes": 31,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/7bf2917cebe5ada03c8e051b5a281cb4/spectrum/1040g0k032561gbd7k40g5p564g948buheaajv0g!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6aaa594c000000000b037b73?xsec_token=AB6dGQ9KEls9M5VT8I2x-3nf0aBPpYrzfJ6vkb8gI89BQ=&xsec_source=pc_collect"
+  },
+  {
+    "title": "大厂面试总结 Agent Tool 怎么设计？",
+    "summary": "",
+    "date": "2026-09-18",
+    "likes": 7,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/c83a6841c750bb5b3a49ee15e987f62e/spectrum/1040g34o3255tj9nq44105p564g948buhvk91lt8!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6aaa21fa000000001203cb04?xsec_token=AB6dGQ9KEls9M5VT8I2x-3naGzaz7lNAj_sbvZdljLMVY=&xsec_source=pc_collect"
+  },
+  {
+    "title": "陪跑大厂AI Agent开发实习/校招Offer",
+    "summary": "",
+    "date": "2026-09-17",
+    "likes": 2,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/9a22e09f14ea0f917a5cc106a2bba2c3/spectrum/1040g34o32550t7b5ka005p564g948buh7edma50!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6aa90786000000000b003fae?xsec_token=AB-JwZZnedwhjFyg3kgEAjsbbNfyBlzAhKR0jQjWqkDp0=&xsec_source=pc_collect"
+  },
+  {
+    "title": "大厂面试 Agent ReAct 🆚 Plan Execute",
+    "summary": "",
+    "date": "2026-09-16",
+    "likes": 14,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/9d1efc70536d217324c737ee81480f0f/spectrum/1040g0k03255u1c7v44005p564g948buh7aij8q8!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6aa7cbd4000000002a02ef8f?xsec_token=ABsiQsT8l5xkC7DvFGmaiN3qjv-mMHTjMDmPRKpbDmqSE=&xsec_source=pc_collect"
+  },
+  {
+    "title": "大厂面试总结：Agent开发岗考核的5层能力",
+    "summary": "",
+    "date": "2026-09-15",
+    "likes": 9,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/f2c862f1681a9820ab52afe44b4a5cc1/spectrum/1040g0k03253hg0tc2u005p564g948buhg2pceh0!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6aa7cbc8000000002a005510?xsec_token=ABsiQsT8l5xkC7DvFGmaiN3mzUKZs3LKcvdRxA5dGi2Sk=&xsec_source=pc_collect"
+  },
+  {
+    "title": "一分钟，带你了解RAG全局架构和技术选型～",
+    "summary": "",
+    "date": "2026-09-14",
+    "likes": 4,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/76826b1803e1c128e75a7913aad35720/spectrum/1040g0k03253232q6is005p564g948buhc38r6u8!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6aa74ab7000000002a02f159?xsec_token=ABsiQsT8l5xkC7DvFGmaiN3pG93yiUZCVpDiGOqL9OVlo=&xsec_source=pc_collect"
+  },
+  {
+    "title": "建议都去看LHY老师AIAgent课 附笔记分享",
+    "summary": "",
+    "date": "2026-09-13",
+    "likes": 9,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/e735f473d5893aa4052c75562e9b93e5/spectrum/1040g0k032512rj312u005p564g948buhdvt26e0!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6aa3ffbe000000002901ac03?xsec_token=ABR4mUyMTazeWoL0C2UYfhhfe50Ah75TMHFBkgOgegF1A=&xsec_source=pc_collect"
+  },
+  {
+    "title": "面试官总结5万字RAG深度题库 持续更新",
+    "summary": "",
     "date": "2026-09-12",
-    "likes": 1286,
-    "collects": 3402,
-    "cover": "📱",
-    "url": ""
+    "likes": 4,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/a655466b93881f75589e41bfefdcfacb/spectrum/1040g0k03250khrja30005p564g948buh1edkrvo!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6aa3ff09000000002a027d71?xsec_token=ABR4mUyMTazeWoL0C2UYfhhc9hrX_68JUWoNth8iqxYZI=&xsec_source=pc_collect"
   },
   {
-    "title": "408统考 vs 自命题，考研择校必看的3个真相",
-    "summary": "数据结构/组成原理/操作系统/网络四科怎么复习？不同基础的人该怎么选学校？",
+    "title": "面试问「Agent框架是什么」如何答？",
+    "summary": "",
+    "date": "2026-09-09",
+    "likes": 11,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/c320969ca8216f60c31bd8e67027bf99/spectrum/1040g34o324s0g6hc1q805p564g948buh5kgflj0!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6aa015390000000029016a3b?xsec_token=ABMM4l-GZ61SzG5OZVNbctlSpWpcthOrlq4Erik-QO0ks=&xsec_source=pc_collect"
+  },
+  {
+    "title": "腾讯校招客户端一面面经，快来借鉴学习啦～",
+    "summary": "",
+    "date": "2026-09-04",
+    "likes": 6,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/bce4b59a7e23c668987eea110de931aa/spectrum/1040g34o324m9mv8b72105p564g948buhkc1bga0!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6a9a3fa5000000001001ebce?xsec_token=ABrQfhX-XCNYJU-u-epkarvbJxvKmwzTOcbJG7JFWg52s=&xsec_source=pc_collect"
+  },
+  {
+    "title": "一分钟，带你看懂Loop Engineering～",
+    "summary": "",
+    "date": "2026-09-04",
+    "likes": 13,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/4f94701b7e3e0ae65e97ee55284b9665/spectrum/1040g34o324m6edvb6u105p564g948buhlb4f9dg!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6a9a1ff400000000110366dd?xsec_token=ABrQfhX-XCNYJU-u-epkarvdVLwAxE00odnpNLi715x0M=&xsec_source=pc_collect"
+  },
+  {
+    "title": "快手校招一面面经，快来借鉴学习啦～",
+    "summary": "",
+    "date": "2026-09-01",
+    "likes": 8,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/2b790208bfb4eef3ec7a3f0ead20d5b6/spectrum/1040g0k0324iio3fs0m005p564g948buhs827pno!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6a966afe000000001001fa0e?xsec_token=ABaM_s71pJFiU3p-slQxbA_8OvOyAHqzKfwT7yDwWo3cY=&xsec_source=pc_collect"
+  },
+  {
+    "title": "一分钟，带你看懂Agent架构设计～",
+    "summary": "",
+    "date": "2026-09-01",
+    "likes": 18,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/a60ec94f509eaf56be2ada0235dfd4e7/spectrum/1040g0k0324ia21obn4005p564g948buhs4gjf6g!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6a962c5c00000000260161b2?xsec_token=ABaM_s71pJFiU3p-slQxbA_xVl1CLaDuY11u7uTINk6-o=&xsec_source=pc_collect"
+  },
+  {
+    "title": "一分钟，带你看懂MCP工作机制～",
+    "summary": "",
     "date": "2026-08-28",
-    "likes": 967,
-    "collects": 2851,
-    "cover": "📚",
-    "url": ""
+    "likes": 18,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/3d9e3a34f544c9babd196bf0f18578b8/spectrum/1040g0k0324ckrq4f0m005p564g948buhsq5ging!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6a90601400000000210302b8?xsec_token=ABbnbxFYQJWSyFKyptZ--CzDmvLtn1BjdtmGH0OaBT-g0=&xsec_source=pc_collect"
   },
   {
-    "title": "大二开始规划保研，我都做对了什么？",
-    "summary": "GPA、科研、竞赛、夏令营全链路规划，绩点排名前5%的真实复盘",
-    "date": "2026-07-15",
-    "likes": 1543,
-    "collects": 4120,
-    "cover": "🎓",
-    "url": ""
+    "title": "ClaudeCode Agent源码解析(八)：框架生态",
+    "summary": "",
+    "date": "2026-08-27",
+    "likes": 12,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/ff046b23de6bfd2628347797935702de/spectrum/1040g0k0324c97sbp72005p564g948buhoel2doo!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6a9012e1000000001803d8d2?xsec_token=ABbnbxFYQJWSyFKyptZ--CzBSAXwfdy3PMZ6hk7nySrQg=&xsec_source=pc_collect"
   },
   {
-    "title": "前端面试被问爆的React并发原理，一次讲清",
-    "summary": "Fiber架构、优先级调度、Concurrent Rendering核心考点梳理，附高频追问",
-    "date": "2026-06-20",
-    "likes": 892,
-    "collects": 2210,
-    "cover": "💻",
-    "url": ""
+    "title": "一分钟看懂Function Call工作机制～",
+    "summary": "",
+    "date": "2026-08-26",
+    "likes": 9,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/69f287b0b90affd6bca4070cc974019b/spectrum/1040g0k0324b2chs00m005p564g948buhu78b8l0!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6a8ecdac0000000021030e50?xsec_token=ABJ9m9-frtDeeb_sEjgD9d0bcEXoFLozws9GurqTPD8bc=&xsec_source=pc_collect"
   },
   {
-    "title": "AI Agent入门实战：从LangChain到多智能体编排",
-    "summary": "大模型应用开发路线图，RAG/工具调用/多Agent协同的落地经验与避坑指南",
-    "date": "2026-05-30",
-    "likes": 1876,
-    "collects": 5233,
-    "cover": "🤖",
-    "url": ""
+    "title": "ClaudeCode Agent源码解析(七)：插件生态",
+    "summary": "",
+    "date": "2026-08-26",
+    "likes": 10,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/27747fa7333e435b2285cd10f55ff522/spectrum/1040g0k0324a4d1v1mu005p564g948buhft62uj0!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6a8dc45700000000210244e5?xsec_token=ABi-pGL7-yPJrt5-RBKGu2ar8htOxhEVsa3Jye9UWsYGE=&xsec_source=pc_collect"
   },
   {
-    "title": "双非逆袭CMU全奖：留学申请时间线全公开",
-    "summary": "从选校定位到文书打磨，科研实习怎么安排才能打动招生官",
-    "date": "2026-04-18",
-    "likes": 2034,
-    "collects": 4876,
-    "cover": "🌏",
-    "url": ""
+    "title": "ClaudeCode Agent源码解析(六)：缓存机制",
+    "summary": "",
+    "date": "2026-08-25",
+    "likes": 10,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/853006132dad4eb75a3b6b3e7a30b952/spectrum/1040g0k03249sj8gs74005p564g948buh9rasthg!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6a8d8437000000002501c351?xsec_token=ABi-pGL7-yPJrt5-RBKGu2al1fB-v3hFdKWdBZL8sr-LY=&xsec_source=pc_collect"
+  },
+  {
+    "title": "ClaudeCode Agent源码解析(五)：待办机制",
+    "summary": "",
+    "date": "2026-08-24",
+    "likes": 10,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/0d77db9c7a18b6359e8e7be2c54651b7/spectrum/1040g0k03248fdjll74005p564g948buhte395a0!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6a8c11fe0000000017003dfa?xsec_token=ABAAdqv8Tn7H05OzuyO3OO_WuNJ9YrxL8mw4EJPBrcEXk=&xsec_source=pc_collect"
+  },
+  {
+    "title": "ClaudeCode Agent源码解析(四)：Agent隔离",
+    "summary": "",
+    "date": "2026-08-23",
+    "likes": 12,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/d33e85d72280fe3874c73567817c1b45/spectrum/1040g0k03246qp8ni0s005p564g948buhsobfp00!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6a8a649b000000003703e80c?xsec_token=ABvBiS9lvClxtv6bq3WxncBAnnlm74B5wBXu85Plh2NT0=&xsec_source=pc_collect"
+  },
+  {
+    "title": "ClaudeCode Agent源码解析(三)：Agent协作",
+    "summary": "",
+    "date": "2026-08-22",
+    "likes": 17,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/308bfd497cb8d7d9e21677ee93f4e86e/spectrum/1040g0k032460sesbmu005p564g948buhqnmk7a8!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6a898ea10000000033023fa5?xsec_token=ABEfk3vrecyX-8it6ViiQ5HftKUFJheAwDYtPPFkGUYzo=&xsec_source=pc_collect"
+  },
+  {
+    "title": "ClaudeCode实战八条：颠覆你的编程体验～",
+    "summary": "",
+    "date": "2026-08-21",
+    "likes": 2,
+    "collects": 0,
+    "cover": "https://sns-webpic-qc.xhscdn.com/202610262333/e92377d9d9322b7e2c3561cd618750ac/spectrum/1040g0k03244ldefqgs005p564g948buhnerta0g!nc_n_webp_prv_1",
+    "url": "https://www.xiaohongshu.com/explore/6a88359a0000000025006599?xsec_token=AB_Z9Bic5Q62pN2xvBaVWK-fo9YR0LIbW_59uGSqjqBsA=&xsec_source=pc_collect"
   }
 ]
