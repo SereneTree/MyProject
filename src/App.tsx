@@ -1,6 +1,6 @@
-import { BookOutlined, CrownOutlined, DownloadOutlined, EyeOutlined, FileTextOutlined, FormOutlined, LockOutlined, ProfileOutlined, ReadOutlined, RocketOutlined, TeamOutlined, TrophyOutlined, UserOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, BookOutlined, CrownOutlined, DownloadOutlined, FileTextOutlined, FormOutlined, LockOutlined, ProfileOutlined, ReadOutlined, RocketOutlined, TeamOutlined, TrophyOutlined, UserOutlined } from '@ant-design/icons';
 import { Alert, Badge, Button, Card, Col, Collapse, Divider, Empty, Form, Input, Layout, List, Menu, message, Radio, Row, Select, Space, Spin, Statistic, Table, Tabs, Tag, Timeline, Typography } from 'antd';
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -27,6 +27,13 @@ const memberColors: Record<MemberLevel, string> = {
 // 免费开放模式：所有学习资料无需登录注册即可免费查看（登录验证、会员等级、年级锁定全部放行）。
 // 如需恢复会员付费模式，将其改回 false 即可，原登录/会员/年级权限逻辑均已保留。
 const FREE_OPEN_MODE = true;
+
+// 大四课程暂不在前端展示（数据库数据保留，便于后续恢复）；
+// 年级筛选中的「大四上 / 大四下」选项仍保留，只是点进去没有课程。
+const HIDDEN_COURSE_GRADE_IDS = new Set(['senior_fall', 'senior_spring']);
+
+// 顶部导航为 sticky 固定高度 64px，滚动定位时预留间距避免内容被遮挡
+const TOPBAR_OFFSET = 80;
 
 const gradeOptions = [
   { value: 'freshman_fall', label: '大一上' },
@@ -147,6 +154,7 @@ function AppShell() {
           <Route path="/career-planning" element={<CareerPlanningPage />} />
           <Route path="/career-planning/tech-articles" element={<TechArticlesPage />} />
           <Route path="/career-planning/application-guide" element={<ApplicationGuidePage />} />
+          <Route path="/career-planning/coaching" element={<CoachingPage />} />
           <Route path="/consultation" element={<ConsultationPage profile={profile} />} />
           <Route path="/about" element={<AboutPage />} />
         </Routes>
@@ -168,6 +176,7 @@ function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profi
   // 学习资源页的“年级 + 课程”选择状态与 URL 查询参数同步，
   // 使用户从资源详情页点击浏览器 back 后仍能回到原选中的课程，也便于链接分享。
   const [searchParams, setSearchParams] = useSearchParams();
+  const routerLocation = useLocation();
   const initialGrade = searchParams.get('grade') || undefined;
   const initialCourse = searchParams.get('course') || undefined;
   const initialKeyword = searchParams.get('q') || '';
@@ -186,10 +195,30 @@ function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profi
   // 当前用户被赋予的年级访问权限（null 代表不限制，如未登录或未设置）
   const [unlockedGradeIds, setUnlockedGradeIds] = useState<string[] | null>(null);
 
+  // 右侧「课程资源」列的锚点：左侧课程列表较长，点击下方课程时需上滑把该列拉回视口
+  const resourceColumnRef = useRef<HTMLDivElement | null>(null);
+
+  function scrollToResourceColumn() {
+    const el = resourceColumnRef.current;
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY - TOPBAR_OFFSET;
+    window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
+  }
+
+  // 从课程资源详情页返回时 URL 带 #resources，直接把课程资源列滚回视口
+  useEffect(() => {
+    if (routerLocation.hash !== '#resources' || courses.length === 0) return;
+    const el = resourceColumnRef.current;
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY - TOPBAR_OFFSET;
+    window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
+  }, [routerLocation.hash, courses.length]);
+
   useEffect(() => {
     getHomeResources().then((data) => {
       setGrades(data.grades);
-      setCourses(data.courses);
+      // 大四课程不在前端展示（数据仍在库中，去掉此处过滤即可恢复）
+      setCourses(data.courses.filter((c) => !HIDDEN_COURSE_GRADE_IDS.has(c.gradeId)));
       setAllAssignments(data.assignments);
       setAssignments(data.assignments);
     });
@@ -300,8 +329,8 @@ function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profi
         const orderB = gradeOrder.get(b.gradeId) ?? Number.MAX_SAFE_INTEGER;
         if (orderA !== orderB) return orderA - orderB;
       }
-      // 3) 同状态同年级下，按浏览量降序
-      return b.viewCount - a.viewCount;
+      // 3) 其余情况保持后端返回顺序
+      return 0;
     });
   }, [scopedCourses, selectedGrade, grades, lockedCourseIdSet]);
 
@@ -383,8 +412,6 @@ function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profi
           <strong>{selectedGradeName}</strong>
           <em>/</em>
           <strong>{selectedCourseText}</strong>
-          <em>/</em>
-          <strong>{scopedAssignments.length} 项课程资源</strong>
         </div>
         <div className="resource-cascade">
           <div className="cascade-column cascade-column-grade">
@@ -432,7 +459,10 @@ function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profi
                 return (
                   <List.Item
                     className={course.id === selectedCourse ? 'active-list-item' : ''}
-                    onClick={() => setSelectedCourse(course.id)}
+                    onClick={() => {
+                      setSelectedCourse(course.id);
+                      scrollToResourceColumn();
+                    }}
                     title={locked ? '该课程处于锁定年级：可查看课程名与资源标题，但不能进入详情' : undefined}
                   >
                     <Space>
@@ -455,7 +485,7 @@ function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profi
               }}
             />
           </div>
-          <div className="cascade-column cascade-column-main">
+          <div className="cascade-column cascade-column-main" ref={resourceColumnRef}>
             <div className="cascade-title">
               <span>课程资源</span>
               {selectedCourse && (
@@ -619,11 +649,6 @@ function CourseResourceTabs({
                     <Paragraph className="assignment-item-summary" ellipsis={{ rows: 2 }}>{item.summary}</Paragraph>
                   )}
                 </div>
-                <div className="assignment-item-right">
-                  <Text type="secondary" className="assignment-view-count">
-                    <EyeOutlined style={{ marginRight: 4 }} /> {item.viewCount}
-                  </Text>
-                </div>
               </div>
             </List.Item>
           );
@@ -668,11 +693,6 @@ function AssignmentCard({ assignment, isLoggedIn, locked }: { assignment: Assign
           </div>
           <Title level={4} className="assignment-item-title">{assignment.title}</Title>
           <Paragraph className="assignment-item-summary" ellipsis={{ rows: 2 }}>{assignment.summary}</Paragraph>
-        </div>
-        <div className="assignment-item-right">
-          <Text type="secondary" className="assignment-view-count">
-            <EyeOutlined style={{ marginRight: 4 }} /> {assignment.viewCount}
-          </Text>
         </div>
       </div>
     </List.Item>
@@ -1290,6 +1310,13 @@ function CourseResourceDetailPage({ memberLevel, profile, isLoggedIn }: { member
 
   return (
     <div>
+      <Button
+        style={{ marginBottom: 16 }}
+        icon={<ArrowLeftOutlined />}
+        onClick={() => navigate(`/?course=${detail.courseId}#resources`)}
+      >
+        返回学习资源
+      </Button>
       <Card className="detail-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
           <Space direction="vertical" size={8} style={{ flex: 1, minWidth: 0 }}>
@@ -1302,7 +1329,6 @@ function CourseResourceDetailPage({ memberLevel, profile, isLoggedIn }: { member
             </Space>
             <Title>{detail.title}</Title>
             {detail.summary && <Paragraph>{detail.summary}</Paragraph>}
-            <Text type="secondary"><EyeOutlined /> {detail.viewCount} 次浏览</Text>
           </Space>
           {!detail.locked && detail.url && (
             <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -1594,7 +1620,7 @@ function ProfilePage({
     setCoursesLoading(true);
     getUserCourses(profile.phone)
       .then((res) => {
-        setMajorCourses(res.data.courses);
+        setMajorCourses(res.data.courses.filter((c) => !HIDDEN_COURSE_GRADE_IDS.has(c.gradeId)));
       })
       .catch(() => setMajorCourses([]))
       .finally(() => setCoursesLoading(false));
@@ -1831,7 +1857,6 @@ function ProfilePage({
                       actions={[
                         <Tag key="grade" color="blue">{item.gradeName}</Tag>,
                         item.isHot ? <Tag key="hot" color="volcano">热门</Tag> : null,
-                        <Text key="views" type="secondary"><EyeOutlined /> {item.viewCount}</Text>
                       ].filter(Boolean) as ReactNode[]}
                     >
                       <List.Item.Meta
@@ -2073,9 +2098,11 @@ function CampusRecruitTab() {
         />
         <Divider style={{ margin: '12px 0' }} />
         <Text strong>⚡ 各厂节奏差异提示</Text>
-        <Paragraph style={{ marginBottom: 2, marginTop: 8 }}><Text strong>字节跳动：</Text>常年滚动招聘，节奏极快，从投递到面完可能只需 2 周。</Paragraph>
-        <Paragraph style={{ marginBottom: 2 }}><Text strong>腾讯：</Text>按事业群（BG）独立招聘。微信（WXG）、IEG（互娱）、CSIG 等节奏不同，需分别盯紧。</Paragraph>
-        <Paragraph style={{ marginBottom: 0 }}><Text strong>阿里巴巴：</Text>近年来受组织架构调整影响，HC 波动较大，秋招启动有时会比其他厂晚半个月。</Paragraph>
+        <div style={detailGroupStyle}>
+          <Paragraph style={{ marginBottom: 2 }}><Text strong>字节跳动：</Text>常年滚动招聘，节奏极快，从投递到面完可能只需 2 周。</Paragraph>
+          <Paragraph style={{ marginBottom: 2 }}><Text strong>腾讯：</Text>按事业群（BG）独立招聘。微信（WXG）、IEG（互娱）、CSIG 等节奏不同，需分别盯紧。</Paragraph>
+          <Paragraph style={{ marginBottom: 0 }}><Text strong>阿里巴巴：</Text>近年来受组织架构调整影响，HC 波动较大，秋招启动有时会比其他厂晚半个月。</Paragraph>
+        </div>
       </Card>
       <Card className="career-resource-card" title="💰 薪资待遇信息（SP/SSP 体系）" style={{ marginBottom: 16 }} size="small">
         <Paragraph type="secondary">大厂的校招薪资高度透明化（尤其在牛客网等平台），实行“密薪制但明牌打”的策略。薪资不仅看 Base，更看总包（Total Package）。</Paragraph>
@@ -2094,7 +2121,7 @@ function CampusRecruitTab() {
           ]}
         />
         <Divider style={{ margin: '12px 0' }} />
-        <Text strong>💼 头部大厂薪资参考范围（2023-2024 届行情）</Text>
+        <Text strong>💼 头部大厂薪资参考范围（2024-2025 届行情）</Text>
         <Alert
           type="warning"
           showIcon
@@ -2117,10 +2144,12 @@ function CampusRecruitTab() {
         />
         <Divider style={{ margin: '12px 0' }} />
         <Text strong>🎁 隐性收入与福利（不可忽视）</Text>
-        <Paragraph style={{ marginBottom: 2, marginTop: 8 }}><Text strong>签字费（Sign-on Bonus）：</Text>为了抢 SSP 或防止你被竞品挖走，一次性发放 3W - 10W 不等。</Paragraph>
-        <Paragraph style={{ marginBottom: 2 }}><Text strong>股票/期权：</Text>阿里、腾讯、字节对 SSP 通常会配股，分 4 年归属（Vesting），这是拉开总包差距的核心。</Paragraph>
-        <Paragraph style={{ marginBottom: 2 }}><Text strong>公积金：</Text>注意缴纳基数和比例。比如北京有些厂按全额工资 12% 交（双边每月多出几千块隐形收入），有些按最低基数交，差距极大。</Paragraph>
-        <Paragraph style={{ marginBottom: 0 }}><Text strong>搬家费/安家费：</Text>部分大厂提供 5000 - 15000 元的一次性异地入职补贴。</Paragraph>
+        <div style={detailGroupStyle}>
+          <Paragraph style={{ marginBottom: 2 }}><Text strong>签字费（Sign-on Bonus）：</Text>为了抢 SSP 或防止你被竞品挖走，一次性发放 3W - 10W 不等。</Paragraph>
+          <Paragraph style={{ marginBottom: 2 }}><Text strong>股票/期权：</Text>阿里、腾讯、字节对 SSP 通常会配股，分 4 年归属（Vesting），这是拉开总包差距的核心。</Paragraph>
+          <Paragraph style={{ marginBottom: 2 }}><Text strong>公积金：</Text>注意缴纳基数和比例。比如北京有些厂按全额工资 12% 交（双边每月多出几千块隐形收入），有些按最低基数交，差距极大。</Paragraph>
+          <Paragraph style={{ marginBottom: 0 }}><Text strong>搬家费/安家费：</Text>部分大厂提供 5000 - 15000 元的一次性异地入职补贴。</Paragraph>
+        </div>
       </Card>
       <Card className="career-resource-card" title="⚠️ 核心注意事项与避坑指南" style={{ marginBottom: 16 }} size="small">
         <Collapse
@@ -2185,29 +2214,34 @@ const internTimelineData = [
   { period: '5月 - 6月', heat: '🔥🔥', reason: '相对平稳。此时暑期实习生即将入职，部分团队的日常实习 HC 会被压缩。' },
   { period: '7月 - 8月', heat: '🔥🔥🔥🔥🔥', reason: '暑期巅峰。大量在校生放假，全职可实习；同时很多暑期实习生在准备答辩/转正，团队需要额外人手分担压力。' },
   { period: '9月 - 10月', heat: '🔥🔥🔥', reason: '秋季小高峰。秋招开启，大三/研二学生面临抉择；部分拿到秋招 Offer 的同学开始找日常实习“试岗”。' },
-  { period: '11月 - 12月', heat: '🔥🔥', reason: '临近年底，各厂锁 HC（Headcount）冲财报，招聘放缓。但会有年前离职潮带来的捡漏机会。' },
+  { period: '11月 - 12月', heat: '🔥🔥', reason: '临近年底，各厂锁 HC 冲财报，招聘放缓。但会有年前离职潮带来的捡漏机会。' },
   { period: '1月', heat: '🔥', reason: '寒假前夕，需求较少，多为急招替补。' },
 ];
 
 const internSalaryData = [
-  { company: '字节跳动', tech: '400 - 600+', prod: '300 - 400', func: '200 - 300', note: '业内顶薪之一。包三餐（食堂极好），下午茶，无房补但有免费健身房。' },
+  { company: '字节跳动', tech: '400 - 600+', prod: '300 - 400', func: '200 - 300', note: '业内顶薪之一。包三餐，下午茶，无房补但有免费健身房。' },
   { company: '腾讯', tech: '300 - 500', prod: '200 - 300', func: '150 - 250', note: '深圳总部有班车和食堂补贴。微信/QQ 等核心 BG 待遇可能略高。' },
   { company: '阿里巴巴', tech: '300 - 500', prod: '200 - 350', func: '150 - 250', note: '园区食堂好吃且便宜，部分部门有打车报销。' },
   { company: '美团', tech: '300 - 450', prod: '200 - 300', func: '150 - 200', note: '晚 7 点后包晚餐，加班文化较重，但给钱痛快。' },
   { company: '快手', tech: '350 - 500', prod: '250 - 350', func: '200 - 250', note: '薪资对标字节，房补较高（北京通常 1500-2000/月）。' },
   { company: '百度', tech: '300 - 400', prod: '200 - 300', func: '150 - 200', note: '食堂不错，整体性价比尚可。' },
-  { company: '京东', tech: '250 - 400', prod: '150 - 250', func: '120 - 200', note: '亦庄总部有免费班车和公租房名额（需抢）。' },
+  { company: '京东', tech: '250 - 400', prod: '150 - 250', func: '120 - 200', note: '亦庄总部有免费班车。' },
   { company: '小红书', tech: '300 - 500', prod: '250 - 400', func: '200 - 300', note: '近年待遇提升快，包三餐，氛围较年轻。' },
   { company: '拼多多', tech: '400 - 600+', prod: '300 - 400+', func: '250 - 300+', note: '绝对高薪，但对应的是极长的工作时间（11-11-6 常态）。' },
 ];
 
 const internChannelData = [
+  { channel: '内部员工内推', level: '⭐⭐⭐⭐⭐', tip: '成功率最高。通过学长学姐、脉脉、领英找到目标部门员工，直接递简历。' },
   { channel: '牛客网 / 实习僧', level: '⭐⭐⭐⭐⭐', tip: '最集中的日常实习发布地。牛客网的“讨论区”常有员工直招内推帖，回复极快。' },
   { channel: 'Boss直聘', level: '⭐⭐⭐⭐', tip: '可以直接和业务 Leader 或 HR 开聊。适合搜“日常实习”、“急招”关键词。' },
-  { channel: '内部员工内推', level: '⭐⭐⭐⭐⭐', tip: '成功率最高。通过学长学姐、脉脉、领英找到目标部门员工，直接递简历。' },
   { channel: '微信公众号/社群', level: '⭐⭐⭐⭐', tip: '关注“互联派”、“刺猬实习”、“校招日历”等，以及各大厂的官方招聘号（如“字节跳动招聘”）。' },
   { channel: '大厂官网', level: '⭐⭐⭐', tip: '流程最正规，但反馈最慢。日常实习在官网容易被淹没。' },
 ];
+
+const emphasisTextStyle = { color: 'rgba(0, 0, 0, 0.65)' };
+
+// 卡片内「小标题 + 细节说明」的细节段落统一左缩进，避免与标题齐平
+const detailGroupStyle = { paddingLeft: 16, marginTop: 8 };
 
 function DailyInternTab() {
   return (
@@ -2222,16 +2256,16 @@ function DailyInternTab() {
       <Card className="career-resource-card" title="五步走完整流程" style={{ marginBottom: 16 }}>
         <Timeline
           items={[
-            { color: 'green', children: <><Text strong>① 目标定位</Text><Paragraph type="secondary" style={{ marginBottom: 0 }}>先定方向（技术/产品/运营）与城市，再评估可实习时长：建议 3 个月以上、每周 4-5 天 on-site，这是大部分 JD 的硬门槛。</Paragraph></> },
-            { color: 'green', children: <><Text strong>② 简历打磨</Text><Paragraph type="secondary" style={{ marginBottom: 0 }}>一页纸原则，项目经历用“背景-动作-量化结果”描述，技术栈与目标 JD 对齐；无大厂经历时突出课程项目、竞赛与开源贡献。</Paragraph></> },
-            { color: 'blue', children: <><Text strong>③ 投递渠道</Text><Paragraph type="secondary" style={{ marginBottom: 0 }}>优先级：学长姐/导师内推 → 官网/公众号 → BOSS直聘/实习僧；内推可直达招聘群，简历响应速度最快。</Paragraph></> },
-            { color: 'blue', children: <><Text strong>④ 面试（1-2 轮）</Text><Paragraph type="secondary" style={{ marginBottom: 0 }}>通常 1-2 轮技术面 + 1 轮mentor/HR 面，一周内可走完；实习面试更看重基础扎实度、学习潜力与到岗时间。</Paragraph></> },
-            { color: 'orange', children: <><Text strong>⑤ 入职与转正</Text><Paragraph type="secondary" style={{ marginBottom: 0 }}>入职后跟 mentor 定期对齐目标，争取独立负责模块；实习 2-3 个月后可主动沟通留用意向，秋招走转正绿色通道。</Paragraph></> },
+            { color: 'green', children: <><Text strong>① 目标定位</Text><Paragraph type="secondary" style={{ marginBottom: 0 }}>先定方向（技术/产品/运营）与城市，再评估可实习时长：<Text strong style={emphasisTextStyle}>建议 3 个月以上、每周 4-5 天 on-site</Text>，这是大部分 JD 的硬门槛。</Paragraph></> },
+            { color: 'green', children: <><Text strong>② 简历打磨</Text><Paragraph type="secondary" style={{ marginBottom: 0 }}><Text strong style={emphasisTextStyle}>一页纸原则，项目经历用“背景-动作-量化结果”描述</Text>，技术栈和背景与目标 JD 对齐；无大厂经历时突出课程项目、竞赛与开源贡献。</Paragraph></> },
+            { color: 'blue', children: <><Text strong>③ 投递渠道</Text><Paragraph type="secondary" style={{ marginBottom: 0 }}>优先级：<Text style={{ color: '#b8860b', fontWeight: 600 }}><CrownOutlined style={{ marginRight: 4 }} />学长姐/导师内推</Text> → 官网/公众号 → BOSS直聘/实习僧；内推可直达招聘群，简历响应速度最快。</Paragraph></> },
+            { color: 'blue', children: <><Text strong>④ 面试（2-3 轮）</Text><Paragraph type="secondary" style={{ marginBottom: 0 }}><Text strong style={emphasisTextStyle}>通常 2-3 轮专业面 + 1 轮mentor/HR 面</Text>，一般一周内可走完；实习面试更看重基础扎实度、学习潜力与到岗时间。</Paragraph></> },
+            { color: 'orange', children: <><Text strong>⑤ 入职与转正</Text><Paragraph type="secondary" style={{ marginBottom: 0 }}>入职后跟 mentor 定期对齐目标，争取独立负责模块；<Text strong style={emphasisTextStyle}>实习 2-3 个月后可主动沟通留用意向</Text>，秋招走转正绿色通道。</Paragraph></> },
           ]}
         />
       </Card>
       <Card className="career-resource-card" title="📅 全年时间轴与招聘热度" style={{ marginBottom: 16 }} size="small">
-        <Paragraph type="secondary">日常实习没有统一的时间表，全年滚动招聘（Rolling basis），但受业务周期和学校假期影响，有明显的淡旺季。</Paragraph>
+        <Paragraph type="secondary">日常实习没有统一的时间表，全年滚动招聘，但受业务周期和学校假期影响，有明显的淡旺季。</Paragraph>
         <Table
           size="small"
           pagination={false}
@@ -2245,9 +2279,11 @@ function DailyInternTab() {
         />
         <Divider style={{ margin: '12px 0' }} />
         <Text strong>⏳ 时长与到岗要求</Text>
-        <Paragraph style={{ marginBottom: 2, marginTop: 8 }}><Text strong>硬性规定：</Text>绝大多数大厂要求至少实习 3 个月，更青睐能实习 4-6 个月的候选人。</Paragraph>
-        <Paragraph style={{ marginBottom: 2 }}><Text strong>出勤天数：</Text>通常要求每周到岗 4-5 天（全勤优先）。如果只能一周去 2-3 天，简历通过率极低。</Paragraph>
-        <Paragraph style={{ marginBottom: 0 }}><Text strong>到岗速度：</Text>日常实习通常是“急招”，面试官常问“最快什么时候能入职？”，能在面试通过后 1-2 周内到岗是巨大加分项。</Paragraph>
+        <div style={detailGroupStyle}>
+          <Paragraph style={{ marginBottom: 2 }}><Text strong>硬性规定：</Text>绝大多数大厂要求至少实习 3 个月，更青睐能实习 4-6 个月的候选人。</Paragraph>
+          <Paragraph style={{ marginBottom: 2 }}><Text strong>出勤天数：</Text>通常要求每周到岗 4-5 天（全勤优先）。如果只能一周去 2-3 天，简历通过率极低。</Paragraph>
+          <Paragraph style={{ marginBottom: 0 }}><Text strong>到岗速度：</Text>日常实习通常是“急招”，面试官常问“最快什么时候能入职？”，能在面试通过后 1-2 周内到岗是巨大加分项。</Paragraph>
+        </div>
       </Card>
       <Card className="career-resource-card" title="💰 薪资待遇速查（2023-2024 年市场行情）" style={{ marginBottom: 16 }} size="small">
         <Paragraph type="secondary">薪资结构：日薪 × 出勤天数 + 房补/餐补；不享受正式员工的年终奖、股票和完整福利。</Paragraph>
@@ -2267,12 +2303,16 @@ function DailyInternTab() {
         />
         <Divider style={{ margin: '12px 0' }} />
         <Text strong>🎁 隐性福利与补贴（重点关注）</Text>
-        <Paragraph style={{ marginBottom: 2, marginTop: 8 }}><Text strong>房补（异地实习的核心）：</Text>快手、小红书、B 站等通常有 1500-2000 元/月的房补；腾讯、阿里部分城市有合作公寓或租房补贴；注意字节和拼多多部分岗位反而没有直接房补，需提前问清 HR。</Paragraph>
-        <Paragraph style={{ marginBottom: 2 }}><Text strong>餐饮：</Text>字节、快手、小红书等包三餐（相当于每天省下 80-100 元）；腾讯、阿里通常是发餐补到工卡里。</Paragraph>
-        <Paragraph style={{ marginBottom: 8 }}><Text strong>交通：</Text>晚上加班到一定时间（如 21:30 或 22:00 后）打车全额报销。</Paragraph>
-        <Text strong>🧮 算一笔账（以北京字节产品实习为例）</Text>
-        <Paragraph style={{ marginBottom: 2, marginTop: 8 }}>日薪 300 元 × 22 天 = 6600 元；扣除五险一金/个税（实习劳务报酬税率较高，通常按 20% 预扣，次年汇算清缴退税）到手约 5500 元；加房补（如有）1500 元。</Paragraph>
-        <Paragraph style={{ marginBottom: 0 }}><Text strong>实际月到手预期：6000 - 7500 元左右</Text>（足以覆盖一线城市基本生活成本）。</Paragraph>
+        <div style={detailGroupStyle}>
+          <Paragraph style={{ marginBottom: 2 }}><Text strong>房补（异地实习的核心）：</Text>快手、小红书、B 站等通常有 1500-2000 元/月的房补；腾讯、阿里部分城市有合作公寓或租房补贴；注意字节和拼多多部分岗位反而没有直接房补，需提前问清 HR。</Paragraph>
+          <Paragraph style={{ marginBottom: 2 }}><Text strong>餐饮：</Text>字节、快手、小红书等包三餐（相当于每天省下 80-100 元）；腾讯、阿里通常是发餐补到工卡里。</Paragraph>
+          <Paragraph style={{ marginBottom: 0 }}><Text strong>交通：</Text>晚上加班到一定时间（如 21:30 或 22:00 后）打车全额报销。</Paragraph>
+        </div>
+        <Text strong style={{ display: 'inline-block', marginTop: 12 }}>🧮 算一笔账（以北京字节产品实习为例）</Text>
+        <div style={detailGroupStyle}>
+          <Paragraph style={{ marginBottom: 2 }}>日薪 300 元 × 22 天 = 6600 元；扣除五险一金/个税（实习劳务报酬税率较高，通常按 20% 预扣，次年汇算清缴退税）到手约 5500 元；加房补（如有）1500 元。</Paragraph>
+          <Paragraph style={{ marginBottom: 0 }}><Text strong>实际月到手预期：6000 - 7500 元左右</Text>（足以覆盖一线城市基本生活成本）。</Paragraph>
+        </div>
       </Card>
       <Card className="career-resource-card" title="🎯 投递渠道与信息差" style={{ marginBottom: 16 }} size="small">
         <Paragraph type="secondary">不要只盯着官网，日常实习讲究“快”和“精准”。</Paragraph>
@@ -2291,20 +2331,13 @@ function DailyInternTab() {
       <Card className="career-resource-card" title="⚠️ 核心注意事项与避坑指南" size="small">
         <Collapse
           items={[
-            { key: 'return', label: <Text strong>1. 关于“转正”的残酷真相</Text>, children: (
+            { key: 'school', label: <Text strong>1. 学校与学业的平衡（红线问题）</Text>, children: (
               <div>
-                <Paragraph style={{ marginBottom: 2 }}>日常实习 ≠ 暑期实习。日常实习的默认设定是<strong>“不承诺转正”</strong>。</Paragraph>
-                <Paragraph style={{ marginBottom: 2 }}><Text strong>避坑话术：</Text>面试时如果 Leader 说“表现好可以转正”，一定要追问：“目前团队有日常实习转正的 HC 吗？往年转化率大概是多少？”如果没有明确 HC，就把它当成纯粹刷简历的经历，不要押宝。</Paragraph>
-                <Paragraph style={{ marginBottom: 0 }}><Text strong>曲线救国：</Text>有些团队确实会通过日常实习考察候选人，然后在秋招时发 Offer。但这需要你表现出远超实习生的能力，且 Leader 愿意为你争取。</Paragraph>
-              </div>
-            ) },
-            { key: 'school', label: <Text strong>2. 学校与学业的平衡（红线问题）</Text>, children: (
-              <div>
-                <Paragraph style={{ marginBottom: 2 }}><Text strong>导师/辅导员态度：</Text>研一/研二学生必须搞定导师。很多大厂背调或入职时需要提供《学校同意实习证明》。如果导师不放人，千万别强行旷课去实习，一旦被发现可能被开除或延毕。</Paragraph>
+                <Paragraph style={{ marginBottom: 2 }}><Text strong>导师/辅导员态度：</Text>研一/研二学生必须搞定导师。如果导师不放人，千万别强行旷课去实习，一旦被发现可能被开除或延毕。</Paragraph>
                 <Paragraph style={{ marginBottom: 0 }}><Text strong>期末考试：</Text>入职前务必确认考试周时间，提前和 Leader 沟通请假。大厂对实习生请假通常比较宽容，但不能玩消失。</Paragraph>
               </div>
             ) },
-            { key: 'chores', label: <Text strong>3. 警惕“打杂陷阱”</Text>, children: (
+            { key: 'chores', label: <Text strong>2. 警惕“打杂陷阱”</Text>, children: (
               <div>
                 <Paragraph style={{ marginBottom: 2 }}><Text strong>现象：</Text>进去后发现每天都在贴发票、拉数据跑 SQL、做毫无营养的竞品截图。</Paragraph>
                 <Paragraph style={{ marginBottom: 4 }}><Text strong>应对：</Text>前两周熟悉业务打杂是正常的。但如果一个月后依然如此，你需要主动向上管理：</Paragraph>
@@ -2313,19 +2346,19 @@ function DailyInternTab() {
                 <Paragraph style={{ marginBottom: 0 }}>③ 如果实在学不到东西，果断止损离职，不要为了一个大厂 Title 浪费半年青春。</Paragraph>
               </div>
             ) },
-            { key: 'nda', label: <Text strong>4. 竞业协议与保密红线</Text>, children: (
+            { key: 'nda', label: <Text strong>3. 竞业协议与保密红线</Text>, children: (
               <div>
                 <Paragraph style={{ marginBottom: 2 }}><Text strong>绝对红线：</Text>严禁将公司的代码、内部文档、未上线的产品截图发到个人电脑、GitHub 或社交媒体上。哪怕是一张带有内部水印的飞书/钉钉截图，都可能导致你被开除甚至面临法律诉讼。</Paragraph>
                 <Paragraph style={{ marginBottom: 0 }}><Text strong>竞业限制：</Text>极少数核心算法岗的日常实习生可能会被要求签竞业协议（离职后几个月不能去竞品），签之前一定要看清条款。一般产品/运营岗不涉及。</Paragraph>
               </div>
             ) },
-            { key: 'tax', label: <Text strong>5. 税务问题（劳务报酬）</Text>, children: (
+            { key: 'tax', label: <Text strong>4. 税务问题（劳务报酬）</Text>, children: (
               <div>
                 <Paragraph style={{ marginBottom: 2 }}>实习生的工资在法律上属于<strong>“劳务报酬”</strong>，而非“工资薪金”。单次收入超过 800 元的部分，企业会按 20%~40% 的税率预扣预缴个人所得税。</Paragraph>
                 <Paragraph style={{ marginBottom: 0 }}><Text strong>重点：不要慌！</Text>次年 3-6 月进行个人所得税综合所得汇算清缴时，因为你的年总收入通常达不到高税率标准，多扣的税会全额退还给你（在“个人所得税”App 上操作即可）。</Paragraph>
               </div>
             ) },
-            { key: 'extra', label: <Text strong>6. 其他提醒</Text>, children: (
+            { key: 'extra', label: <Text strong>5. 其他提醒</Text>, children: (
               <div>
                 <Paragraph style={{ marginBottom: 2 }}>入职前确认薪资结构（日薪/月薪、餐补房补）与转正机制，口头承诺尽量落实到邮件或 Offer 文件。</Paragraph>
                 <Paragraph style={{ marginBottom: 2 }}>警惕“付费内推”与包装简历的中介，正规内推均不收费。</Paragraph>
@@ -2479,33 +2512,9 @@ function SelfAssessmentTab() {
         type="info"
         showIcon
         style={{ marginBottom: 24 }}
-        message="投递前先完成个人评估：明确定位 → 盘点硬实力 → 制定公司分级策略"
+        message="投递前先完成个人评估：对照六类岗位画像，找到最适合自己的方向"
         description="评估的目的是把有限精力投入到性价比最高的方向上，避免海投带来的时间与信心损耗。"
       />
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} md={8}>
-          <Card className="career-resource-card" title="🎯 目标定位" size="small">
-            <Paragraph style={{ marginBottom: 4 }}>· 岗位方向：技术栈、兴趣与长期发展三者取交集</Paragraph>
-            <Paragraph style={{ marginBottom: 4 }}>· 目标城市：一线机会多、竞争烈，新一线性价比高</Paragraph>
-            <Paragraph style={{ marginBottom: 0 }}>· 时间预算：距离投递还有几个月，决定补短板的深度</Paragraph>
-          </Card>
-        </Col>
-        <Col xs={24} md={8}>
-          <Card className="career-resource-card" title="💪 硬实力盘点" size="small">
-            <Paragraph style={{ marginBottom: 4 }}>· 算法基础：LeetCode 200+ 题、Hot 100 熟练度</Paragraph>
-            <Paragraph style={{ marginBottom: 4 }}>· 项目深度：能否讲清架构选型、难点与量化收益</Paragraph>
-            <Paragraph style={{ marginBottom: 4 }}>· 实习经历：每段实习都能沉淀可复述的成果</Paragraph>
-            <Paragraph style={{ marginBottom: 0 }}>· 八股广度：语言特性/网络/OS/数据库按岗位侧重准备</Paragraph>
-          </Card>
-        </Col>
-        <Col xs={24} md={8}>
-          <Card className="career-resource-card" title="📊 公司分级策略" size="small">
-            <Paragraph style={{ marginBottom: 4 }}>· 冲刺层：大厂核心 BU，需提前批抢占先机</Paragraph>
-            <Paragraph style={{ marginBottom: 4 }}>· 匹配层：与当前能力画像最接近的主投递池</Paragraph>
-            <Paragraph style={{ marginBottom: 0 }}>· 保底层：中厂/独角兽，确保手握 Offer 再博弈</Paragraph>
-          </Card>
-        </Col>
-      </Row>
       <JobProfileSection />
       <Card className="career-resource-card" title="行动建议" size="small">
         <Paragraph style={{ marginBottom: 4 }}>1. 每两周做一次模拟面（同学互面或 AI 面试工具），用录音复盘表达与知识盲区。</Paragraph>
@@ -2534,6 +2543,122 @@ function ApplicationGuidePage() {
           { key: 'internship', label: '日常实习', children: <DailyInternTab /> },
           { key: 'assessment', label: '个人评估', children: <SelfAssessmentTab /> },
         ]}
+      />
+    </div>
+  );
+}
+
+type CoachingStep = { title: string; detail: string; color: string };
+
+type CoachingTrack = {
+  key: string;
+  label: string;
+  audience: string;
+  intro: string;
+  focus: string[];
+  steps: CoachingStep[];
+  deliverables: string[];
+};
+
+// 1V1 全流程辅导：研发 / 商科两个方向的陪跑环节拆解
+const coachingTracks: CoachingTrack[] = [
+  {
+    key: 'rd',
+    label: '💻 研发',
+    audience: '后端 / 前端 / 算法 / 客户端 / 测试 / 安全等技术岗',
+    intro: '以“能不能上手写、能不能讲清楚”为验收标准，评测到复盘六个环节全部围绕技术岗面试真实链路展开。',
+    focus: ['算法与八股', '项目深挖', '手撕代码', '系统设计'],
+    steps: [
+      { title: '① 职业性格评测', color: 'green', detail: 'MBTI + 技术方向倾向双测评，结合语言偏好、debug 耐心度与协作方式，收敛出 2-3 个最匹配的细分方向（服务端 / 前端 / 算法 / 客户端），避免盲目跟风投递。' },
+      { title: '② 个人能力摸底', color: 'green', detail: '算法题量、八股掌握度、项目复杂度、工程素养四项打分，定位当前处在“能投 / 能面 / 能拿 offer”哪一档，并输出可量化的差距清单与补齐周期。' },
+      { title: '③ 背景&简历提升', color: 'blue', detail: '简历按 STAR + 量化指标重写，把“参与开发”改成“负责什么模块、解决什么问题、带来什么指标”；缺项目时规划 6-8 周可交付的实战项目（含技术选型与验收标准），规避课程设计式项目。' },
+      { title: '④ 模拟面试', color: 'blue', detail: '中文技术面 + 手撕算法 + 系统设计三件套，全程录音逐题点评，重点纠表达结构与边界意识（先说思路再写代码、主动谈复杂度与场景权衡）。' },
+      { title: '⑤ 真实面试复盘', color: 'orange', detail: '每场真实面试当日复盘，区分“不会”与“没讲好”，沉淀高频题、卡点与答崩原因，逐步形成自己的题库与话术，越面越稳。' },
+      { title: '⑥ 流程跟进', color: 'red', detail: '投递节奏规划、内推资源匹配、多场面试排期冲突处理、Offer 横向比较与谈薪策略，全程推送进展到结案。' },
+    ],
+    deliverables: ['能力雷达图', '简历诊断与改稿', '模拟面试录音复盘', '个人高频题库', '投递进度跟踪表'],
+  },
+  {
+    key: 'biz',
+    label: '📈 商科',
+    audience: '产品 / 运营 / 市场营销 / 数据分析 / 咨询 / 管培生',
+    intro: '技术岗拼硬技能，商科岗拼“结构化表达 + 商业判断”，因此评测与模拟环节默认把案例分析和行为面作为主战场。',
+    focus: ['商业 sense', '数据分析', '结构化表达', '案例拆解'],
+    steps: [
+      { title: '① 职业性格评测', color: 'green', detail: '霍兰德 + 大五人格测评，区分产品、运营、咨询、管培四类岗位的胜任特征，避免只看岗位热度而忽视性格与工作节奏的匹配度。' },
+      { title: '② 个人能力摸底', color: 'green', detail: '商业 sense、数据分析、结构化表达、案例拆解四项打分，明确与目标岗位胜任模型的差距，并给出 4-8 周的针对性提升任务。' },
+      { title: '③ 背景&简历提升', color: 'blue', detail: '把社团、实习、竞赛翻译成可量化的商业成果（GMV、留存、转化率、复购），并补一份行业研究报告作为作品集，应对“你有什么作品”这类追问。' },
+      { title: '④ 模拟面试', color: 'blue', detail: '行为面 STAR 逐句打磨 + 案例分析（Case）框架演练 + 群面角色定位与时间管理，每轮录音逐句反馈结论先行、逻辑分层与数据引用。' },
+      { title: '⑤ 真实面试复盘', color: 'orange', detail: '记录每家公司的考察侧重点与话术得失，区分“知识缺口”与“表达问题”，下一场面试前针对性补刀，不在同一个坑跌两次。' },
+      { title: '⑥ 流程跟进', color: 'red', detail: '秋招宣讲会与网申节奏并行，内推与官方渠道双线推进，Offer 决策矩阵（业务前景 / 成长性 / 薪资 / 城市）辅助做出不后悔的选择。' },
+    ],
+    deliverables: ['能力雷达图', '简历量化改稿', 'Case 模拟记录', '行业研究报告', '投递进度跟踪表'],
+  },
+];
+
+function CoachingTrackPanel({ track, onConsult }: { track: CoachingTrack; onConsult: () => void }) {
+  return (
+    <div>
+      <Alert
+        type="info"
+        showIcon
+        style={{ marginBottom: 24 }}
+        message={`适合方向：${track.audience}`}
+        description={track.intro}
+      />
+      <Card className="career-resource-card" title="考察重点" size="small" style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {track.focus.map((f) => <Tag key={f} color="blue">{f}</Tag>)}
+        </div>
+      </Card>
+      <Card className="career-resource-card" title="六步陪跑流程" style={{ marginBottom: 16 }}>
+        <Timeline
+          items={track.steps.map((s) => ({
+            color: s.color,
+            children: (
+              <>
+                <Text strong>{s.title}</Text>
+                <Paragraph type="secondary" style={{ marginBottom: 0 }}>{s.detail}</Paragraph>
+              </>
+            ),
+          }))}
+        />
+      </Card>
+      <Card className="career-resource-card" title="服务交付物" size="small" style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {track.deliverables.map((d) => <Tag key={d} color="green">{d}</Tag>)}
+        </div>
+      </Card>
+      <Card className="career-resource-card career-followup-cta">
+        <div style={{ textAlign: 'center' }}>
+          <Title level={5}>想先看看自己现在处在哪一档？</Title>
+          <Paragraph type="secondary">先做一次免费初步评估，再决定是否需要全程陪跑</Paragraph>
+          <Button type="primary" size="large" onClick={onConsult}>立即预约 1v1 咨询</Button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function CoachingPage() {
+  const navigate = useNavigate();
+  return (
+    <div className="career-planning-page">
+      <Button style={{ marginBottom: 16 }} onClick={() => navigate('/career-planning')}>← 返回求职专区</Button>
+      <div className="career-hero">
+        <div className="career-hero-badge">🎯 求职专区 · 全流程陪跑</div>
+        <Title level={2}>1V1<span className="career-hero-highlight">全流程辅导</span></Title>
+        <Paragraph>职业性格评测、个人能力摸底、背景&简历提升、模拟面试、真实面试复盘、流程跟进等全流程陪跑</Paragraph>
+      </div>
+      <Tabs
+        defaultActiveKey="rd"
+        size="large"
+        className="career-tabs"
+        items={coachingTracks.map((track) => ({
+          key: track.key,
+          label: track.label,
+          children: <CoachingTrackPanel track={track} onConsult={() => navigate('/consultation')} />,
+        }))}
       />
     </div>
   );
@@ -2599,6 +2724,21 @@ function TechArticlesPage() {
   );
 }
 
+// 尚未开发完成的板块：整块灰色蒙层 + 锁提示，拦截所有点击
+function ComingSoonMask({ section }: { section: string }) {
+  return (
+    <div className="career-coming-soon-mask">
+      <div className="career-coming-soon-panel">
+        <LockOutlined className="career-coming-soon-icon" />
+        <Title level={5} className="career-coming-soon-title">功能暂未开放</Title>
+        <Paragraph type="secondary" className="career-coming-soon-desc">
+          {section}正在整理完善中，暂不支持查看，敬请期待
+        </Paragraph>
+      </div>
+    </div>
+  );
+}
+
 function CareerPlanningPage() {
   const navigate = useNavigate();
   const [jobsBoardOpen, setJobsBoardOpen] = useState(false);
@@ -2622,9 +2762,9 @@ function CareerPlanningPage() {
 
   const internshipData = [
     { title: '大厂申请全流程', desc: '从面试准备、简历投递到Offer接收的完整链路，含个人评估、时间节点与注意事项', tag: '流程', color: 'blue' },
-    { title: '简历与项目包装指南', desc: '如何用STAR法则描述项目经历，突出技术亮点', tag: '简历', color: 'purple' },
     { title: '实习岗位集结号', desc: '各大厂春招/秋招/日常实习时间线与内推渠道汇总，点击查看在招岗位', tag: '动态', color: 'red' },
     { title: '技术干货抢先读', desc: '精选大厂技术文章与面试干货，抢先掌握前沿技术动态与实战经验', tag: '干货', color: 'cyan' },
+    { title: '1V1全流程辅导', desc: '职业性格评测、个人能力摸底、背景&简历提升、模拟面试、真实面试复盘、流程跟进等全流程陪跑', tag: '辅导', color: 'purple', highlight: true },
   ];
 
   const studentCases = [
@@ -2999,8 +3139,8 @@ function CareerPlanningPage() {
   };
 
   const renderResourceList = (
-    data: { title: string; desc: string; tag: string; color: string }[],
-    onItemClick?: (item: { title: string; desc: string; tag: string; color: string }) => void,
+    data: { title: string; desc: string; tag: string; color: string; highlight?: boolean }[],
+    onItemClick?: (item: { title: string; desc: string; tag: string; color: string; highlight?: boolean }) => void,
   ) => (
     <List
       dataSource={data}
@@ -3012,8 +3152,29 @@ function CareerPlanningPage() {
             onClick={onItemClick ? () => onItemClick(item) : undefined}
           >
             <div className="career-resource-header">
-              <Tag color={item.color}>{item.tag}</Tag>
-              <Text className="career-resource-title" strong>{item.title}</Text>
+              {/* highlight 卡片：皇冠包在与其它卡片同款的金色小标签里 */}
+              {item.highlight ? (
+                <Tag
+                  color="gold"
+                  style={{
+                    // 不覆盖 marginInlineEnd，保留 antd 默认 8px，与文字标签的标签→标题间距一致
+                    paddingInline: 7,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    // 与其他文字标签（宽 40 / 高 22）保持同尺寸
+                    minWidth: 40,
+                    height: 22,
+                  }}
+                >
+                  <CrownOutlined style={{ fontSize: 16 }} />
+                </Tag>
+              ) : (
+                <Tag color={item.color}>{item.tag}</Tag>
+              )}
+              <Text className="career-resource-title" strong style={item.highlight ? { color: '#b8860b' } : undefined}>
+                {item.title}
+              </Text>
             </div>
             <Paragraph type="secondary" className="career-resource-desc">{item.desc}</Paragraph>
           </Card>
@@ -3026,33 +3187,7 @@ function CareerPlanningPage() {
     {
       key: 'internship',
       label: <span><ProfileOutlined /> 求职专区</span>,
-      children: jobsBoardOpen ? (
-        <div className="career-tab-content">
-          <Button style={{ marginBottom: 16 }} onClick={() => setJobsBoardOpen(false)}>← 返回求职专区</Button>
-          <div className="career-section-header">
-            <Title level={4}>实习岗位集结号</Title>
-            <Paragraph type="secondary">按职位类型浏览在招实习岗位，信息持续更新</Paragraph>
-          </div>
-          <Tabs
-            activeKey={activeJobCategory}
-            onChange={setActiveJobCategory}
-            className="career-tabs"
-            items={jobCategoryData.map((cat) => ({
-              key: cat.name,
-              label: <span>{cat.icon} {cat.name}</span>,
-              children: (
-                <Row gutter={[16, 16]}>
-                  {(jobPostingsData[cat.name] || []).map((job) => (
-                    <Col xs={24} key={`${job.company}-${job.role}`}>
-                      <JobPostingCard job={job} />
-                    </Col>
-                  ))}
-                </Row>
-              ),
-            }))}
-          />
-        </div>
-      ) : (
+      children: (
         <div className="career-tab-content">
           <div className="career-section-header">
             <Title level={4}>求职专区</Title>
@@ -3062,6 +3197,7 @@ function CareerPlanningPage() {
             if (item.title === '实习岗位集结号') setJobsBoardOpen(true);
             if (item.title === '大厂申请全流程') navigate('/career-planning/application-guide');
             if (item.title === '技术干货抢先读') navigate('/career-planning/tech-articles');
+            if (item.title === '1V1全流程辅导') navigate('/career-planning/coaching');
           })}
         </div>
       ),
@@ -3075,7 +3211,10 @@ function CareerPlanningPage() {
             <Title level={4}>留学专区</Title>
             <Paragraph type="secondary">涵盖选校定位、标化备考、文书打造到申请提交的全流程指导</Paragraph>
           </div>
-          {renderResourceList(studyAbroadData)}
+          <div className="career-coming-soon-body">
+            {renderResourceList(studyAbroadData)}
+            <ComingSoonMask section="留学专区" />
+          </div>
         </div>
       ),
     },
@@ -3088,7 +3227,10 @@ function CareerPlanningPage() {
             <Title level={4}>保研专区</Title>
             <Paragraph type="secondary">为目标保研的同学提供从规划到录取的全链路资料与信息</Paragraph>
           </div>
-          {renderResourceList(postgraduateData)}
+          <div className="career-coming-soon-body">
+            {renderResourceList(postgraduateData)}
+            <ComingSoonMask section="保研专区" />
+          </div>
         </div>
       ),
     },
@@ -3131,6 +3273,39 @@ function CareerPlanningPage() {
     },
   ];
 
+  // 岗位集结号以二级页面形态呈现：隐藏生涯规划顶层的专区 Tabs，与其它专区二级页面结构一致
+  if (jobsBoardOpen) {
+    return (
+      <div className="career-planning-page">
+        <Button style={{ marginBottom: 16 }} onClick={() => setJobsBoardOpen(false)}>← 返回求职专区</Button>
+        <div className="career-hero">
+          <div className="career-hero-badge">💼 求职专区 · 岗位集结号</div>
+          <Title level={2}>实习岗位<span className="career-hero-highlight">集结号</span></Title>
+          <Paragraph>按职位类型浏览在招实习岗位，信息持续更新</Paragraph>
+        </div>
+        <Tabs
+          activeKey={activeJobCategory}
+          onChange={setActiveJobCategory}
+          className="career-tabs"
+          size="large"
+          items={jobCategoryData.map((cat) => ({
+            key: cat.name,
+            label: <span>{cat.icon} {cat.name}</span>,
+            children: (
+              <Row gutter={[16, 16]}>
+                {(jobPostingsData[cat.name] || []).map((job) => (
+                  <Col xs={24} key={`${job.company}-${job.role}`}>
+                    <JobPostingCard job={job} />
+                  </Col>
+                ))}
+              </Row>
+            ),
+          }))}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="career-planning-page">
       <div className="career-hero">
@@ -3160,6 +3335,8 @@ function ConsultationPage({ profile }: { profile: Profile }) {
       await submitConsultationLead(values);
       form.resetFields();
       message.success('提交成功！我们已收到你的咨询意向，将尽快与你联系，请保持手机畅通。');
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '提交失败，请稍后重试');
     } finally {
       setSubmitting(false);
     }

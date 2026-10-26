@@ -65,7 +65,6 @@ model Course {
   gradeId   String   @map("grade_id") @db.VarChar(64) // 年级ID
   name      String   @map("name") @db.VarChar(128) // 课程名称
   isHot     Boolean  @default(false) @map("is_hot") // 是否热门
-  viewCount Int      @default(0) @map("view_count") // 浏览量
   
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -87,7 +86,6 @@ model Assignment {
   summary        String?  @map("summary") @db.Text // 作业摘要
   difficulty     String   @map("difficulty") // 难度：easy/medium/hard
   assignmentType String   @map("assignment_type") // 作业类型：coding/theory/project
-  viewCount      Int      @default(0) @map("view_count") // 浏览量
   favoriteCount  Int      @default(0) @map("favorite_count") // 收藏数
   isFreeFull     Boolean  @default(false) @map("is_free_full") // 是否免费完整
   
@@ -269,7 +267,6 @@ model CourseResource {
   content       String?  @map("content") @db.Text // 资源正文（详情页呈现）
   url           String?  @map("url") @db.VarChar(512) // 可选外链
   requiredLevel String   @default("free") @map("required_level") @db.VarChar(32) // free / study / career
-  viewCount     Int      @default(0) @map("view_count") // 浏览量
   sortOrder     Int      @default(0) @map("sort_order") // 在该分类下的顺序
 
   createdAt     DateTime @default(now()) @map("created_at")

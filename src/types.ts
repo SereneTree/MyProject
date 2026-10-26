@@ -11,7 +11,6 @@ export interface Course {
   gradeId: string;
   name: string;
   isHot: boolean;
-  viewCount: number;
 }
 
 export interface Assignment {
@@ -21,7 +20,6 @@ export interface Assignment {
   summary: string;
   difficulty: 'easy' | 'medium' | 'hard';
   assignmentType: 'coding' | 'theory' | 'project';
-  viewCount: number;
   favoriteCount: number;
   courseName: string;
   gradeId: string;
@@ -100,7 +98,6 @@ export interface MajorCourse {
   gradeId: string;
   gradeName: string;
   isHot: boolean;
-  viewCount: number;
   sortOrder: number;
 }
 
@@ -144,7 +141,6 @@ export interface CourseResourceItem {
   summary: string | null;
   requiredLevel: MemberLevel;
   locked: boolean;
-  viewCount: number;
   sortOrder: number;
 }
 
@@ -174,7 +170,6 @@ export interface CourseResourceDetail {
   locked: boolean;
   content: string | null;
   url: string | null;
-  viewCount: number;
   hasMaterial: boolean;
   hasSolutions: boolean;
   hasTestMaterial: boolean;

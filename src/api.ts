@@ -141,7 +141,7 @@ export function updateMe(payload: { phone: string; nickname?: string; school?: s
 }
 
 export function submitConsultationLead(payload: Record<string, string>) {
-  return request<{ data: { id: string } }>('/api/consultation/leads', {
+  return request<{ data: { delivered: boolean; sentAt: string } }>('/api/consultation/leads', {
     method: 'POST',
     body: JSON.stringify(payload)
   });

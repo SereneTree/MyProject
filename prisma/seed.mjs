@@ -58,72 +58,72 @@ const plans = [
 const courses = [
   // —— 信息与计算科学（沿用原 8 门） ——
   // 信息与计算科学大一上
-  { id: 'pdp', gradeId: 'freshman_fall', name: '个人发展规划&企业技能', isHot: false, viewCount: 5280 },
-  { id: 'math-analysis', gradeId: 'freshman_fall', name: '数学分析', isHot: true, viewCount: 5280 },
-  { id: 'advanced-algebra', gradeId: 'freshman_fall', name: '高等代数', isHot: true, viewCount: 5280 },
-  { id: 'cs-intro', gradeId: 'freshman_fall', name: '计算机导论&程序设计', isHot: false, viewCount: 5280 },
+  { id: 'pdp', gradeId: 'freshman_fall', name: '个人发展规划', isHot: false },
+  { id: 'math-analysis', gradeId: 'freshman_fall', name: '数学分析', isHot: true },
+  { id: 'advanced-algebra', gradeId: 'freshman_fall', name: '高等代数', isHot: true },
+  { id: 'cs-intro', gradeId: 'freshman_fall', name: '计导&程序设计', isHot: false },
 
   // 信息与计算科学大一下
-  { id: 'analytic-geometry', gradeId: 'freshman_spring', name: '空间解析几何', isHot: false, viewCount: 2310 },
-  { id: 'data-science-intro', gradeId: 'freshman_spring', name: '数科编程导论', isHot: false, viewCount: 2310 },
+  { id: 'analytic-geometry', gradeId: 'freshman_spring', name: '空间解析几何', isHot: false },
+  { id: 'data-science-intro', gradeId: 'freshman_spring', name: '数科编程导论', isHot: false },
   
   // 信息与计算科学大二上
-  { id: 'data-structure', gradeId: 'sophomore_fall', name: '数据结构', isHot: true, viewCount: 6890 },
-  { id: 'program-design', gradeId: 'sophomore_fall', name: '项目设计', isHot: true, viewCount: 6890 },
-  { id: 'advanced-physics', gradeId: 'sophomore_fall', name: '大学物理', isHot: true, viewCount: 6890 },
-  { id: 'probability-statistics', gradeId: 'sophomore_fall', name: '概率论与数理统计', isHot: true, viewCount: 6890 },
-  { id: 'exploratory-data-analysis', gradeId: 'sophomore_fall', name: '数据分析', isHot: true, viewCount: 6890 },
-  { id: 'ordinary-diff-equation', gradeId: 'sophomore_fall', name: '常微分方程', isHot: true, viewCount: 6890 },
+  { id: 'data-structure', gradeId: 'sophomore_fall', name: '数据结构', isHot: true },
+  { id: 'program-design', gradeId: 'sophomore_fall', name: '项目设计', isHot: true },
+  { id: 'advanced-physics', gradeId: 'sophomore_fall', name: '大学物理', isHot: true },
+  { id: 'probability-statistics', gradeId: 'sophomore_fall', name: '概率论与数理统计', isHot: true },
+  { id: 'exploratory-data-analysis', gradeId: 'sophomore_fall', name: '数据分析', isHot: true },
+  { id: 'ordinary-diff-equation', gradeId: 'sophomore_fall', name: '常微分方程', isHot: true },
 
   // 信息与计算科学大二下
-  { id: 'data-science', gradeId: 'sophomore_spring', name: '数据科学', isHot: true, viewCount: 4520 },
-  { id: 'ai', gradeId: 'sophomore_spring', name: '人工智能', isHot: true, viewCount: 4520 },
-  { id: 'computer-network', gradeId: 'sophomore_spring', name: '计算机网络', isHot: true, viewCount: 4520 },
-  { id: 'math-model', gradeId: 'sophomore_spring', name: '数学模型', isHot: true, viewCount: 4520 },
-  { id: 'numerical-model', gradeId: 'sophomore_spring', name: '数值模型', isHot: true, viewCount: 4520 },
+  { id: 'data-science', gradeId: 'sophomore_spring', name: '数据科学', isHot: true },
+  { id: 'ai', gradeId: 'sophomore_spring', name: '人工智能', isHot: true },
+  { id: 'computer-network', gradeId: 'sophomore_spring', name: '计算机网络', isHot: true },
+  { id: 'math-model', gradeId: 'sophomore_spring', name: '数学模型', isHot: true },
+  { id: 'numerical-model', gradeId: 'sophomore_spring', name: '数值模型', isHot: true },
 
   // 信息与计算科学大三上
-  { id: 'linear-programming', gradeId: 'junior_fall', name: '线性规划&博弈论', isHot: true, viewCount: 5670 },
-  { id: 'ml', gradeId: 'junior_fall', name: '机器学习', isHot: true, viewCount: 7120 },
-  { id: 'database', gradeId: 'junior_fall', name: '数据库系统', isHot: true, viewCount: 7120 },
-  { id: 'dsp-fundamentals', gradeId: 'junior_fall', name: '数字信号处理入门', isHot: true, viewCount: 7120 },
-  { id: 'diff-equation', gradeId: 'junior_fall', name: '微分方程数值解', isHot: true, viewCount: 7120 },
+  { id: 'linear-programming', gradeId: 'junior_fall', name: '线性规划&博弈论', isHot: true },
+  { id: 'ml', gradeId: 'junior_fall', name: '机器学习', isHot: true },
+  { id: 'database', gradeId: 'junior_fall', name: '数据库系统', isHot: true },
+  { id: 'dsp-fundamentals', gradeId: 'junior_fall', name: '数字信号处理入门', isHot: true },
+  { id: 'diff-equation', gradeId: 'junior_fall', name: '微分方程数值解', isHot: true },
 
   // 信息与计算科学大三下
-  { id: 'block-chain', gradeId: 'junior_spring', name: '区块链', isHot: true, viewCount: 4890 },
-  { id: 'graph-theory', gradeId: 'junior_spring', name: '图论', isHot: true, viewCount: 4890 },
-  { id: 'bayesian', gradeId: 'junior_spring', name: '贝叶斯统计', isHot: true, viewCount: 4890 },
-  { id: 'complex-networks', gradeId: 'junior_spring', name: '复杂网络', isHot: true, viewCount: 4890 },
-  { id: 'dl', gradeId: 'junior_spring', name: '深度学习', isHot: true, viewCount: 4890 },
+  { id: 'block-chain', gradeId: 'junior_spring', name: '区块链', isHot: true },
+  { id: 'graph-theory', gradeId: 'junior_spring', name: '图论', isHot: true },
+  { id: 'bayesian', gradeId: 'junior_spring', name: '贝叶斯统计', isHot: true },
+  { id: 'complex-networks', gradeId: 'junior_spring', name: '复杂网络', isHot: true },
+  { id: 'dl', gradeId: 'junior_spring', name: '深度学习', isHot: true },
 
   // 信息与计算科学大四上
-  { id: 'aaa', gradeId: 'senior_fall', name: 'aaa', isHot: true, viewCount: 7120 },
+  { id: 'aaa', gradeId: 'senior_fall', name: 'aaa', isHot: true },
 
   // 信息与计算科学大四下
-  { id: 'xxx', gradeId: 'senior_spring', name: 'xxx', isHot: true, viewCount: 7120 },
+  { id: 'xxx', gradeId: 'senior_spring', name: 'xxx', isHot: true },
 
   // —— 数字媒体专业课程 ——
-  { id: 'dm-design-basics', gradeId: 'freshman_fall', name: '设计基础', isHot: false, viewCount: 1320 },
-  { id: 'dm-color-theory', gradeId: 'freshman_fall', name: '色彩构成', isHot: false, viewCount: 1180 },
-  { id: 'dm-image-process', gradeId: 'freshman_spring', name: '数字图像处理', isHot: true, viewCount: 2480 },
-  { id: 'dm-typography', gradeId: 'freshman_spring', name: '字体与版式设计', isHot: false, viewCount: 1420 },
-  { id: 'dm-graphic-design', gradeId: 'sophomore_fall', name: '平面设计实战', isHot: true, viewCount: 2360 },
-  { id: 'dm-3d-modeling', gradeId: 'sophomore_spring', name: '三维建模与动画', isHot: true, viewCount: 3120 },
-  { id: 'dm-motion-graphics', gradeId: 'sophomore_spring', name: '动态图形设计', isHot: false, viewCount: 1860 },
-  { id: 'dm-web-design', gradeId: 'junior_fall', name: '网页设计与交互', isHot: true, viewCount: 2890 },
-  { id: 'dm-ui-ux', gradeId: 'junior_fall', name: 'UI/UX 设计', isHot: true, viewCount: 3210 },
-  { id: 'dm-video-edit', gradeId: 'junior_spring', name: '影视后期与剪辑', isHot: true, viewCount: 2740 },
-  { id: 'dm-final-project', gradeId: 'senior_spring', name: '数字媒体毕业作品', isHot: false, viewCount: 980 },
+  { id: 'dm-design-basics', gradeId: 'freshman_fall', name: '设计基础', isHot: false },
+  { id: 'dm-color-theory', gradeId: 'freshman_fall', name: '色彩构成', isHot: false },
+  { id: 'dm-image-process', gradeId: 'freshman_spring', name: '数字图像处理', isHot: true },
+  { id: 'dm-typography', gradeId: 'freshman_spring', name: '字体与版式设计', isHot: false },
+  { id: 'dm-graphic-design', gradeId: 'sophomore_fall', name: '平面设计实战', isHot: true },
+  { id: 'dm-3d-modeling', gradeId: 'sophomore_spring', name: '三维建模与动画', isHot: true },
+  { id: 'dm-motion-graphics', gradeId: 'sophomore_spring', name: '动态图形设计', isHot: false },
+  { id: 'dm-web-design', gradeId: 'junior_fall', name: '网页设计与交互', isHot: true },
+  { id: 'dm-ui-ux', gradeId: 'junior_fall', name: 'UI/UX 设计', isHot: true },
+  { id: 'dm-video-edit', gradeId: 'junior_spring', name: '影视后期与剪辑', isHot: true },
+  { id: 'dm-final-project', gradeId: 'senior_spring', name: '数字媒体毕业作品', isHot: false },
 
   // —— 电子信息工程专业课程 ——
-  { id: 'ei-circuit', gradeId: 'freshman_fall', name: '电路分析基础', isHot: false, viewCount: 1820 },
-  { id: 'ei-c-lang', gradeId: 'freshman_spring', name: 'C 语言程序设计 (电信)', isHot: true, viewCount: 2640 },
-  { id: 'ei-analog', gradeId: 'sophomore_fall', name: '模拟电子技术', isHot: false, viewCount: 1980 },
-  { id: 'ei-digital', gradeId: 'sophomore_spring', name: '数字电子技术', isHot: true, viewCount: 2360 },
-  { id: 'ei-signal-system', gradeId: 'junior_fall', name: '信号与系统', isHot: true, viewCount: 2540 },
-  { id: 'ei-mcu', gradeId: 'junior_spring', name: '单片机原理与应用', isHot: true, viewCount: 2870 },
-  { id: 'ei-embedded', gradeId: 'junior_spring', name: '嵌入式系统设计', isHot: false, viewCount: 1980 },
-  { id: 'ei-comm', gradeId: 'senior_fall', name: '通信原理', isHot: false, viewCount: 1620 },
+  { id: 'ei-circuit', gradeId: 'freshman_fall', name: '电路分析基础', isHot: false },
+  { id: 'ei-c-lang', gradeId: 'freshman_spring', name: 'C 语言程序设计', isHot: true },
+  { id: 'ei-analog', gradeId: 'sophomore_fall', name: '模拟电子技术', isHot: false },
+  { id: 'ei-digital', gradeId: 'sophomore_spring', name: '数字电子技术', isHot: true },
+  { id: 'ei-signal-system', gradeId: 'junior_fall', name: '信号与系统', isHot: true },
+  { id: 'ei-mcu', gradeId: 'junior_spring', name: '单片机原理与应用', isHot: true },
+  { id: 'ei-embedded', gradeId: 'junior_spring', name: '嵌入式系统设计', isHot: false },
+  { id: 'ei-comm', gradeId: 'senior_fall', name: '通信原理', isHot: false },
 
 ];
 
@@ -242,97 +242,97 @@ const assignments = [
   {
     id: 'a-c-001', courseId: 'c-lang',
     title: '数组与函数：学生成绩统计系统', summary: '实现成绩录入、均值、最高分、最低分和排序输出。',
-    difficulty: 'easy', assignmentType: 'coding', viewCount: 2381, favoriteCount: 321, isFreeFull: true
+    difficulty: 'easy', assignmentType: 'coding', favoriteCount: 321, isFreeFull: true
   },
   {
     id: 'a-c-002', courseId: 'c-lang',
     title: '结构体与文件读写：图书管理系统', summary: '使用结构体数组保存图书信息，并通过文件实现数据持久化。',
-    difficulty: 'medium', assignmentType: 'project', viewCount: 1760, favoriteCount: 218, isFreeFull: false
+    difficulty: 'medium', assignmentType: 'project', favoriteCount: 218, isFreeFull: false
   },
   {
     id: 'a-c-003', courseId: 'c-lang',
     title: '指针与字符串：简易文本统计工具', summary: '统计字符数、单词数和关键词出现次数，训练指针与字符串处理。',
-    difficulty: 'medium', assignmentType: 'coding', viewCount: 2115, favoriteCount: 286, isFreeFull: false
+    difficulty: 'medium', assignmentType: 'coding', favoriteCount: 286, isFreeFull: false
   },
   {
     id: 'a-dm-001', courseId: 'discrete-math',
     title: '命题逻辑与真值表推导', summary: '围绕复合命题、等价变换和真值表构造进行系统练习。',
-    difficulty: 'easy', assignmentType: 'theory', viewCount: 1460, favoriteCount: 192, isFreeFull: true
+    difficulty: 'easy', assignmentType: 'theory', favoriteCount: 192, isFreeFull: true
   },
   {
     id: 'a-dm-002', courseId: 'discrete-math',
     title: '图论基础：最短路径与连通性分析', summary: '理解图的表示、连通分量、BFS 与最短路径建模。',
-    difficulty: 'medium', assignmentType: 'theory', viewCount: 1688, favoriteCount: 224, isFreeFull: false
+    difficulty: 'medium', assignmentType: 'theory', favoriteCount: 224, isFreeFull: false
   },
   {
     id: 'a-ds-001', courseId: 'data-structure',
     title: '链表反转与环检测综合题', summary: '掌握链表指针操作、快慢指针与边界条件。',
-    difficulty: 'medium', assignmentType: 'coding', viewCount: 4188, favoriteCount: 812, isFreeFull: false
+    difficulty: 'medium', assignmentType: 'coding', favoriteCount: 812, isFreeFull: false
   },
   {
     id: 'a-ds-002', courseId: 'data-structure',
     title: '栈与队列：表达式求值器', summary: '实现中缀表达式转后缀表达式，并完成四则运算求值。',
-    difficulty: 'medium', assignmentType: 'coding', viewCount: 3320, favoriteCount: 501, isFreeFull: false
+    difficulty: 'medium', assignmentType: 'coding', favoriteCount: 501, isFreeFull: false
   },
   {
     id: 'a-ds-003', courseId: 'data-structure',
     title: '二叉树遍历与层序输出', summary: '实现前序、中序、后序和层序遍历，并分析递归与非递归写法。',
-    difficulty: 'medium', assignmentType: 'coding', viewCount: 3742, favoriteCount: 548, isFreeFull: false
+    difficulty: 'medium', assignmentType: 'coding', favoriteCount: 548, isFreeFull: false
   },
   {
     id: 'a-db-001', courseId: 'database',
     title: '学生选课系统 SQL 查询设计', summary: '围绕多表连接、聚合统计、子查询和索引优化展开。',
-    difficulty: 'medium', assignmentType: 'project', viewCount: 3560, favoriteCount: 604, isFreeFull: false
+    difficulty: 'medium', assignmentType: 'project', favoriteCount: 604, isFreeFull: false
   },
   {
     id: 'a-db-002', courseId: 'database',
     title: '事务隔离级别与并发异常分析', summary: '通过案例理解脏读、不可重复读、幻读以及不同隔离级别的取舍。',
-    difficulty: 'hard', assignmentType: 'theory', viewCount: 2266, favoriteCount: 336, isFreeFull: false
+    difficulty: 'hard', assignmentType: 'theory', favoriteCount: 336, isFreeFull: false
   },
   {
     id: 'a-db-003', courseId: 'database',
     title: '索引优化与慢查询分析实验', summary: '使用 explain 分析查询计划，比较不同索引策略的性能差异。',
-    difficulty: 'hard', assignmentType: 'project', viewCount: 2498, favoriteCount: 389, isFreeFull: false
+    difficulty: 'hard', assignmentType: 'project', favoriteCount: 389, isFreeFull: false
   },
   {
     id: 'a-os-001', courseId: 'os',
     title: '进程调度算法模拟实验', summary: '实现 FCFS、SJF、RR 调度，并分析平均等待时间。',
-    difficulty: 'hard', assignmentType: 'coding', viewCount: 2892, favoriteCount: 455, isFreeFull: false
+    difficulty: 'hard', assignmentType: 'coding', favoriteCount: 455, isFreeFull: false
   },
   {
     id: 'a-os-002', courseId: 'os',
     title: '页面置换算法模拟实验', summary: '实现 FIFO、LRU、OPT 页面置换策略，并对比缺页率。',
-    difficulty: 'hard', assignmentType: 'coding', viewCount: 2540, favoriteCount: 402, isFreeFull: false
+    difficulty: 'hard', assignmentType: 'coding', favoriteCount: 402, isFreeFull: false
   },
   {
     id: 'a-net-001', courseId: 'network',
     title: 'TCP 三次握手与拥塞控制分析', summary: '理解连接建立、可靠传输、慢启动和拥塞避免。',
-    difficulty: 'medium', assignmentType: 'theory', viewCount: 3016, favoriteCount: 512, isFreeFull: false
+    difficulty: 'medium', assignmentType: 'theory', favoriteCount: 512, isFreeFull: false
   },
   {
     id: 'a-net-002', courseId: 'network',
     title: 'HTTP 请求流程与缓存机制分析', summary: '从 DNS、TCP、TLS 到 HTTP 缓存，梳理一次网页请求的完整链路。',
-    difficulty: 'medium', assignmentType: 'theory', viewCount: 2810, favoriteCount: 466, isFreeFull: false
+    difficulty: 'medium', assignmentType: 'theory', favoriteCount: 466, isFreeFull: false
   },
   {
     id: 'a-ml-001', courseId: 'ml',
     title: '线性回归与梯度下降实验', summary: '实现线性回归训练、损失函数可视化和参数调优。',
-    difficulty: 'hard', assignmentType: 'project', viewCount: 1980, favoriteCount: 277, isFreeFull: false
+    difficulty: 'hard', assignmentType: 'project', favoriteCount: 277, isFreeFull: false
   },
   {
     id: 'a-ml-002', courseId: 'ml',
     title: '分类模型评估：准确率、召回率与 F1', summary: '构造混淆矩阵，理解不同评估指标在真实业务中的适用场景。',
-    difficulty: 'medium', assignmentType: 'project', viewCount: 1875, favoriteCount: 246, isFreeFull: false
+    difficulty: 'medium', assignmentType: 'project', favoriteCount: 246, isFreeFull: false
   },
   {
     id: 'a-career-001', courseId: 'career-project',
     title: '毕业设计选题：AI 辅助学习平台原型', summary: '从需求分析、功能拆解、技术选型到 MVP 展示，完成毕设选题规划。',
-    difficulty: 'medium', assignmentType: 'project', viewCount: 1598, favoriteCount: 198, isFreeFull: false
+    difficulty: 'medium', assignmentType: 'project', favoriteCount: 198, isFreeFull: false
   },
   {
     id: 'a-career-002', courseId: 'career-project',
     title: '简历项目包装：课程作业到工程项目', summary: '将课程实验延展为可展示的项目经历，突出技术难点和个人贡献。',
-    difficulty: 'easy', assignmentType: 'project', viewCount: 2218, favoriteCount: 367, isFreeFull: false
+    difficulty: 'easy', assignmentType: 'project', favoriteCount: 367, isFreeFull: false
   }
 ];
 
@@ -544,7 +544,6 @@ async function main() {
           content: tpl.contentFn(c.name),
           url: tpl.urlFn ? tpl.urlFn(c.id) : null,
           requiredLevel: tpl.requiredLevel,
-          viewCount: Math.floor(Math.random() * 2000) + 200,
           sortOrder: i + 1,
         },
       });

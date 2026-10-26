@@ -509,7 +509,6 @@ app.get('/api/resources/home', async (req, res) => {
       summary: a.summary,
       difficulty: a.difficulty,
       assignmentType: a.assignmentType,
-      viewCount: a.viewCount,
       favoriteCount: a.favoriteCount,
       isFreeFull: a.isFreeFull,
       courseName: a.course.name,
@@ -567,7 +566,6 @@ app.get('/api/assignments', async (req, res) => {
       summary: a.summary,
       difficulty: a.difficulty,
       assignmentType: a.assignmentType,
-      viewCount: a.viewCount,
       favoriteCount: a.favoriteCount,
       isFreeFull: a.isFreeFull,
       courseName: a.course.name,
@@ -603,12 +601,6 @@ app.get('/api/assignments/:id', async (req, res) => {
       return res.status(404).json({ message: '作业不存在' });
     }
 
-    // 更新浏览量 (异步执行，不阻塞接口返回)
-    prisma.assignment.update({
-      where: { id: assignmentId },
-      data: { viewCount: { increment: 1 } }
-    }).catch(console.error);
-
     // 获取作业详情模块
     const modules = await prisma.assignmentModule.findMany({
       where: { assignmentId },
@@ -641,7 +633,6 @@ app.get('/api/assignments/:id', async (req, res) => {
       summary: assignment.summary,
       difficulty: assignment.difficulty,
       assignmentType: assignment.assignmentType,
-      viewCount: assignment.viewCount,
       favoriteCount: assignment.favoriteCount,
       isFreeFull: assignment.isFreeFull,
       courseName: assignment.course.name,
@@ -839,7 +830,6 @@ app.get('/api/courses/:id/resources', async (req, res) => {
             summary: r.summary,
             requiredLevel: r.requiredLevel,
             locked: !allowed,
-            viewCount: r.viewCount,
             sortOrder: r.sortOrder,
           };
         });
@@ -960,11 +950,6 @@ app.get('/api/resources/:id', async (req, res) => {
       return res.status(404).json({ message: '资源不存在' });
     }
 
-    // 浏览量 +1 (异步)
-    prisma.courseResource
-      .update({ where: { id: resourceId }, data: { viewCount: { increment: 1 } } })
-      .catch(console.error);
-
     const allowed = currentRank >= (memberRank[resource.requiredLevel] || 0);
 
     // 检查该课程是否有可下载的大作业资料
@@ -1015,7 +1000,6 @@ app.get('/api/resources/:id', async (req, res) => {
       locked: !allowed,
       content: allowed ? resource.content : null,
       url: allowed ? resource.url : null,
-      viewCount: resource.viewCount,
       hasMaterial,
       hasSolutions,
       hasTestMaterial,
@@ -1358,9 +1342,21 @@ app.post('/api/admin/users/update', requireAdminToken, async (req, res) => {
 // ==========================================
 
 // --- 钉钉群机器人通知 ---
+// 咨询意向不再写入数据库，改为直接推送到钉钉群；发送失败会抛错，由接口层返回给前端
+const gradeLabelMap = {
+  freshman_fall: '大一上',
+  freshman_spring: '大一下',
+  sophomore_fall: '大二上',
+  sophomore_spring: '大二下',
+  junior_fall: '大三上',
+  junior_spring: '大三下',
+  senior_fall: '大四上',
+  senior_spring: '大四下'
+};
+
 async function sendDingTalkNotification(lead) {
   const webhookUrl = (process.env.DINGTALK_WEBHOOK_URL || '').trim();
-  if (!webhookUrl) return; // 未配置则静默跳过
+  if (!webhookUrl) throw new Error('未配置 DINGTALK_WEBHOOK_URL，无法发送群通知');
 
   const secret = (process.env.DINGTALK_WEBHOOK_SECRET || '').trim();
   let url = webhookUrl;
@@ -1376,6 +1372,8 @@ async function sendDingTalkNotification(lead) {
   }
 
   const now = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+  const gradeRaw = lead.grade || lead.gradeId || '';
+  const gradeText = gradeLabelMap[gradeRaw] || gradeRaw || '-';
   const markdown = [
     '### 📨 新咨询意向',
     '',
@@ -1383,7 +1381,7 @@ async function sendDingTalkNotification(lead) {
     `- **联系方式**: ${lead.contact || '-'}`,
     `- **学校**: ${lead.school || '-'}`,
     `- **专业**: ${lead.major || '-'}`,
-    `- **年级**: ${lead.gradeId || '-'}`,
+    `- **年级**: ${gradeText}`,
     `- **咨询方向**: ${lead.goal || '-'}`,
     `- **当前困惑**: ${lead.description || '-'}`,
     `- **提交时间**: ${now}`,
@@ -1400,7 +1398,8 @@ async function sendDingTalkNotification(lead) {
   const resp = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(8000)
   });
 
   const result = await resp.json();
@@ -1411,36 +1410,19 @@ async function sendDingTalkNotification(lead) {
 }
 
 app.post('/api/consultation/leads', async (req, res) => {
+  const { name, contact, school, major, grade, gradeId, goal, description } = req.body || {};
+
+  if (!name || !contact || !description) {
+    return res.status(400).json({ message: '请填写必要信息' });
+  }
+
   try {
-    const { name, contact, school, major, gradeId, goal, description } = req.body;
-    
-    if (!name || !contact || !description) {
-      return res.status(400).json({ message: '请填写必要信息' });
-    }
-
-    const lead = await prisma.consultationLead.create({
-      data: {
-        id: `lead-${Date.now()}`,
-        name,
-        contact,
-        school,
-        major,
-        gradeId,
-        goal,
-        description,
-        status: 'new'
-      }
-    });
-
-    // 异步发送钉钉通知（不阻塞响应）
-    sendDingTalkNotification({ name, contact, school, major, gradeId, goal, description }).catch((err) => {
-      console.error('[DingTalk] 通知发送失败:', err.message);
-    });
-
-    res.json({ data: lead });
+    // 不落库，直接推送到钉钉群；等待结果以便前端得知是否真正送达
+    await sendDingTalkNotification({ name, contact, school, major, grade, gradeId, goal, description });
+    return res.json({ data: { delivered: true, sentAt: new Date().toISOString() } });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: '提交咨询失败' });
+    console.error('[DingTalk] 通知发送失败:', error.message);
+    return res.status(502).json({ message: '消息未能发送到钉钉群，请稍后重试或直接联系顾问' });
   }
 });
 
@@ -1560,7 +1542,6 @@ app.get('/api/users/courses', async (req, res) => {
       gradeId: mc.course.gradeId,
       gradeName: mc.course.grade.name,
       isHot: mc.course.isHot,
-      viewCount: mc.course.viewCount,
       sortOrder: mc.sortOrder
     }));
 
