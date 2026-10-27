@@ -32,8 +32,33 @@ const FREE_OPEN_MODE = true;
 // 年级筛选中的「大四上 / 大四下」选项仍保留，只是点进去没有课程。
 const HIDDEN_COURSE_GRADE_IDS = new Set(['senior_fall', 'senior_spring']);
 
+// 课程置顶：数组顺序即展示顺序，仅在所属年级内部生效（不跨年级前插）
+const PINNED_COURSE_IDS = ['data-structure'];
+
+// 返回置顶序号，未置顶的统一排到最后
+function pinnedCourseIndex(courseId: string) {
+  const index = PINNED_COURSE_IDS.indexOf(courseId);
+  return index === -1 ? Number.MAX_SAFE_INTEGER : index;
+}
+
+// 大一上 / 下学期的课程资源尚在整理，进入该范围的课程资源统一盖蒙层提示，不开放具体内容。
+const COMING_SOON_COURSE_GRADE_IDS = new Set(['freshman_fall', 'freshman_spring']);
+const COMING_SOON_TEXT = '资料整理筹备中，敬请期待哦～';
+
 // 顶部导航为 sticky 固定高度 64px，滚动定位时预留间距避免内容被遮挡
 const TOPBAR_OFFSET = 80;
+
+// 顶栏「学习资源」入口默认锚定到大二上的数据结构课程
+const DEFAULT_RESOURCE_PATH = '/?grade=sophomore_fall&course=data-structure#resources';
+
+// 已处于资源页且 URL 未变化时，<Link> 不会触发路由变化，这里兜底把资源列滚回视口
+function scrollToResourceColumnFallback() {
+  if (window.location.hash !== '#resources') return;
+  const el = document.querySelector('.cascade-column-main');
+  if (!el) return;
+  const top = el.getBoundingClientRect().top + window.scrollY - TOPBAR_OFFSET;
+  window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
+}
 
 const gradeOptions = [
   { value: 'freshman_fall', label: '大一上' },
@@ -116,7 +141,7 @@ function AppShell() {
           <span>计算机专业学习与发展规划平台</span>
         </Link>
         <Menu mode="horizontal" className="nav" selectedKeys={[getSelectedNavKey(location.pathname)]} items={[
-          { key: 'home', label: <Link to="/">学习资源</Link> },
+          { key: 'home', label: <Link to={DEFAULT_RESOURCE_PATH} onClick={scrollToResourceColumnFallback}>学习资源</Link> },
           { key: 'career-planning', label: <Link to="/career-planning">生涯规划</Link> },
           { key: 'consultation', label: <Link to="/consultation">咨询服务</Link> }
         ]} />
@@ -201,13 +226,17 @@ function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profi
     window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
   }
 
-  // 从课程资源详情页返回时 URL 带 #resources，直接把课程资源列滚回视口
+  // 从课程资源详情页返回、或从顶栏锚点进入时 URL 带 #resources，直接把课程资源列滚回视口。
+  // 课程数据渲染后行高才稳定，故延后一帧再量位置，避免算到布局未完成时的偏移量。
   useEffect(() => {
     if (routerLocation.hash !== '#resources' || courses.length === 0) return;
-    const el = resourceColumnRef.current;
-    if (!el) return;
-    const top = el.getBoundingClientRect().top + window.scrollY - TOPBAR_OFFSET;
-    window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
+    const timer = window.setTimeout(() => {
+      const el = resourceColumnRef.current;
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY - TOPBAR_OFFSET;
+      window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
+    }, 180);
+    return () => window.clearTimeout(timer);
   }, [routerLocation.hash, courses.length]);
 
   useEffect(() => {
@@ -325,7 +354,11 @@ function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profi
         const orderB = gradeOrder.get(b.gradeId) ?? Number.MAX_SAFE_INTEGER;
         if (orderA !== orderB) return orderA - orderB;
       }
-      // 3) 其余情况保持后端返回顺序
+      // 3) 同一年级内，置顶课程排到首行（如大二上的数据结构）
+      const pinA = pinnedCourseIndex(a.id);
+      const pinB = pinnedCourseIndex(b.id);
+      if (pinA !== pinB) return pinA - pinB;
+      // 4) 其余情况保持后端返回顺序
       return 0;
     });
   }, [scopedCourses, selectedGrade, grades, lockedCourseIdSet]);
@@ -344,6 +377,13 @@ function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profi
     }
   }, [courses.length, visibleCourses, selectedCourse]);
 
+  // 顶栏「学习资源」等入口会带查询参数重新导航，这里把参数同步回选择状态
+  useEffect(() => {
+    setSelectedGrade(searchParams.get('grade') || undefined);
+    setSelectedCourse(searchParams.get('course') || undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   // 选择变化时同步到 URL 查询参数（replace 避免污染历史栈）
   useEffect(() => {
     const next = new URLSearchParams(searchParams);
@@ -361,6 +401,14 @@ function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profi
   }, [selectedGrade, selectedCourse, keyword]);
   const selectedGradeName = selectedGrade ? grades.find((grade) => grade.id === selectedGrade)?.name || '年级' : '全部年级';
   const selectedCourseText = selectedCourse ? scopedCourses.find((course) => course.id === selectedCourse)?.name || '已选课程' : `${visibleCourses.length} 个课程`;
+
+  // 命中大一上/下学期（无论按年级筛选还是点开具体课程）时，课程资源区域整块用蒙层罩住
+  const selectedCourseGradeId = selectedCourse
+    ? scopedCourses.find((course) => course.id === selectedCourse)?.gradeId
+    : undefined;
+  const resourceComingSoon = COMING_SOON_COURSE_GRADE_IDS.has(
+    (selectedCourse ? selectedCourseGradeId : selectedGrade) || ''
+  );
 
   return (
     <div>
@@ -489,45 +537,54 @@ function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profi
               )}
             </div>
 
-            {!selectedCourse ? (
-              <>
-                <Input.Search className="resource-search" placeholder="搜索课程资源/课程" allowClear onSearch={setKeyword} onChange={(e) => !e.target.value && setKeyword('')} />
-                <Alert
-                  style={{ marginBottom: 12 }}
-                  type="info"
-                  showIcon
-                  message="请先在左侧选择一门课程，查看「课件讲义 / 大作业 / 历年考试 / 职场展望」四类资源"
-                  description="未选课程时默认展示本专业/年级下的全部库存作业总览。"
+            <div className={resourceComingSoon ? 'resource-coming-soon-wrap' : undefined}>
+              {!selectedCourse ? (
+                <>
+                  <Input.Search className="resource-search" placeholder="搜索课程资源/课程" allowClear onSearch={setKeyword} onChange={(e) => !e.target.value && setKeyword('')} />
+                  <Alert
+                    style={{ marginBottom: 12 }}
+                    type="info"
+                    showIcon
+                    message="请先在左侧选择一门课程，查看「课件讲义 / 大作业 / 历年考试 / 职场展望」四类资源"
+                    description="未选课程时默认展示本专业/年级下的全部库存作业总览。"
+                  />
+                  <List
+                    loading={loading}
+                    dataSource={scopedAssignments}
+                    pagination={{ pageSize: 10, hideOnSinglePage: true, showSizeChanger: false }}
+                    locale={{ emptyText: <Empty description="暂无匹配资源" /> }}
+                    renderItem={(assignment) => (
+                      <AssignmentCard
+                        assignment={assignment}
+                        isLoggedIn={isLoggedIn}
+                        locked={lockedCourseIdSet.has(assignment.courseId)}
+                      />
+                    )}
+                  />
+                </>
+              ) : (
+                <CourseResourceTabs
+                  courseId={selectedCourse}
+                  courseName={scopedCourses.find((c) => c.id === selectedCourse)?.name || ''}
+                  gradeName={(() => {
+                    const c = scopedCourses.find((c) => c.id === selectedCourse);
+                    return c ? grades.find((g) => g.id === c.gradeId)?.name || '' : '';
+                  })()}
+                  courseLocked={lockedCourseIdSet.has(selectedCourse)}
+                  groups={courseResourceGroups}
+                  loading={resourceLoading}
+                  memberLevel={memberLevel}
+                  isLoggedIn={isLoggedIn}
                 />
-                <List
-                  loading={loading}
-                  dataSource={scopedAssignments}
-                  pagination={{ pageSize: 10, hideOnSinglePage: true, showSizeChanger: false }}
-                  locale={{ emptyText: <Empty description="暂无匹配资源" /> }}
-                  renderItem={(assignment) => (
-                    <AssignmentCard
-                      assignment={assignment}
-                      isLoggedIn={isLoggedIn}
-                      locked={lockedCourseIdSet.has(assignment.courseId)}
-                    />
-                  )}
-                />
-              </>
-            ) : (
-              <CourseResourceTabs
-                courseId={selectedCourse}
-                courseName={scopedCourses.find((c) => c.id === selectedCourse)?.name || ''}
-                gradeName={(() => {
-                  const c = scopedCourses.find((c) => c.id === selectedCourse);
-                  return c ? grades.find((g) => g.id === c.gradeId)?.name || '' : '';
-                })()}
-                courseLocked={lockedCourseIdSet.has(selectedCourse)}
-                groups={courseResourceGroups}
-                loading={resourceLoading}
-                memberLevel={memberLevel}
-                isLoggedIn={isLoggedIn}
-              />
-            )}
+              )}
+              {/* 大一上/下学期：整块内容加蒙层，锁标志 + 筹备中提示，阻断点击 */}
+              {resourceComingSoon && (
+                <div className="resource-coming-soon">
+                  <LockOutlined />
+                  <span>{COMING_SOON_TEXT}</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
@@ -633,7 +690,7 @@ function CourseResourceTabs({
                       <Tag color="geekblue">{gradeName}</Tag>
                       <Tag>{courseName}</Tag>
                       <Tag color={meta.tagColor} icon={meta.icon}>{meta.label}</Tag>
-                      <Tag color={levelColor}>{levelText}</Tag>
+                      {!isFree && <Tag color={levelColor}>{levelText}</Tag>}
                       {item.locked && !courseLocked && <Tag icon={<LockOutlined />} color="default">需升级</Tag>}
                       {courseLocked && !isFree && <Tag icon={<LockOutlined />} color="default">年级锁定</Tag>}
                     </Space>
@@ -905,18 +962,6 @@ function LectureNotesSection({ courseId }: { courseId: string }) {
             )}
           </Space>
         ),
-        extra: (
-          <Button
-            type="link"
-            size="small"
-            icon={<DownloadOutlined />}
-            href={note.url}
-            download={note.filename}
-            onClick={(e) => e.stopPropagation()}
-          >
-            下载
-          </Button>
-        ),
         children: loadingKeys.has(note.filename) ? (
           <Spin />
         ) : contents[note.filename] ? (
@@ -1009,16 +1054,6 @@ function CourseDocsList({ section, courseId }: { section: DocSection; courseId: 
             )}
           </Space>
         ),
-        extra: (
-          <Button
-            type="link"
-            size="small"
-            icon={<DownloadOutlined />}
-            href={it.url}
-            download={it.filename}
-            onClick={(e) => e.stopPropagation()}
-          >下载</Button>
-        ),
         children: loadingKeys.has(it.filename) ? (
           <Spin />
         ) : contents[it.filename] ? (
@@ -1110,16 +1145,6 @@ function AssignmentSolutionsList({ courseId }: { courseId: string }) {
               <Text type="secondary" style={{ fontSize: 12 }}>{it.summary}</Text>
             )}
           </Space>
-        ),
-        extra: (
-          <Button
-            type="link"
-            size="small"
-            icon={<DownloadOutlined />}
-            href={it.url}
-            download={it.filename}
-            onClick={(e) => e.stopPropagation()}
-          >下载</Button>
         ),
         children: loadingKeys.has(it.filename) ? (
           <Spin />
@@ -1307,6 +1332,7 @@ function CourseResourceDetailPage({ memberLevel, profile, isLoggedIn }: { member
   return (
     <div>
       <Button
+        type="primary"
         style={{ marginBottom: 16 }}
         icon={<ArrowLeftOutlined />}
         onClick={() => navigate(`/?course=${detail.courseId}#resources`)}
@@ -1320,40 +1346,13 @@ function CourseResourceDetailPage({ memberLevel, profile, isLoggedIn }: { member
               <Tag color="geekblue">{detail.gradeName}</Tag>
               <Tag>{detail.courseName}</Tag>
               <Tag color="purple">{meta.label}</Tag>
-              <Tag color={levelTagColor}>{levelText}</Tag>
+              {/* 免费资源不显示等级标签，仅付费等级保留提示 */}
+              {detail.requiredLevel !== 'free' && <Tag color={levelTagColor}>{levelText}</Tag>}
               {detail.locked && <Tag icon={<LockOutlined />} color="default">需升级</Tag>}
             </Space>
             <Title>{detail.title}</Title>
             {detail.summary && <Paragraph>{detail.summary}</Paragraph>}
           </Space>
-          {!detail.locked && detail.url && (
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <Button
-                type="primary"
-                size="large"
-                icon={<DownloadOutlined />}
-                href={detail.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                download
-              >
-                {detail.category === 'lecture' ? '课件下载' : '下载原始资源'}
-              </Button>
-            </div>
-          )}
-          {!detail.locked && detail.hasMaterial && (
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <Button
-                type="primary"
-                size="large"
-                icon={<DownloadOutlined />}
-                href={`/api/resources/material/download/${detail.courseId}`}
-                download
-              >
-                资料打包下载
-              </Button>
-            </div>
-          )}
         </div>
       </Card>
 

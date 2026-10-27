@@ -254,6 +254,39 @@ body {
   background: linear-gradient(180deg, #fbfdff 0%, #ffffff 100%);
 }
 
+/* 大一上/下学期课程资源：整块内容罩蒙层 + 锁标志，同时阻断点击 */
+.resource-coming-soon-wrap {
+  position: relative;
+}
+
+.resource-coming-soon {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px 20px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  border-radius: 16px;
+  cursor: not-allowed;
+}
+
+.resource-coming-soon .anticon {
+  font-size: 30px;
+  color: #94a3b8;
+}
+
+.resource-coming-soon span {
+  color: #64748b;
+  font-size: 14px;
+  letter-spacing: 0.4px;
+}
+
 .cascade-title {
   display: flex;
   align-items: center;
