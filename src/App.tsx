@@ -2006,10 +2006,10 @@ function JobPostingCard({ job }: { job: JobPosting }) {
 /* 大厂申请全流程二级页面：春/秋招 · 日常实习 · 个人评估 */
 /* 春/秋招补充数据：秋招时间轴 / 春招时间轴 / 定薪体系 / 大厂薪资 / 春秋对比 */
 const autumnTimelineData = [
-  { period: '5月 - 7月', stage: '提前批（神仙打架）', actions: '免笔试或流程极快，不占用正式秋招名额（挂了还能投正式批）。主要抢夺顶尖人才（竞赛大佬、顶会论文作者、名校尖子生）。字节、腾讯、阿里通常在 6 月底前开放。' },
-  { period: '8月 - 9月', stage: '正式批爆发期（主战场）', actions: '全面开放，HC 最多。8 月是网申和笔试的高峰，9 月是面试高峰。“金九银十”现在变成了“金八银九”，很多大厂 9 月底就发完大部分 Offer 了。' },
+  { period: '5月 - 7月', stage: '提前批', actions: '免笔试或流程极快，不占用正式秋招名额（挂了还能投正式批）。主要抢夺顶尖人才。字节、腾讯、阿里等大厂通常在 6 月底前开放。' },
+  { period: '8月 - 9月', stage: '正式批', actions: '全面开放，HC 最多。8 月是网申和笔试的高峰，9 月是面试高峰。“金九银十”现在变成了“金八银九”，很多大厂 9 月底就发完大部分 Offer 了。' },
   { period: '10月 - 11月', stage: 'Offer 发放与逼签', actions: '密集发 Offer，同时伴随“逼签”（给你 3-7 天时间考虑，不接就作废）。部分同学开始毁约释放 HC。' },
-  { period: '12月 - 次年2月', stage: '秋招补录（捡漏）', actions: '考研/考公失利大军入场，同时有大厂员工毁约腾出的少量 HC。竞争依然激烈，但岗位质量不如 8-9 月。' },
+  { period: '12月 - 次年2月', stage: '秋招补录', actions: '考研/考公失利大军入场，同时有大厂员工毁约腾出的少量 HC。竞争依然激烈，但岗位质量不如 8-9 月。' },
 ];
 
 const springTimelineData = [
@@ -2140,9 +2140,9 @@ function CampusRecruitTab() {
         <Divider style={{ margin: '12px 0' }} />
         <Text strong>🎁 隐性收入与福利（不可忽视）</Text>
         <div style={detailGroupStyle}>
-          <Paragraph style={{ marginBottom: 2 }}><Text strong>签字费（Sign-on Bonus）：</Text>为了抢 SSP 或防止你被竞品挖走，一次性发放 3W - 10W 不等。</Paragraph>
-          <Paragraph style={{ marginBottom: 2 }}><Text strong>股票/期权：</Text>阿里、腾讯、字节对 SSP 通常会配股，分 4 年归属（Vesting），这是拉开总包差距的核心。</Paragraph>
-          <Paragraph style={{ marginBottom: 2 }}><Text strong>公积金：</Text>注意缴纳基数和比例。比如北京有些厂按全额工资 12% 交（双边每月多出几千块隐形收入），有些按最低基数交，差距极大。</Paragraph>
+          <Paragraph style={{ marginBottom: 2 }}><Text strong>签字费：</Text>为了抢 SSP 或防止你被竞品挖走，一次性发放 3W - 10W 不等。</Paragraph>
+          <Paragraph style={{ marginBottom: 2 }}><Text strong>股票/期权：</Text>腾讯、字节对 SSP 可能会配股/期权，分 4 年归属，这是拉开总包差距的核心。</Paragraph>
+          <Paragraph style={{ marginBottom: 2 }}><Text strong>公积金：</Text>注意缴纳基数和比例。比如北京有些厂按全额工资 12% 交，有些按最低基数交，差距极大。</Paragraph>
           <Paragraph style={{ marginBottom: 0 }}><Text strong>搬家费/安家费：</Text>部分大厂提供 5000 - 15000 元的一次性异地入职补贴。</Paragraph>
         </div>
       </Card>
@@ -2548,15 +2548,10 @@ type CoachingStep = { title: string; detail: string; color: string; bullets?: st
 type CoachingTrack = {
   key: string;
   label: string;
-  audience: string;
-  intro: string;
-  focus: string[];
   steps: CoachingStep[];
-  deliverables: string[];
   stepsTitle?: string;
   origin?: string;
   pains?: string[];
-  bonus?: { title: string; desc: string };
 };
 
 // 1V1 全流程辅导：研发 / 商科两个方向的陪跑环节拆解
@@ -2564,62 +2559,52 @@ const coachingTracks: CoachingTrack[] = [
   {
     key: 'rd',
     label: '💻 研发',
-    audience: 'CS 本科 / 研究生为主，AI 产品、运营、解决方案方向同样适用',
-    intro: '三阶段陪跑：精准诊断 → 系统赋能与实战演练 → 成果落地。目标是带着一个能讲深的 AI Agent 项目，稳稳拿到大厂 AI 岗的实习 / 校招 Offer。',
-    focus: ['AI Agent 项目', 'RAG 与 Context Engineering', 'Agent 框架', '大模型原理', '系统设计', '算法八股'],
     stepsTitle: '三阶段陪跑流程',
-    origin: '做陪跑的初衷：如果时间倒退回研究生未毕业甚至更早，那时若有学长带自己，或许能少走很多弯路、拿到更有竞争力的 Offer。现在把这条路上的经验，直接交到你手里。',
+    origin: '做陪跑的初衷很简单：我大学那几年，最盼的就是身边有个学长带。那些绕过的弯、错过的机会，学弟学妹们不必再经历一遍——这条路上的经验，我直接给你。',
     pains: [
-      '🛑 实习 / 校招投了简历没反馈',
-      '📉 面试一问项目细节就卡壳',
-      '🤖 人人在说大模型、Agent，你连项目都无',
+      '⏳ 学期与假期拥有大段可支配时间，却缺少清晰的能力积累路径',
+      '🧩 校内课程与企业岗位要求的知识结构之间，找不到明确的结合点',
+      '📅 对校招应当准备什么、关键时间节点如何安排，缺乏系统认知',
+      '📉 面试被追问项目细节时难以展开，缺少可深入阐述的技术叙事',
+      '🤖 大模型与 Agent 已成为行业共识，自身却缺少可展示的项目积累',
     ],
     steps: [
       {
         title: '① 一阶段 · 精准诊断',
         color: 'green',
-        detail: '1v1 线上深度面试 60 分钟，扫描知识盲区、制定陪跑计划，并结合 AI 行业趋势锁定你适合的具体企业与岗位。',
+        detail: '',
         bullets: [
-          '深度面试：60 分钟线上 1v1，完整走一遍简历、项目与基础三轮，先看清当前处在能投 / 能面 / 能拿 Offer 哪一档',
+          '深度面试：60分钟线上 1v1，覆盖简历、项目与基础，摸底当前水平',
           '能力雷达图：算法、工程、项目深度、领域知识、表达五项打分，明确差距与补齐周期',
-          '目标锁定：结合 AI 行业趋势、城市与院校背景，收敛出可投递的企业与岗位清单',
+          '目标锁定：结合 AI 行业趋势、个人性格兴趣与院校背景，确定高匹配度企业与岗位清单',
         ],
       },
       {
         title: '② 二阶段 · 系统赋能 + 实战演练',
         color: 'blue',
-        detail: '四大模块并行推进，把「做过」推到「精通」，从项目、叙事、考点、压力四个方面同时补齐。',
+        detail: '',
         bullets: [
-          '硬核技术重构：在导师指导下从 0 到 1 独立设计与实现一个具备完整业务闭环的 AI Agent 应用——需求分析与场景定义（智能客服 / 代码审查 / 数据分析 Agent 等）、架构设计（任务规划、工具调用、记忆机制、多轮推理）、大模型 API 接入与 Context Engineering、前后端搭建与部署上线，最终沉淀为带完整技术文档的 GitHub 开源项目，作为求职的强敲门砖',
-          '项目价值升华：用 STAR 法则重构项目叙事，深挖每个技术决策背后的取舍，把平淡的功能描述变成体现架构力与业务洞察的技术故事',
-          '高频考点狙击：构建系统化的计算机知识图谱，对大模型原理、RAG、Agent 框架、分布式系统、算法八股等高频题做「剥洋葱」式深挖',
-          '高压模拟面试：1:1 还原大厂 AI 岗面试场景（在线编程、系统设计、项目深挖、压力面），每次模拟后详细复盘、针对性改进，直至形成肌肉记忆',
+          '硬核技术重构：从 0 到 1 独立设计与实现一个具备完整业务闭环的 AI Agent 应用——需求分析与场景定义（智能客服 / 代码审查 / 数据分析 Agent 等）、架构设计（任务规划、工具调用、记忆机制、多轮推理），最终沉淀为带完整技术文档的业界实战项目',
+          '项目价值升华：深挖每个技术决策背后的取舍，拒绝平淡功能描述，体现架构能力与业务洞察',
+          '高频考点狙击：构建系统化的计算机知识图谱，对大模型原理、Agent 框架、主流 AI 工具、AI Coding 应试技巧详细解析',
+          '高压模拟面试：1:1 还原大厂 AI 岗面试场景（在线编程、系统设计、项目深挖），每次模拟后详细复盘、针对性改进，直至形成肌肉记忆',
         ],
       },
       {
         title: '③ 三阶段 · 成果收获',
         color: 'orange',
-        detail: '陪跑结束时，这些成果可以直接带进面试考场：',
+        detail: '',
         bullets: [
           '系统化的 AI 技术认知体系',
-          '一个从 0 到 1 的 AI Agent 实战项目 + 完整技术文档 + 可演示 Demo',
-          '能讲出有深度的项目故事，面试不再被问倒',
+          '有细节、有亮点、有价值的 AI Agent 实战项目',
           '从容应对高压深挖，显著提升大厂 AI Offer 获取率',
         ],
       },
     ],
-    deliverables: ['能力雷达图', '可投递企业岗位清单', 'GitHub 开源 Agent 项目', '技术文档与演示 Demo', 'STAR 项目叙事稿', '个人高频题库', '模拟面试复盘记录'],
-    bonus: {
-      title: '🎁 福利：免费领取 1 次 1v1 背景诊断（60 分钟）',
-      desc: '名额有限，优质陪伴需要投入；全程由学长本人亲自沟通。',
-    },
   },
   {
     key: 'biz',
     label: '📈 商科',
-    audience: '产品 / 运营 / 市场营销 / 数据分析 / 咨询 / 管培生',
-    intro: '技术岗拼硬技能，商科岗拼“结构化表达 + 商业判断”，因此评测与模拟环节默认把案例分析和行为面作为主战场。',
-    focus: ['商业 sense', '数据分析', '结构化表达', '案例拆解'],
     steps: [
       { title: '① 职业性格评测', color: 'green', detail: '霍兰德 + 大五人格测评，区分产品、运营、咨询、管培四类岗位的胜任特征，避免只看岗位热度而忽视性格与工作节奏的匹配度。' },
       { title: '② 个人能力摸底', color: 'green', detail: '商业 sense、数据分析、结构化表达、案例拆解四项打分，明确与目标岗位胜任模型的差距，并给出 4-8 周的针对性提升任务。' },
@@ -2628,15 +2613,15 @@ const coachingTracks: CoachingTrack[] = [
       { title: '⑤ 真实面试复盘', color: 'orange', detail: '记录每家公司的考察侧重点与话术得失，区分“知识缺口”与“表达问题”，下一场面试前针对性补刀，不在同一个坑跌两次。' },
       { title: '⑥ 流程跟进', color: 'red', detail: '秋招宣讲会与网申节奏并行，内推与官方渠道双线推进，Offer 决策矩阵（业务前景 / 成长性 / 薪资 / 城市）辅助做出不后悔的选择。' },
     ],
-    deliverables: ['能力雷达图', '简历量化改稿', 'Case 模拟记录', '行业研究报告', '投递进度跟踪表'],
   },
 ];
 
-// 研发方向配图：招募海报、三阶段总览、项目库、成果收获（图片放在 public/coaching）
-const coachingMedia: Record<string, { hero?: string; stages?: string; projects?: string; results?: string }> = {
+// 研发方向配图：招募海报、三阶段总览、学习地图、项目库、成果收获（图片放在 public/coaching）
+const coachingMedia: Record<string, { hero?: string; stages?: string; map?: string; projects?: string; results?: string }> = {
   rd: {
     hero: '/coaching/hero-offer.jpg',
     stages: '/coaching/three-stages.jpg',
+    map: '/coaching/learning-map.jpg',
     projects: '/coaching/project-library.png',
     results: '/coaching/results.jpg',
   },
@@ -2644,78 +2629,91 @@ const coachingMedia: Record<string, { hero?: string; stages?: string; projects?:
 
 function CoachingTrackPanel({ track, onConsult }: { track: CoachingTrack; onConsult: () => void }) {
   const media = coachingMedia[track.key] || {};
+  const hasHero = Boolean(media.hero || track.origin || track.pains);
   return (
     <div>
-      <Alert
-        type="info"
-        showIcon
-        style={{ marginBottom: 16 }}
-        message={`适合方向：${track.audience}`}
-        description={track.intro}
-      />
-      {media.hero && (
-        <figure className="coaching-figure">
-          <img src={media.hero} alt="AI 应用开发 Offer 陪跑 1V1：3 个月 3 个阶段" loading="lazy" />
-        </figure>
-      )}
-      {track.origin && <div className="coaching-origin">{track.origin}</div>}
-      {track.pains && (
-        <Card className="career-resource-card" title="你是不是也有这种焦虑" size="small" style={{ marginBottom: 16 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {track.pains.map((p) => <Text key={p}>{p}</Text>)}
+      {hasHero && (
+        <section className={`coaching-hero${media.hero ? '' : ' coaching-hero--no-media'}`}>
+          <div className="coaching-hero-body">
+            {track.origin && <p className="coaching-hero-origin">{track.origin}</p>}
+            {track.pains && (
+              <div className="coaching-hero-group">
+                <div className="coaching-hero-group-title">你是不是也有这种焦虑</div>
+                <ul className="coaching-hero-pains">
+                  {track.pains.map((p) => <li key={p}>{p}</li>)}
+                </ul>
+              </div>
+            )}
+            <div className="coaching-hero-relief">
+              <p className="coaching-hero-relief-title">不用怕，这条路上有人带着走</p>
+              <p className="coaching-hero-relief-text">
+                这些不是能力问题，是信息差——早有人替你踩过，就不必自己再撞一遍。简历有人改、项目有人带、面试有人陪练，每一步都踩在关键节点上。等秋招真正开始，你会发现自己已经准备好了。三个月走完，目标只有一个：拿到一份你自己满意的工作。
+              </p>
+            </div>
           </div>
-        </Card>
-      )}
-      <Card className="career-resource-card" title="考察重点" size="small" style={{ marginBottom: 16 }}>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {track.focus.map((f) => <Tag key={f} color="blue">{f}</Tag>)}
-        </div>
-      </Card>
-      {media.stages && (
-        <Card className="career-resource-card" title="三阶段总览" size="small" style={{ marginBottom: 16 }}>
-          <img className="coaching-wide-img coaching-img-narrow" src={media.stages} alt="三阶段陪跑：从写简历到拿大厂 AI Offer" loading="lazy" />
-        </Card>
+          {media.hero && (
+            <figure className="coaching-hero-media">
+              <img src={media.hero} alt="AI 应用开发 Offer 陪跑 1V1：3 个月 3 个阶段" loading="lazy" />
+            </figure>
+          )}
+        </section>
       )}
       <Card className="career-resource-card" title={track.stepsTitle || '六步陪跑流程'} style={{ marginBottom: 16 }}>
-        <Timeline
-          items={track.steps.map((s) => ({
-            color: s.color,
-            children: (
-              <>
-                <Text strong>{s.title}</Text>
-                <Paragraph type="secondary" style={{ marginBottom: 0 }}>{s.detail}</Paragraph>
-                {s.bullets && (
-                  <ul className="coaching-step-bullets">
-                    {s.bullets.map((b) => <li key={b}>{b}</li>)}
-                  </ul>
-                )}
-              </>
-            ),
-          }))}
-        />
-      </Card>
-      {media.projects && (
-        <Card className="career-resource-card" title="项目库覆盖" style={{ marginBottom: 16 }}>
-          <Paragraph type="secondary" style={{ marginBottom: 12 }}>
-            主线项目从持续维护的实战项目库中挑选，覆盖行业 AI Coding、Agent 架构、MCP / RAG / Context Engineering、主流 AI 编程工具与框架等主题，再按你的目标岗位匹配一个作为主线。
-          </Paragraph>
-          <img className="coaching-wide-img" src={media.projects} alt="实战项目库：行业 AI Coding、Agent、MCP、RAG 等主题" loading="lazy" />
-        </Card>
-      )}
-      <Card className="career-resource-card" title="服务交付物" size="small" style={{ marginBottom: 16 }}>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {track.deliverables.map((d) => <Tag key={d} color="green">{d}</Tag>)}
+        <div className={`coaching-stages${media.stages ? '' : ' coaching-stages--no-media'}`}>
+          <Timeline
+            items={track.steps.map((s) => ({
+              color: s.color,
+              children: (
+                <>
+                  <Text strong>{s.title}</Text>
+                  <Paragraph type="secondary" style={{ marginBottom: 0 }}>{s.detail}</Paragraph>
+                  {s.bullets && (
+                    <ul className="coaching-step-bullets">
+                      {s.bullets.map((b) => <li key={b}>{b}</li>)}
+                    </ul>
+                  )}
+                </>
+              ),
+            }))}
+          />
+          {media.stages && (
+            <figure className="coaching-stages-media">
+              <img src={media.stages} alt="三阶段陪跑：从写简历到拿大厂 AI Offer" loading="lazy" />
+            </figure>
+          )}
         </div>
       </Card>
-      {media.results && (
-        <Card className="career-resource-card" title="成果收获 · 看得见的蜕变" size="small" style={{ marginBottom: 16 }}>
-          <img className="coaching-wide-img coaching-img-narrow" src={media.results} alt="成果收获：4 项核心资产" loading="lazy" />
+      {media.projects && (
+        <Card className="career-resource-card" title="AI 知识体系" style={{ marginBottom: 16 }}>
+          <Paragraph className="coaching-map-intro">
+            这是一条螺旋向上的路：先打牢编程底子，再了解模型原理，Agent框架、工程理念逐层叠加，最后一站直接落在行业项目与面试上。
+          </Paragraph>
+          {media.map && (
+            <figure className="coaching-map">
+              <img
+                src={media.map}
+                alt="从零基础到大厂 Agent 工程师的学习地图：1 编程与工程基础、2 大模型基础原理、3 RAG 与知识检索、4 Agent 基础能力、5 上下文与记忆工程、6 Agent 工程化 Harness、7 工具生态与 AI Coding、8 行业项目与面试准备"
+                loading="lazy"
+              />
+            </figure>
+          )}
+          <Divider style={{ margin: '20px 0 16px' }} />
+          <Text strong className="coaching-map-heading">📁 地图之外：持续更新的 27 个实战项目文件夹</Text>
+          <Paragraph type="secondary" style={{ marginBottom: 12 }}>
+            地图上每一站都不是空谈，项目库已沉淀 27 个主题文件夹，覆盖行业 AI Coding（电商 / 金融 / 内容消费）、Agent 架构、MCP / RAG / Context Engineering、Harness 工程化、主流 AI 编程工具与框架实践等行业热门领域，并持续更新补充。选题和找资料这两件最耗时间的事，不必再自己扛！
+          </Paragraph>
+          <img className="coaching-wide-img coaching-img-medium" src={media.projects} alt="实战项目库：27 个主题文件夹，覆盖行业 AI Coding、Agent、MCP、RAG、Context Engineering 等主题" loading="lazy" />
         </Card>
       )}
-      {track.bonus && (
-        <Card className="career-resource-card coaching-bonus" style={{ marginBottom: 16 }}>
-          <Text strong style={{ display: 'block', marginBottom: 6 }}>{track.bonus.title}</Text>
-          <Text type="secondary">{track.bonus.desc}</Text>
+      {media.results && (
+        <Card className="career-resource-card" title="成果收获" style={{ marginBottom: 16 }}>
+          <img className="coaching-wide-img coaching-img-narrow" src={media.results} alt="成果收获：4 项核心资产" loading="lazy" />
+          <div className="coaching-results-note">
+            <p className="coaching-results-note-title">这条路，我陪你走完</p>
+            <p className="coaching-results-note-text">
+              你只管往前——把时间投进项目，把问题抛给我，把面试当练手。路上难免卡壳和焦虑，但努力终将会有回报。加油兄弟姐妹们，我们终点见。
+            </p>
+          </div>
         </Card>
       )}
       <Card className="career-resource-card career-followup-cta">
