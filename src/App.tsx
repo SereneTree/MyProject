@@ -2004,24 +2004,18 @@ function JobPostingCard({ job }: { job: JobPosting }) {
 }
 
 /* 大厂申请全流程二级页面：春/秋招 · 日常实习 · 个人评估 */
-/* 春/秋招补充数据：秋招时间轴 / 春招时间轴 / 定薪体系 / 大厂薪资 / 春秋对比 */
+/* 春/秋招补充数据：秋招时间轴 / 定薪体系 / 大厂薪资 / 春秋对比 */
 const autumnTimelineData = [
-  { period: '5月 - 7月', stage: '提前批', actions: '免笔试或流程极快，不占用正式秋招名额（挂了还能投正式批）。主要抢夺顶尖人才。字节、腾讯、阿里等大厂通常在 6 月底前开放。' },
-  { period: '8月 - 9月', stage: '正式批', actions: '全面开放，HC 最多。8 月是网申和笔试的高峰，9 月是面试高峰。“金九银十”现在变成了“金八银九”，很多大厂 9 月底就发完大部分 Offer 了。' },
-  { period: '10月 - 11月', stage: 'Offer 发放与逼签', actions: '密集发 Offer，同时伴随“逼签”（给你 3-7 天时间考虑，不接就作废）。部分同学开始毁约释放 HC。' },
-  { period: '12月 - 次年2月', stage: '秋招补录', actions: '考研/考公失利大军入场，同时有大厂员工毁约腾出的少量 HC。竞争依然激烈，但岗位质量不如 8-9 月。' },
-];
-
-const springTimelineData = [
-  { period: '2月 - 3月', stage: '春招提前批/启动', actions: '年后刚开工，各部门盘点缺人情况，释放补录 HC。' },
-  { period: '3月 - 4月', stage: '春招正式批（补录为主）', actions: '针对当年应届生最后的校招窗口。HC 少，且多为边缘业务线或别人挑剩下的岗位。' },
-  { period: '3月 - 5月', stage: '暑期实习招聘（面向下一届）', actions: '极度重要！这是下一届学生的“秋招提前批”。大厂的暑期实习转正率极高（如腾讯、字节部分部门可达 60%-80%），相当于提前锁定秋招 Offer。' },
+  { period: '5月 - 7月', stage: '提前批', actions: '免笔试或流程极快，不占用正式秋招名额（挂了不影响投正式批），主要抢夺人才。BAT 等大厂通常在 6 月底前开放。' },
+  { period: '8月 - 9月', stage: '正式批', actions: '全面开放，HC 最多。8 月是网申和笔试的高峰，9 月是面试高峰。“金九银十”现在变成了“金八银九”。' },
+  { period: '10月 - 11月', stage: 'Offer 发放与逼签', actions: '密集发 Offer，同时伴随“逼签”（给你 3-7 天时间考虑，接受Offer或者超时作废）。部分同学开始毁约释放 HC。' },
+  { period: '12月 - 次年2月', stage: '秋招补录', actions: '竞争依然激烈，但岗位质量不如 8-9 月。' },
 ];
 
 const offerLevelData = [
-  { level: '白菜价', meaning: '标准 Offer，满足基本要求', ratio: '60%-70%', diff: '基准线' },
-  { level: 'SP (Special Offer)', meaning: '优秀候选人，面试评价高', ratio: '20%-30%', diff: '比白菜高 2k-5k/月，或签字费更高' },
-  { level: 'SSP (Super SP)', meaning: '顶尖人才（竞赛金牌/顶会/名校第一）', ratio: '5%以内', diff: '比 SP 更高，常有股票/期权，专属培养计划' },
+  { level: '🥬', meaning: '标准 Offer，满足基本要求', ratio: '60%-70%', diff: '基准线' },
+  { level: 'SP (Special Offer)', meaning: '优秀候选人，面试评价高', ratio: '20%-30%', diff: '比🥬高 2k-5k/月，或签字费更高' },
+  { level: 'SSP (Super SP)', meaning: '顶尖人才（名校/优质论文/竞赛获奖）', ratio: '5%以内', diff: '比 SP 更高，常有股票/期权，专属培养计划' },
 ];
 
 const campusSalaryData = [
@@ -2033,15 +2027,6 @@ const campusSalaryData = [
   { company: '快手', base: '24k - 35k+', bonus: '4个月（16薪）', total: '38W - 55W+', note: '房补 2000/月，免费三餐，整体性价比高。' },
   { company: '小红书', base: '25k - 38k+', bonus: '3-4个月', total: '38W - 60W+', note: '近年涨薪猛，抢人凶狠，对标字节/快手。' },
   { company: '华为', base: '20k - 35k+', bonus: '绩效导向（浮动极大）', total: '30W - 60W+', note: '13-15 级定级；底薪不算最高，但分红/年终奖上限极高。' },
-];
-
-const campusCompareData = [
-  { dim: '定位', autumn: '决战时刻，决定职业生涯起点', spring: '查漏补缺，最后上车机会' },
-  { dim: 'HC 数量', autumn: '极多（占全年校招 70%+）', spring: '较少（主要是秋招没招满或有人毁约）' },
-  { dim: '岗位质量', autumn: '核心业务线、管培生全开', spring: '边缘业务、急招干活的岗位偏多' },
-  { dim: '竞争对手', autumn: '全体应届生、海归、保研失败者', spring: '考研/考公落榜大军（人数庞大，增加竞争烈度）' },
-  { dim: '面试难度', autumn: '标准化，流程长，考察全面', spring: '偏向“即插即用”，更看重能不能马上干活' },
-  { dim: '建议策略', autumn: 'All in，全力以赴', spring: '降低预期，先拿保底 Offer，骑驴找马' },
 ];
 
 function CampusRecruitTab() {
@@ -2059,7 +2044,7 @@ function CampusRecruitTab() {
           items={[
             { color: 'green', children: <><Text strong>① 网申投递</Text><Paragraph type="secondary" style={{ marginBottom: 0 }}>官网/校招公众号/内推码多渠道投递；提前批多免笔试直通面试，内推简历可被优先捞取。同一集团下多家子公司可分别投递，互不影响。</Paragraph></> },
             { color: 'green', children: <><Text strong>② 笔试测评</Text><Paragraph type="secondary" style={{ marginBottom: 0 }}>投递后 1-2 周内触发，一般为算法题 + 行测 + 性格测评；技术岗重点刷 LeetCode Hot 100 与历年真题（牛客网），性格测评如实作答、避免极端选项。</Paragraph></> },
-            { color: 'blue', children: <><Text strong>③ 技术面（2-3 轮）</Text><Paragraph type="secondary" style={{ marginBottom: 0 }}>一面考察基础知识与手撕算法，二面深挖项目与系统设计，交叉面考察技术广度与潜力；每轮结束后主动复盘，补齐暴露的短板。</Paragraph></> },
+            { color: 'blue', children: <><Text strong>③ 技术面（2-3 轮）</Text><Paragraph type="secondary" style={{ marginBottom: 0 }}>一、二面深挖项目与系统设计，考察基础知识与手撕算法，交叉面考察技术广度与潜力；每轮结束后主动复盘，补齐暴露的短板。</Paragraph></> },
             { color: 'blue', children: <><Text strong>④ HR 面</Text><Paragraph type="secondary" style={{ marginBottom: 0 }}>考察职业规划、稳定性与价值观匹配；提前准备好“为什么选择我们”与城市、岗位方向的取舍理由，薪资意向可表达开放态度。</Paragraph></> },
             { color: 'orange', children: <><Text strong>⑤ Offer 与签约</Text><Paragraph type="secondary" style={{ marginBottom: 0 }}>意向书 → 三方协议 → 入职；注意三方违约金条款与两家 Offer 的时间差博弈，校招 Offer 一般会明确薪资与入职部门。</Paragraph></> },
           ]}
@@ -2079,29 +2064,8 @@ function CampusRecruitTab() {
           ]}
         />
       </Card>
-      <Card className="career-resource-card" title="🌸 春招完整时间轴" style={{ marginBottom: 16 }} size="small">
-        <Table
-          size="small"
-          pagination={false}
-          rowKey="stage"
-          dataSource={springTimelineData}
-          columns={[
-            { title: '时间段', dataIndex: 'period', width: 120 },
-            { title: '阶段名称', dataIndex: 'stage', width: 200 },
-            { title: '核心动作与特点', dataIndex: 'actions' },
-          ]}
-        />
-        <Divider style={{ margin: '12px 0' }} />
-        <Text strong>⚡ 各厂节奏差异提示</Text>
-        <div style={detailGroupStyle}>
-          <Paragraph style={{ marginBottom: 2 }}><Text strong>字节跳动：</Text>常年滚动招聘，节奏极快，从投递到面完可能只需 2 周。</Paragraph>
-          <Paragraph style={{ marginBottom: 2 }}><Text strong>腾讯：</Text>按事业群（BG）独立招聘。微信（WXG）、IEG（互娱）、CSIG 等节奏不同，需分别盯紧。</Paragraph>
-          <Paragraph style={{ marginBottom: 0 }}><Text strong>阿里巴巴：</Text>近年来受组织架构调整影响，HC 波动较大，秋招启动有时会比其他厂晚半个月。</Paragraph>
-        </div>
-      </Card>
       <Card className="career-resource-card" title="💰 薪资待遇信息（SP/SSP 体系）" style={{ marginBottom: 16 }} size="small">
-        <Paragraph type="secondary">大厂的校招薪资高度透明化（尤其在牛客网等平台），实行“密薪制但明牌打”的策略。薪资不仅看 Base，更看总包（Total Package）。</Paragraph>
-        <Text strong>🏷️ 职级与定薪体系（白菜、SP、SSP）</Text>
+        <Text strong>🏷️ 职级与定薪体系（🥬、SP、SSP）</Text>
         <Paragraph type="secondary" style={{ marginBottom: 8, marginTop: 4 }}>大厂根据面试表现将候选人分级，薪资差异巨大：</Paragraph>
         <Table
           size="small"
@@ -2115,7 +2079,7 @@ function CampusRecruitTab() {
             { title: '薪资差异', dataIndex: 'diff' },
           ]}
         />
-        <Divider style={{ margin: '12px 0' }} />
+        <Divider style={{ margin: '22px 0' }} />
         <Text strong>💼 头部大厂薪资参考范围（2024-2025 届行情）</Text>
         <Alert
           type="warning"
@@ -2133,12 +2097,12 @@ function CampusRecruitTab() {
             { title: '公司', dataIndex: 'company', width: 100, fixed: 'left' },
             { title: '技术岗月薪范围 (RMB)', dataIndex: 'base', width: 150 },
             { title: '年终奖月数', dataIndex: 'bonus', width: 190 },
-            { title: '年总包预估（白菜-SSP）', dataIndex: 'total', width: 180 },
+            { title: '年总包预估（🥬-SSP）', dataIndex: 'total', width: 180 },
             { title: '薪资结构与特色', dataIndex: 'note' },
           ]}
         />
-        <Divider style={{ margin: '12px 0' }} />
-        <Text strong>🎁 隐性收入与福利（不可忽视）</Text>
+        <Divider style={{ margin: '22px 0' }} />
+        <Text strong>🎁 隐性收入与福利</Text>
         <div style={detailGroupStyle}>
           <Paragraph style={{ marginBottom: 2 }}><Text strong>签字费：</Text>为了抢 SSP 或防止你被竞品挖走，一次性发放 3W - 10W 不等。</Paragraph>
           <Paragraph style={{ marginBottom: 2 }}><Text strong>股票/期权：</Text>腾讯、字节对 SSP 可能会配股/期权，分 4 年归属，这是拉开总包差距的核心。</Paragraph>
@@ -2151,21 +2115,20 @@ function CampusRecruitTab() {
           items={[
             { key: 'apply', label: <Text strong>1. 简历与投递策略</Text>, children: (
               <div>
-                <Paragraph style={{ marginBottom: 2 }}><Text strong>不要海投同一个公司的所有岗位：</Text>大厂的 ATS（招聘管理系统）会自动查重。如果你同时投了字节的产品和运营，大概率两个都会被锁死。精准投递，一个公司只选一个最匹配的岗位。</Paragraph>
+                <Paragraph style={{ marginBottom: 2 }}><Text strong>不要海投同一个公司的所有岗位：</Text>大厂的招聘管理系统会自动查重。如果你同时投了字节的产品和运营，大概率两个都会被锁死。精准投递。</Paragraph>
                 <Paragraph style={{ marginBottom: 2 }}><Text strong>内推 &gt; 官网直投：</Text>找学长学姐或在牛客网找内部员工内推。内推不仅能免去部分笔试，更重要的是能追踪进度，避免简历石沉大海。</Paragraph>
                 <Paragraph style={{ marginBottom: 0 }}><Text strong>警惕“池子”：</Text>面试通过后不发 Offer，而是把你放进“人才池”排序。如果 HC 满了或者有更优的人，你会在池子里泡几个月后被捞起或挂掉。</Paragraph>
               </div>
             ) },
             { key: 'exam', label: <Text strong>2. 笔试与面试准备</Text>, children: (
               <div>
-                <Paragraph style={{ marginBottom: 2 }}><Text strong>行测题/性格测试：</Text>腾讯、阿里、网易等非常看重性格测试和行测（逻辑、图形推理）。性格测试千万不要前后矛盾，系统有测谎机制，不一致直接挂。</Paragraph>
                 <Paragraph style={{ marginBottom: 2 }}><Text strong>手撕代码（技术岗）：</Text>LeetCode Medium 是底线。不仅要写出来，还要讲清楚时间/空间复杂度。</Paragraph>
                 <Paragraph style={{ marginBottom: 0 }}><Text strong>业务 Sense（非技术岗）：</Text>产品经理面试必问“拆解一款 App”或“设计一个功能”。不要只谈体验，要谈商业模式、ROI、数据指标。</Paragraph>
               </div>
             ) },
             { key: 'sign', label: <Text strong>3. “逼签”与“毁约”博弈</Text>, children: (
               <div>
-                <Paragraph style={{ marginBottom: 2 }}><Text strong>逼签应对：</Text>当你拿到 A 厂 Offer（要求 3 天内签），但你还在等 B 厂（Dream Offer）时：</Paragraph>
+                <Paragraph style={{ marginBottom: 2 }}><Text strong>逼签应对：</Text>当你拿到 A 厂 Offer（要求 3 天内签），但你还在等 B 厂时：</Paragraph>
                 <Paragraph style={{ marginBottom: 2 }}>① 拖延战术：诚恳地向 HR 表示需要和家人商量，争取延期 1-2 周。</Paragraph>
                 <Paragraph style={{ marginBottom: 2 }}>② 催熟战术：拿着 A 厂的 Offer 去联系 B 厂的 HR，说明情况，请求加速流程（B 厂如果想要你，通常会加速）。</Paragraph>
                 <Paragraph style={{ marginBottom: 0 }}><Text strong>三方协议与违约金：</Text>签了三方协议后想毁约去更好的厂，通常需要交违约金（一般 5000 - 8000 元）。这笔钱该交就交，不要心疼，但要注意原学校发新三方的时间差，别导致两头空。</Paragraph>
@@ -2173,7 +2136,7 @@ function CampusRecruitTab() {
             ) },
             { key: 'dept', label: <Text strong>4. 部门选择大于公司选择</Text>, children: (
               <div>
-                <Paragraph style={{ marginBottom: 2 }}><Text strong>核心盈利部门 vs 边缘创新部门：</Text>同样是腾讯，微信/WXG 和某个不知名创新业务的体验天差地别。边缘部门随时可能被裁撤（整个端掉）。</Paragraph>
+                <Paragraph style={{ marginBottom: 2 }}><Text strong>核心盈利部门 vs 边缘创新部门：</Text>同样是腾讯，微信/WXG 和某个不知名创新业务的体验天差地别。边缘部门随时可能被整个裁撤。</Paragraph>
                 <Paragraph style={{ marginBottom: 0 }}><Text strong>如何调研：</Text>面试反问环节一定要问：“团队目前的 OKR 是什么？”、“这个岗位是新增还是替补？”。去脉脉搜该部门的口碑。</Paragraph>
               </div>
             ) },
@@ -2183,19 +2146,6 @@ function CampusRecruitTab() {
                 <Paragraph style={{ marginBottom: 0 }}><Text strong>实习经历权重：</Text>一段对口的大厂日常实习/暑期实习，抵得上你在学校的十个水项目。</Paragraph>
               </div>
             ) },
-          ]}
-        />
-      </Card>
-      <Card className="career-resource-card" title="📊 春招 vs 秋招的战略对比" size="small">
-        <Table
-          size="small"
-          pagination={false}
-          rowKey="dim"
-          dataSource={campusCompareData}
-          columns={[
-            { title: '维度', dataIndex: 'dim', width: 110 },
-            { title: '秋招 (Autumn Recruitment)', dataIndex: 'autumn' },
-            { title: '春招 (Spring Recruitment)', dataIndex: 'spring' },
           ]}
         />
       </Card>
@@ -2272,7 +2222,7 @@ function DailyInternTab() {
             { title: '原因分析', dataIndex: 'reason' },
           ]}
         />
-        <Divider style={{ margin: '12px 0' }} />
+        <Divider style={{ margin: '22px 0' }} />
         <Text strong>⏳ 时长与到岗要求</Text>
         <div style={detailGroupStyle}>
           <Paragraph style={{ marginBottom: 2 }}><Text strong>硬性规定：</Text>绝大多数大厂要求至少实习 3 个月，更青睐能实习 4-6 个月的候选人。</Paragraph>
@@ -2296,7 +2246,7 @@ function DailyInternTab() {
             { title: '备注说明', dataIndex: 'note' },
           ]}
         />
-        <Divider style={{ margin: '12px 0' }} />
+        <Divider style={{ margin: '22px 0' }} />
         <Text strong>🎁 隐性福利与补贴（重点关注）</Text>
         <div style={detailGroupStyle}>
           <Paragraph style={{ marginBottom: 2 }}><Text strong>房补（异地实习的核心）：</Text>快手、小红书、B 站等通常有 1500-2000 元/月的房补；腾讯、阿里部分城市有合作公寓或租房补贴；注意字节和拼多多部分岗位反而没有直接房补，需提前问清 HR。</Paragraph>
@@ -2479,7 +2429,7 @@ function JobProfileSection() {
                   </div>
                 ))}
               </div>
-              <Divider style={{ margin: '12px 0' }} />
+              <Divider style={{ margin: '22px 0' }} />
               <Text strong>💼 性格画像</Text>
               <ul style={{ margin: '8px 0', paddingLeft: 20 }}>
                 {job.personality.map((p) => (
@@ -2534,7 +2484,7 @@ function ApplicationGuidePage() {
         defaultActiveKey="campus"
         size="large"
         items={[
-          { key: 'campus', label: '春/秋招', children: <CampusRecruitTab /> },
+          { key: 'campus', label: '校招', children: <CampusRecruitTab /> },
           { key: 'internship', label: '日常实习', children: <DailyInternTab /> },
           { key: 'assessment', label: '个人评估', children: <SelfAssessmentTab /> },
         ]}
