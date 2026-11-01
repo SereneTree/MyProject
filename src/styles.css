@@ -1622,6 +1622,284 @@ a.member-pill:hover {
   line-height: 1.9;
 }
 
+/* 师资力量：左头像 + 右侧姓名/角色/擅长，下方经历与 Offer 两栏 */
+.coaching-mentor {
+  padding-top: 2px;
+}
+
+/* 同一方向有多个导师时用虚线分隔 */
+.coaching-mentor + .coaching-mentor {
+  margin-top: 22px;
+  padding-top: 22px;
+  border-top: 1px dashed #e8eef8;
+}
+
+.coaching-mentor-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.coaching-mentor-avatar {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(140deg, #1d4ed8 0%, #3b82f6 55%, #60a5fa 100%);
+  color: #ffffff;
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.22);
+}
+
+.coaching-mentor-meta {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.coaching-mentor-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: #0f172a;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.coaching-mentor-role {
+  padding: 2px 10px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 6px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.coaching-mentor-edu {
+  margin-top: 5px;
+  color: #64748b;
+  font-size: 13.5px;
+  line-height: 1.65;
+}
+
+/* 一句话背景：细竖线引导，不用整块底色 */
+.coaching-mentor-summary {
+  margin: 16px 0 0;
+  padding-left: 14px;
+  border-left: 3px solid #bfdbfe;
+  color: #1e293b;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.8;
+}
+
+/* 经历与 Offer 两栏：左边纯文本列表，右边浅蓝战绩卡 */
+.coaching-mentor-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 18px;
+  margin-top: 16px;
+}
+
+.coaching-mentor-col-title {
+  margin-bottom: 6px;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.coaching-mentor-rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.coaching-mentor-rows li {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px dashed #eef2f7;
+}
+
+.coaching-mentor-rows li:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.coaching-mentor-label {
+  flex: 0 0 76px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.coaching-mentor-value {
+  flex: 1;
+  min-width: 0;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.7;
+}
+
+/* Offer 战绩：浅蓝底卡片，与左侧经历形成主次对比 */
+.coaching-mentor-col--offers {
+  padding: 14px 16px;
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  border-radius: 12px;
+  background: linear-gradient(140deg, rgba(37, 99, 235, 0.07) 0%, rgba(37, 99, 235, 0.02) 100%);
+}
+
+.coaching-mentor-col--offers .coaching-mentor-col-title {
+  color: #2563eb;
+}
+
+.coaching-mentor-col--offers .coaching-mentor-rows li {
+  border-bottom-color: rgba(37, 99, 235, 0.12);
+}
+
+.coaching-mentor-col--offers .coaching-mentor-label {
+  color: #1d4ed8;
+}
+
+/* 擅长方向：与姓名块同行靠右，窄屏自动换行 */
+.coaching-mentor-expertise {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.coaching-mentor-expertise-label {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+}
+
+.coaching-mentor-expertise-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.coaching-mentor-expertise-tag {
+  padding: 3px 11px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.7;
+}
+
+/* 商科能力地图：两列能力模块，对应研发方向的 AI 知识体系卡 */
+.coaching-skills {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.coaching-skill {
+  padding: 14px 16px 14px 18px;
+  border: 1px solid #eef2f7;
+  border-left: 3px solid #bfdbfe;
+  border-radius: 10px;
+  background: #fbfdff;
+}
+
+.coaching-skill-title {
+  margin-bottom: 6px;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.coaching-skill-desc {
+  margin: 0;
+  color: #5b6b7f;
+  font-size: 13.5px;
+  line-height: 1.85;
+}
+
+/* 成果收获（无大图方向）：编号资产清单 + 收尾鼓励 */
+.coaching-gains {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.coaching-gain {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.coaching-gain-index {
+  flex: 0 0 auto;
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.coaching-gain-text {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.7;
+}
+
+@media (max-width: 720px) {
+  .coaching-skills,
+  .coaching-gains {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .coaching-mentor-avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+    font-size: 19px;
+  }
+
+  .coaching-mentor-name {
+    font-size: 17px;
+  }
+
+  .coaching-mentor-expertise {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+/* 再窄才堆叠：中等宽度仍保留经历 / Offer 两栏，避免又变回一长串卡片 */
+@media (max-width: 720px) {
+  .coaching-mentor-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+}
+
 .career-resource-card {
   width: 100%;
   border-radius: 12px;

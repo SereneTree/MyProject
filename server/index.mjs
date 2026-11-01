@@ -1351,7 +1351,15 @@ const gradeLabelMap = {
   junior_fall: '大三上',
   junior_spring: '大三下',
   senior_fall: '大四上',
-  senior_spring: '大四下'
+  senior_spring: '大四下',
+  // 咨询意向表单按学年粒度提交
+  freshman: '大一',
+  sophomore: '大二',
+  junior: '大三',
+  senior: '大四',
+  master1: '研一',
+  master2: '研二',
+  master3: '研三'
 };
 
 async function sendDingTalkNotification(lead) {

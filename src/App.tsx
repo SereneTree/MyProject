@@ -71,6 +71,17 @@ const gradeOptions = [
   { value: 'senior_spring', label: '大四下' }
 ];
 
+// 咨询意向表单按学年粒度选择（大一→大四、研一→研三），不区分上下学期
+const consultGradeOptions = [
+  { value: 'freshman', label: '大一' },
+  { value: 'sophomore', label: '大二' },
+  { value: 'junior', label: '大三' },
+  { value: 'senior', label: '大四' },
+  { value: 'master1', label: '研一' },
+  { value: 'master2', label: '研二' },
+  { value: 'master3', label: '研三' }
+];
+
 const difficultyMap = { easy: '入门', medium: '中等', hard: '挑战' };
 const assignmentTypeMap = { coding: '编程类', theory: '理论类', project: '项目类' };
 
@@ -188,7 +199,7 @@ function AppShell() {
           <Route path="/career-planning/tech-articles" element={<TechArticlesPage />} />
           <Route path="/career-planning/application-guide" element={<ApplicationGuidePage />} />
           <Route path="/career-planning/coaching" element={<CoachingPage />} />
-          <Route path="/consultation" element={<ConsultationPage profile={profile} />} />
+          <Route path="/consultation" element={<ConsultationPage />} />
           <Route path="/about" element={<AboutPage />} />
         </Routes>
       </Content>
@@ -2538,6 +2549,22 @@ function ApplicationGuidePage() {
 
 type CoachingStep = { title: string; detail: string; color: string; bullets?: string[] };
 
+// 师资力量：一位导师 = 头部（姓名/角色/学历）+ 一句背景 + 经历与 Offer 分组
+// 经历与 Offer 统一用 label/value 二元组，方便后续追加导师
+type CoachingMentorRow = { label: string; value: string };
+type CoachingMentor = {
+  name: string;
+  role: string;
+  education: string;
+  summary: string;
+  expertise?: string[];
+  experiences: CoachingMentorRow[];
+  offers: CoachingMentorRow[];
+};
+
+// 能力地图：无配图方向（商科）用它替代研发方向的 AI 知识体系卡
+type CoachingSkill = { title: string; desc: string };
+
 type CoachingTrack = {
   key: string;
   label: string;
@@ -2545,6 +2572,13 @@ type CoachingTrack = {
   stepsTitle?: string;
   origin?: string;
   pains?: string[];
+  reliefText?: string;
+  mentors?: CoachingMentor[];
+  skillsTitle?: string;
+  skillsIntro?: string;
+  skills?: CoachingSkill[];
+  gains?: string[];
+  gainsNote?: string;
 };
 
 // 1V1 全流程辅导：研发 / 商科两个方向的陪跑环节拆解
@@ -2598,6 +2632,48 @@ const coachingTracks: CoachingTrack[] = [
   {
     key: 'biz',
     label: '📈 商科',
+    origin: '做商科陪跑的初衷很实在：我自己就是从语言类专业 0 基础跨界商科，选赛道、改简历、练 Case、跑面试，每一步都踩过坑。这些经验不必再让你自己摸索一遍——方向怎么选、材料怎么写、面试怎么答，我直接带你走一遍。',
+    reliefText: '这些不是能力问题，是信息差——早有人替你踩过，就不必自己再撞一遍。简历有人改、Case 有人陪练、面试有人逐句复盘，行业与岗位的选择也提前帮你想清楚。等秋招真正开始，你会发现自己已经准备好了。三个月走完，目标只有一个：拿到一份你自己满意的工作。',
+    pains: [
+      '🧭 想进咨询 / 快消 / 互联网，却分不清赛道差异，不知道该重点投哪一类',
+      '📄 简历写满社团与学生工作，讲不出可量化的商业成果',
+      '🗣️ 行为面 STAR 讲不完整，案例面（Case）缺少结构化框架',
+      '📊 商业 sense 与行业认知偏薄，群面里抢不到发言位置',
+      '⏰ 暑期实习与秋招节奏没踩准，等到毕业才发现窗口已经关上',
+    ],
+    mentors: [
+      {
+        name: 'Y老师',
+        role: '商科方向主导师',
+        education: '北外、HEC Paris 战略管理研究生（欧洲第一商学院）',
+        summary: '从 0 到 1 跨界商科，成为咨询、互联网战略与快消行业的全能型选手。',
+        expertise: ['面试辅导', 'Mock Case', '快消 / 互联网 / 咨询行业岗位介绍与选择'],
+        experiences: [
+          { label: '咨询', value: '贝恩、罗兰贝格' },
+          { label: '互联网战略', value: '字节跳动、百度' },
+          { label: '快消', value: '联合利华、玛氏' },
+        ],
+        offers: [
+          { label: '暑期实习', value: '宝洁 BRM、腾讯微信产品经理、某战略咨询' },
+          { label: '秋招', value: '某 Tier 2 战略咨询' },
+        ],
+      },
+    ],
+    skillsTitle: '商科能力地图',
+    skillsIntro: '商科求职考的从来不是背了多少模型，而是能不能在有限信息里把事情想清楚、说明白。下面四块能力按“先定方向、再磨材料、最后练表达”的顺序叠加，每一块都有可交付的产出。',
+    skills: [
+      { title: '行业与岗位认知', desc: '咨询（战略 / 管理 / 风险）、快消（BRM / 供应链 / 市场）、互联网（产品 / 运营 / 战略）三大赛道的岗位差异、晋升路径与选人偏好，先把方向定对再谈技巧。' },
+      { title: '简历与作品集', desc: '把社团、实习、竞赛翻译成可量化的商业成果（GMV、留存、转化率、复购），再补一份行业研究报告作为作品集，应对“你有什么作品”这类追问。' },
+      { title: 'Case 与商业分析', desc: '市场规模估算、利润拆解、进入策略等高频题型的框架，配合 mock case 逐轮打磨假设、结构与结论，形成自己可复用的拆题习惯。' },
+      { title: '面试表达与群面', desc: '行为面 STAR 逐句打磨、业务面深挖准备、群面角色定位与时间管理，每轮录音逐句反馈结论先行、逻辑分层与数据引用。' },
+    ],
+    gains: [
+      '一份把经历翻译成商业价值的简历',
+      '一套可复用的 Case 拆解与表达框架',
+      '一份能直接放进作品集的行业研究报告',
+      '一份逐场沉淀的真实面试复盘结论库',
+    ],
+    gainsNote: '商科求职拼的从来不是“知道多少”，而是“能不能讲清楚”。每一轮 mock、每一场面试都会沉淀成你的题库与话术库，到真正上场时，你已经是练过很多次的那个版本。加油，我们终点见。',
     steps: [
       { title: '① 职业性格评测', color: 'green', detail: '霍兰德 + 大五人格测评，区分产品、运营、咨询、管培四类岗位的胜任特征，避免只看岗位热度而忽视性格与工作节奏的匹配度。' },
       { title: '② 个人能力摸底', color: 'green', detail: '商业 sense、数据分析、结构化表达、案例拆解四项打分，明确与目标岗位胜任模型的差距，并给出 4-8 周的针对性提升任务。' },
@@ -2623,6 +2699,17 @@ const coachingMedia: Record<string, { hero?: string; stages?: string; map?: stri
 function CoachingTrackPanel({ track, onConsult }: { track: CoachingTrack; onConsult: () => void }) {
   const media = coachingMedia[track.key] || {};
   const hasHero = Boolean(media.hero || track.origin || track.pains);
+  // 经历与 Offer 共用同一份行渲染，避免两处重复维护
+  const renderMentorRows = (rows: CoachingMentorRow[]) => (
+    <ul className="coaching-mentor-rows">
+      {rows.map((row) => (
+        <li key={row.label}>
+          <span className="coaching-mentor-label">{row.label}</span>
+          <span className="coaching-mentor-value">{row.value}</span>
+        </li>
+      ))}
+    </ul>
+  );
   return (
     <div>
       {hasHero && (
@@ -2640,7 +2727,7 @@ function CoachingTrackPanel({ track, onConsult }: { track: CoachingTrack; onCons
             <div className="coaching-hero-relief">
               <p className="coaching-hero-relief-title">不用怕，这条路上有人带着走</p>
               <p className="coaching-hero-relief-text">
-                这些不是能力问题，是信息差——早有人替你踩过，就不必自己再撞一遍。简历有人改、项目有人带、面试有人陪练，每一步都踩在关键节点上。等秋招真正开始，你会发现自己已经准备好了。三个月走完，目标只有一个：拿到一份你自己满意的工作。
+                {track.reliefText || '这些不是能力问题，是信息差——早有人替你踩过，就不必自己再撞一遍。简历有人改、项目有人带、面试有人陪练，每一步都踩在关键节点上。等秋招真正开始，你会发现自己已经准备好了。三个月走完，目标只有一个：拿到一份你自己满意的工作。'}
               </p>
             </div>
           </div>
@@ -2650,6 +2737,45 @@ function CoachingTrackPanel({ track, onConsult }: { track: CoachingTrack; onCons
             </figure>
           )}
         </section>
+      )}
+      {track.mentors && track.mentors.length > 0 && (
+        <Card className="career-resource-card" title="师资力量" style={{ marginBottom: 16 }}>
+          {track.mentors.map((mentor) => (
+            <article className="coaching-mentor" key={mentor.name}>
+              <header className="coaching-mentor-head">
+                <div className="coaching-mentor-avatar" aria-hidden="true">{mentor.name.slice(0, 1)}</div>
+                <div className="coaching-mentor-meta">
+                  <div className="coaching-mentor-name">
+                    {mentor.name}
+                    <span className="coaching-mentor-role">{mentor.role}</span>
+                  </div>
+                  <div className="coaching-mentor-edu">{mentor.education}</div>
+                </div>
+                {mentor.expertise && mentor.expertise.length > 0 && (
+                  <div className="coaching-mentor-expertise">
+                    <span className="coaching-mentor-expertise-label">擅长</span>
+                    <div className="coaching-mentor-expertise-tags">
+                      {mentor.expertise.map((item) => (
+                        <span className="coaching-mentor-expertise-tag" key={item}>{item}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </header>
+              <p className="coaching-mentor-summary">{mentor.summary}</p>
+              <div className="coaching-mentor-grid">
+                <section className="coaching-mentor-col">
+                  <div className="coaching-mentor-col-title">实习与任职经历</div>
+                  {renderMentorRows(mentor.experiences)}
+                </section>
+                <section className="coaching-mentor-col coaching-mentor-col--offers">
+                  <div className="coaching-mentor-col-title">Offer 战绩</div>
+                  {renderMentorRows(mentor.offers)}
+                </section>
+              </div>
+            </article>
+          ))}
+        </Card>
       )}
       <Card className="career-resource-card" title={track.stepsTitle || '六步陪跑流程'} style={{ marginBottom: 16 }}>
         <div className={`coaching-stages${media.stages ? '' : ' coaching-stages--no-media'}`}>
@@ -2676,6 +2802,37 @@ function CoachingTrackPanel({ track, onConsult }: { track: CoachingTrack; onCons
           )}
         </div>
       </Card>
+      {track.skills && track.skills.length > 0 && (
+        <Card className="career-resource-card" title={track.skillsTitle || '能力地图'} style={{ marginBottom: 16 }}>
+          {track.skillsIntro && <Paragraph className="coaching-map-intro">{track.skillsIntro}</Paragraph>}
+          <div className="coaching-skills">
+            {track.skills.map((skill) => (
+              <section className="coaching-skill" key={skill.title}>
+                <div className="coaching-skill-title">{skill.title}</div>
+                <p className="coaching-skill-desc">{skill.desc}</p>
+              </section>
+            ))}
+          </div>
+        </Card>
+      )}
+      {track.gains && track.gains.length > 0 && (
+        <Card className="career-resource-card" title="成果收获" style={{ marginBottom: 16 }}>
+          <div className="coaching-gains">
+            {track.gains.map((gain, index) => (
+              <div className="coaching-gain" key={gain}>
+                <span className="coaching-gain-index">{String(index + 1).padStart(2, '0')}</span>
+                <span className="coaching-gain-text">{gain}</span>
+              </div>
+            ))}
+          </div>
+          {track.gainsNote && (
+            <div className="coaching-results-note">
+              <p className="coaching-results-note-title">这条路，我陪你走完</p>
+              <p className="coaching-results-note-text">{track.gainsNote}</p>
+            </div>
+          )}
+        </Card>
+      )}
       {media.projects && (
         <Card className="career-resource-card" title="AI 知识体系" style={{ marginBottom: 16 }}>
           <Paragraph className="coaching-map-intro">
@@ -4617,7 +4774,7 @@ function CareerPlanningPage() {
         <div className="career-tab-content">
           {heroSection}
           <div className="career-section-header">
-            <Title level={4}>长期随访 · 学员成长故事</Title>
+            <Title level={4}>长期随访 · 学长现身说法</Title>
             <Paragraph type="secondary">记录每一位同学的规划与成长历程，见证努力到收获的完整链路</Paragraph>
           </div>
           <Row gutter={[16, 16]}>
@@ -4690,7 +4847,7 @@ function CareerPlanningPage() {
   );
 }
 
-function ConsultationPage({ profile }: { profile: Profile }) {
+function ConsultationPage() {
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
 
@@ -4742,21 +4899,14 @@ function ConsultationPage({ profile }: { profile: Profile }) {
           <Form
             form={form}
             layout="vertical"
-            initialValues={{
-              name: profile.nickname && profile.nickname !== '未命名同学' ? profile.nickname : undefined,
-              contact: profile.phone || undefined,
-              school: profile.school || undefined,
-              major: profile.major || undefined,
-              grade: profile.grade || undefined,
-            }}
             onFinish={submit}
           >
             <Row gutter={12}>
               <Col xs={24} md={12}><Form.Item name="name" label="姓名" rules={[{ required: true }]}><Input placeholder="例如：陈小博" /></Form.Item></Col>
-              <Col xs={24} md={12}><Form.Item name="contact" label="联系方式" rules={[{ required: true }]}><Input placeholder="例如：手机号 / 微信" /></Form.Item></Col>
+              <Col xs={24} md={12}><Form.Item name="contact" label="联系方式（手机/微信）" rules={[{ required: true }]}><Input placeholder="例如：138xxxxxxxx / 微信号" /></Form.Item></Col>
               <Col xs={24} md={12}><Form.Item name="school" label="学校"><Input placeholder="例如：北京邮电大学" /></Form.Item></Col>
               <Col xs={24} md={12}><Form.Item name="major" label="专业"><Input placeholder="例如：计算机科学与技术" /></Form.Item></Col>
-              <Col xs={24} md={12}><Form.Item name="grade" label="年级"><Select placeholder="请选择你所在年级" options={gradeOptions} /></Form.Item></Col>
+              <Col xs={24} md={12}><Form.Item name="grade" label="年级"><Select placeholder="请选择你所在年级" options={consultGradeOptions} /></Form.Item></Col>
               <Col xs={24} md={12}><Form.Item name="goal" label="咨询方向" rules={[{ required: true, message: '请选择咨询方向' }]}><Select placeholder="请选择所咨询方向" options={['实习与就业', '考研与保研', '留学', '其他'].map((item) => ({ value: item, label: item }))} /></Form.Item></Col>
             </Row>
             <Form.Item name="description" label="当前困惑" rules={[{ required: true, message: '请描述你当前的困惑' }]}><Input.TextArea rows={5} placeholder="描述你目前的学习/升学/就业困惑" /></Form.Item>
