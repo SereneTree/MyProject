@@ -1,4 +1,4 @@
-import { ArrowLeftOutlined, BookOutlined, CrownOutlined, DownloadOutlined, FileTextOutlined, FormOutlined, LockOutlined, ProfileOutlined, ReadOutlined, RocketOutlined, TeamOutlined, TrophyOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, BookOutlined, CrownOutlined, DownloadOutlined, FileTextOutlined, FormOutlined, LockOutlined, ProfileOutlined, ReadOutlined, RocketOutlined, SoundOutlined, TeamOutlined, TrophyOutlined } from '@ant-design/icons';
 import { Alert, Badge, Button, Card, Col, Collapse, Divider, Empty, Form, Input, Layout, List, Menu, message, Radio, Row, Select, Space, Spin, Statistic, Table, Tabs, Tag, Timeline, Typography } from 'antd';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -142,9 +142,10 @@ function AppShell() {
         </Link>
         <Menu mode="horizontal" className="nav" selectedKeys={[getSelectedNavKey(location.pathname)]} items={[
           { key: 'home', label: <Link to={DEFAULT_RESOURCE_PATH} onClick={scrollToResourceColumnFallback}>学习资源</Link> },
-          { key: 'career-planning', label: <Link to="/career-planning">生涯规划</Link> },
+          { key: 'career-planning', label: <Link to="/career-planning" onClick={() => window.scrollTo({ top: 0 })}>生涯规划</Link> },
           { key: 'consultation', label: <Link to="/consultation">咨询服务</Link> }
         ]} />
+        <HeaderBroadcast />
         <Space className="header-actions" size={10}>
           {/* 仅作状态展示，不再跳转会员页 */}
           <span className={`member-pill member-pill-${memberLevel}`}>
@@ -186,6 +187,37 @@ function AppShell() {
       </Content>
       {/* <Footer className="footer">MVP Demo · 内容用于学习参考和产品验证</Footer> */}
     </Layout>
+  );
+}
+
+// 顶栏小播报站：数组顺序即滚动顺序，改文案只改这里
+const HEADER_BROADCAST_ITEMS = [
+  '保研专区将于11月中旬面向全体同学开放',
+  '求职岗位实时更新中，有意向请直接咨询～',
+  '学习资源区课件&大作业面向全体同学征集，课程资源加油包为你量身打造！'
+];
+
+// 顶栏小播报站：文案首尾相接横向滚动，鼠标悬停暂停
+function HeaderBroadcast() {
+  return (
+    <div className="header-broadcast" aria-label="站内播报">
+      <span className="header-broadcast-tag">
+        <SoundOutlined />
+        播报
+      </span>
+      <div className="header-broadcast-viewport">
+        {/* 同一份内容复制两遍，配合 translateX(-50%) 实现无缝衔接 */}
+        <div className="header-broadcast-track">
+          {[...HEADER_BROADCAST_ITEMS, ...HEADER_BROADCAST_ITEMS].map((text, index) => (
+            <span
+              className="header-broadcast-item"
+              key={`${index}-${text}`}
+              aria-hidden={index >= HEADER_BROADCAST_ITEMS.length}
+            >{text}</span>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -2478,7 +2510,7 @@ function ApplicationGuidePage() {
   const navigate = useNavigate();
   return (
     <div className="career-planning-page">
-      <Button type="primary" style={{ marginBottom: 16 }} onClick={() => navigate('/career-planning')}>← 返回生涯规划</Button>
+      <Button type="primary" style={{ marginBottom: 16 }} onClick={() => navigate('/career-planning')}>← 返回求职专区</Button>
       <div className="career-hero">
         <div className="career-hero-badge">🚀 求职专区 · 申请全流程</div>
         <Title level={2}>大厂申请<span className="career-hero-highlight">全流程</span></Title>
@@ -2777,7 +2809,7 @@ function TechArticlesPage() {
 
   return (
     <div className="career-planning-page">
-      <Button type="primary" style={{ marginBottom: 16 }} onClick={() => navigate('/career-planning')}>← 返回生涯规划</Button>
+      <Button type="primary" style={{ marginBottom: 16 }} onClick={() => navigate('/career-planning')}>← 返回求职专区</Button>
       <div className="career-hero">
         <div className="career-hero-badge">📕 小红书 · 技术干货</div>
         <Title level={2}>技术干货<span className="career-hero-highlight">抢先读</span></Title>
@@ -3347,7 +3379,6 @@ const abroadUpdateRows: AbroadUpdateRow[] = [
       { label: '主轮', value: '2026-11-16 中午' },
       { label: '清算轮', value: '2027-02-01 中午' },
     ],
-    note: '主轮申请优先审理',
     links: [{ label: '官网', href: 'https://www.scifac.hku.hk/prospective/tpg/ArtificialIntelligence' }],
   },
   {
@@ -3372,7 +3403,6 @@ const abroadUpdateRows: AbroadUpdateRow[] = [
       { label: '第一轮', value: '2026-12-01' },
       { label: '第二轮', value: '2027-03-01' },
     ],
-    note: '采用竞争性、滚动审理，建议尽早提交',
     links: [
       { label: 'AI 项目', href: 'https://seng.hkust.edu.hk/academics/taught-postgraduate/msc-ai' },
       { label: 'BDT 项目', href: 'https://seng.hkust.edu.hk/academics/taught-postgraduate/msc-bdt' },
@@ -3394,7 +3424,6 @@ const abroadUpdateRows: AbroadUpdateRow[] = [
     school: '香港中文大学 CUHK',
     programs: 'MSc Artificial Intelligence、MSc Financial Technology',
     deadlines: [{ label: '四轮', value: '2026-10-02 · 2026-11-06 · 2026-12-31 · 2027-02-28' }],
-    note: '滚动审理，名额满后可能不再考虑后续申请',
     links: [{ label: '官网', href: 'https://www.gs.cuhk.edu.hk/admissions/application-deadline' }],
   },
   {
@@ -3404,7 +3433,6 @@ const abroadUpdateRows: AbroadUpdateRow[] = [
     school: '新加坡国立大学 NUS',
     programs: 'MComp（含 General Track；）',
     deadlines: [{ label: '2027 年 8 月入学', value: '2026-10-01 至 2027-01-31' }],
-    note: '该项目自 AY2025 起每年只有 8 月一轮入学',
     links: [{ label: '官网', href: 'https://www.comp.nus.edu.sg/programmes/pg/mcomp-gen/application/' }],
   },
   {
@@ -3416,7 +3444,6 @@ const abroadUpdateRows: AbroadUpdateRow[] = [
     deadlines: [
       { text: '不同学院和项目的截止日不同：学校总招生指南列出了 2027/28 各项目的申请窗口，不能用一个日期代表所有 NTU 项目。' },
     ],
-    note: '需从具体目标项目页面确认',
     links: [{ label: '招生指南', href: 'https://www.ntu.edu.sg/admissions/graduate/cwadmissionguide' }],
   },
   {
@@ -3426,7 +3453,6 @@ const abroadUpdateRows: AbroadUpdateRow[] = [
     school: '帝国理工 Imperial',
     programs: 'AI、Computing、Advanced Computing 等',
     deadlines: [{ label: '后续轮次', value: '2027-01-06 · 03-10 · 04-28' }],
-    note: '多数计算机项目采用分轮申请；项目可能提前满额关闭，不要把最后一轮当成稳妥截止日',
     links: [{ label: 'AI 项目', href: 'https://www.imperial.ac.uk/study/courses/postgraduate-taught/artificial-intelligence/' }],
   },
   {
@@ -3439,7 +3465,6 @@ const abroadUpdateRows: AbroadUpdateRow[] = [
       { label: '需签证', value: '2027-03-22' },
       { label: '不需签证', value: '2027-08-27' },
     ],
-    note: '以 MSc Computer Science 为例；多个项目 2027 入学页面已开放，且可能在公告截止前因满额关闭',
     links: [{ label: '官网', href: 'https://www.ucl.ac.uk/study/prospective-students/graduate/courses/computer-science-msc' }],
   },
 ];
@@ -3468,29 +3493,244 @@ const abroadUpdatePolicies: AbroadUpdatePoint[] = [
   },
 ];
 
-// 把时间表落到执行动作上的四条建议
-const abroadUpdateActions: AbroadUpdatePoint[] = [
+// ---------- 项目级录取难度地图 ----------
+type AbroadDifficultyLevel = 'reach' | 'high' | 'mid' | 'easy';
+type AbroadSchoolDifficultyGroup = {
+  school: string;
+  schoolShort: string;
+  programs: [string, string, AbroadDifficultyLevel][];
+};
+
+// 四档难度：标色用于图例、难度条与项目卡片左边条，文案用于标签
+const abroadDifficultyLevels: { key: AbroadDifficultyLevel; label: string; color: string; desc: string }[] = [
   {
-    title: '按早轮排期，不按最后截止日排期',
-    detail: '港校主轮 / 早期轮次优先且滚动放位，把目标定在主轮提交，清算轮只作为补申备份。',
+    key: 'reach',
+    label: '极高',
+    color: '#e11d48',
+    desc: '往年以 985/211、高 GPA 加硬核实习或科研为主，名额最紧，建议作为冲刺位',
   },
   {
-    title: '先确认自己的签证身份，再锁定 UCL 截止日',
-    detail: '需签证申请人要按 2027-03-22 这类更早的截止倒推语言出分与文书定稿时间。',
+    key: 'high',
+    label: '高',
+    color: '#f97316',
+    desc: '热门王牌项目，对标化、专业匹配度要求高，需要提前 8～10 个月准备',
   },
   {
-    title: '学校总截止不能替代项目截止',
-    detail: 'NTU 与港校内部项目差异明显，逐个目标项目单独记录窗口，避免用同一个日期覆盖全部申请。',
+    key: 'mid',
+    label: '中',
+    color: '#2563eb',
+    desc: '主流可选档：背景达标且方向匹配即有较大机会，适合作为主申',
   },
   {
-    title: '同名前先核对先修课与背景要求',
-    detail: '把目标项目的先修课、编程与数学要求、英语单项、推荐材料列成核对表，再决定冲刺 / 主申 / 保底的分布。',
+    key: 'easy',
+    label: '相对友好',
+    color: '#059669',
+    desc: '新设或交叉学科项目，对跨专业、双非背景更友好，可作保底或转方向跳板',
+  },
+];
+
+// 港 / 新 / 英七所院校的项目级难度（经验评估，同校内不同项目差异远大于学校之间差异）
+// 每项依次为：项目中文名（含缩写）、英文全称、难度档
+const abroadDifficultyGroups: AbroadSchoolDifficultyGroup[] = [
+  {
+    school: '香港大学 HKU',
+    schoolShort: '港大',
+    programs: [
+      ['数据科学 MDASC', 'Master of Data Science', 'high'],
+      ['统计学 MStat（含 Data Analytics 方向）', 'Master of Statistics', 'mid'],
+      ['金融科技方向金融硕士 MFFinTech', 'Master of Finance in Financial Technology', 'reach'],
+      ['人工智能 MSc(AI)', 'MSc Artificial Intelligence', 'reach'],
+      ['金融科技与数据分析 MSc(FTDA)', 'MSc Financial Technology and Data Analytics', 'reach'],
+      ['计算机科学 MSc（网络安全 / 金融计算 / 多媒体计算 / AI）', 'MSc Computer Science', 'high'],
+      ['智能网络与信息工程 MSc(Eng)', 'MSc(Eng) Intelligent Networks and Information Engineering', 'mid'],
+      ['机器人与智能系统 MSc(Eng)', 'MSc(Eng) Robotics and Intelligent Systems', 'mid'],
+      ['电子商务与互联网计算', 'MSc Electronic Commerce & Internet Computing', 'mid'],
+      ['工业工程与物流管理 IELM', 'MSc Industrial Engineering and Logistics Management', 'mid'],
+      ['创新与科技 MSc(I&T)', 'MSc Innovation and Technology', 'mid'],
+      ['生物医学创新 MBioInno（含数字健康与 AI）', 'Master of Biomedical Innovation', 'mid'],
+      ['社会数据分析 MSocSc', 'MSocSc in Social Data Analytics', 'mid'],
+      ['城市分析', 'MSc Urban Analytics', 'mid'],
+      ['建筑人工智能 MSc(BAI)', 'MSc Building Artificial Intelligence', 'easy'],
+      ['图书馆与信息管理（数据科学 pathway）', 'MSc Library and Information Management', 'easy'],
+    ],
+  },
+  {
+    school: '香港科技大学 HKUST',
+    schoolShort: '港科大',
+    programs: [
+      ['人工智能', 'MSc Artificial Intelligence', 'reach'],
+      ['金融科技', 'MSc Financial Technology', 'reach'],
+      ['金融数学（量化方向）', 'MSc Financial Mathematics', 'high'],
+      ['商业分析', 'MSc Business Analytics', 'high'],
+      ['大数据科技', 'MSc Big Data Technology', 'reach'],
+      ['信息技术', 'MSc Information Technology', 'high'],
+      ['电信学（含通信机器学习方向）', 'MSc Telecommunications', 'mid'],
+      ['信息系统管理', 'MSc Information Systems Management', 'mid'],
+      ['数据驱动建模', 'MSc Data-Driven Modeling', 'high'],
+      ['电子工程（含 AI / 机器人方向）', 'MSc Electronic Engineering', 'mid'],
+      ['人工智能与创业', 'MSc AI and Entrepreneurship', 'easy'],
+      ['生物分子工程与健康信息学', 'MSc Biomolecular Engineering and Health Informatics', 'easy'],
+    ],
+  },
+  {
+    school: '香港中文大学 CUHK',
+    schoolShort: '港中大',
+    programs: [
+      ['计算机科学', 'MSc Computer Science', 'high'],
+      ['人工智能', 'MSc Artificial Intelligence', 'reach'],
+      ['金融科技', 'MSc Financial Technology', 'reach'],
+      ['数据科学与商业统计 DSBS', 'MSc Data Science and Business Statistics', 'high'],
+      ['信息工程', 'MSc Information Engineering', 'high'],
+      ['信息科学与技术管理 ISTM', 'MSc Information Science and Technology Management', 'mid'],
+      ['电子商务与物流技术 ECLT', 'MSc E-Commerce and Logistics Technologies', 'mid'],
+      ['生物医学工程（医学影像 / 健康数据）', 'MSc Biomedical Engineering', 'mid'],
+      ['机器人学', 'MSc Robotics', 'high'],
+      ['科学人工智能', 'MSc Artificial Intelligence for Science', 'easy'],
+      ['数字经济与人工智能 DEAI', 'MSc Digital Economy and Artificial Intelligence', 'easy'],
+      ['地理信息科学与智慧城市', 'MSc GeoInformation Science and Smart Cities', 'easy'],
+    ],
+  },
+  {
+    school: '新加坡国立大学 NUS',
+    schoolShort: '新国立',
+    programs: [
+      ['数据科学与机器学习 DSML', 'MSc Data Science and Machine Learning', 'reach'],
+      ['计算机硕士·人工智能方向', 'Master of Computing in Artificial Intelligence', 'reach'],
+      ['计算机硕士·计算机科学方向', 'Master of Computing - Computer Science Specialisation', 'high'],
+      ['计算机硕士·信息系统方向', 'Master of Computing - Information Systems Specialisation', 'mid'],
+      ['计算机硕士·信息安全方向', 'Master of Computing - Infocomm Security Specialisation', 'mid'],
+      ['计算机硕士·通用方向（转专业友好）', 'Master of Computing - General Track', 'high'],
+      ['技术硕士·人工智能系统', 'Master of Technology in Artificial Intelligence Systems', 'mid'],
+      ['技术硕士·企业商业分析', 'Master of Technology in Enterprise Business Analytics', 'mid'],
+      ['技术硕士·软件工程', 'Master of Technology in Software Engineering', 'mid'],
+      ['技术硕士·数字领导力', 'Master of Technology in Digital Leadership', 'easy'],
+      ['生物医学信息学', 'MSc Biomedical Informatics', 'mid'],
+      ['精准健康与医学 × AI', 'MSc Precision Health & Medicine x AI', 'easy'],
+    ],
+  },
+  {
+    school: '南洋理工大学 NTU',
+    schoolShort: '南洋理工',
+    programs: [
+      ['人工智能 MSAI', 'MSc Artificial Intelligence', 'reach'],
+      ['数据科学 MSDS', 'MSc Data Science', 'high'],
+      ['网络安全 MSCS', 'MSc Cyber Security', 'high'],
+      ['金融科技', 'MSc Financial Technology', 'high'],
+      ['应用人工智能计算硕士 MCAAI', 'Master of Computing in Applied AI', 'mid'],
+      ['网络安全·应用方向', 'MSc Cybersecurity (Applied Cybersecurity)', 'mid'],
+      ['区块链', 'MSc Blockchain', 'mid'],
+      ['生物医学数据科学', 'MSc Biomedical Data Science', 'mid'],
+      ['电子电气工程（EEE 下全部 programme）', 'MSc programmes under EEE', 'mid'],
+      ['企业人工智能', 'MSc Enterprise Artificial Intelligence', 'easy'],
+    ],
+  },
+  {
+    school: '帝国理工学院 Imperial',
+    schoolShort: '帝国理工',
+    programs: [
+      ['计算机科学（面向非 CS 背景）', 'MSc Computing', 'high'],
+      ['高级计算机科学（面向 CS 背景）', 'MSc Advanced Computing', 'reach'],
+      ['人工智能', 'MSc Artificial Intelligence', 'reach'],
+      ['计算机·AI 与机器学习方向', 'MSc Computing (AI and Machine Learning)', 'reach'],
+      ['计算机·软件工程方向', 'MSc Computing (Software Engineering)', 'high'],
+      ['计算机·安全与可靠性方向', 'MSc Computing (Security and Reliability)', 'high'],
+      ['计算机·视觉计算与机器人方向', 'MSc Computing (Visual Computing and Robotics)', 'high'],
+      ['AI 应用与创新', 'MSc Artificial Intelligence Applications and Innovation', 'mid'],
+      ['应用机器学习', 'MSc Applied Machine Learning', 'high'],
+      ['统计学', 'MSc Statistics', 'high'],
+      ['统计学·数据科学与机器学习方向', 'MSc Statistics (Data Science and Machine Learning)', 'high'],
+      ['应用计算科学与工程', 'MSc Applied Computational Science and Engineering', 'mid'],
+      ['AI、经济与政策', 'MSc AI, Economics and Policy', 'easy'],
+      ['商业分析与 AI', 'MSc Business Analytics & AI', 'high'],
+      ['通信与信号处理', 'MSc Communications and Signal Processing', 'mid'],
+      ['金融科技', 'MSc Financial Technology', 'high'],
+    ],
+  },
+  {
+    school: '伦敦大学学院 UCL',
+    schoolShort: 'UCL',
+    programs: [
+      ['计算机科学（转专业项目）', 'Computer Science MSc', 'high'],
+      ['机器学习', 'Machine Learning MSc', 'reach'],
+      ['数据科学与机器学习', 'Data Science and Machine Learning MSc', 'reach'],
+      ['人机交互', 'Human-Computer Interaction MSc', 'high'],
+      ['计算统计与机器学习', 'Computational Statistics and Machine Learning MSc', 'high'],
+      ['人工智能与数据工程', 'Artificial Intelligence and Data Engineering MSc', 'mid'],
+      ['金融科技', 'Financial Technology MSc', 'high'],
+      ['计算金融', 'Computational Finance MSc', 'high'],
+      ['金融风险管理（CS 系开设）', 'Financial Risk Management MSc', 'mid'],
+      ['金融与数据科学', 'Finance with Data Science MSc', 'high'],
+      ['数据科学', 'Data Science MSc', 'reach'],
+      ['统计学', 'Statistics MSc', 'high'],
+      ['生物医学与医疗 AI', 'Artificial Intelligence for Biomedicine and Healthcare MSc', 'mid'],
+      ['机器人与人工智能', 'Robotics and Artificial Intelligence MSc', 'high'],
+      ['软件系统工程', 'Software Systems Engineering MSc', 'mid'],
+      ['信息安全', 'Information Security MSc', 'mid'],
+      ['新兴数字技术（AI / 区块链 / 云）', 'Emerging Digital Technologies MSc', 'mid'],
+      ['计算机图形、视觉与成像', 'Computer Graphics, Vision and Imaging MSc', 'mid'],
+      ['物联网系统工程', 'Systems Engineering for the Internet of Things MSc', 'easy'],
+      ['集成机器学习系统', 'Integrated Machine Learning Systems MSc', 'mid'],
+      ['可持续发展 AI', 'Artificial Intelligence for Sustainable Development MSc', 'easy'],
+      ['医学统计与数据科学', 'Medical Statistics and Data Science MSc', 'mid'],
+      ['健康数据科学', 'Health Data Science MSc', 'mid'],
+      ['科学与数据密集型计算', 'Scientific and Data Intensive Computing MSc', 'mid'],
+      ['知识、信息与数据科学', 'Knowledge, Information and Data Science MSc', 'easy'],
+      ['AI 与医学影像', 'Artificial Intelligence and Medical Imaging MSc', 'mid'],
+      ['医疗机器人与 AI', 'Medical Robotics and Artificial Intelligence MSc', 'mid'],
+      ['时空分析与大数据挖掘', 'Spatio-temporal Analytics and Big Data Mining MSc', 'mid'],
+      ['地理空间科学·GIS 与计算', 'Geospatial Sciences (GIS and Computing) MSc', 'easy'],
+      ['城市空间科学', 'Urban Spatial Science MSc', 'easy'],
+    ],
   },
 ];
 
 // 留学专区二级页：2027 入学申请时间表 + 审理规则变化
 function StudyAbroadUpdatesPage() {
   const navigate = useNavigate();
+
+  // 难度地图筛选：'全部' 表示不筛选
+  const [difficultySchool, setDifficultySchool] = useState('全部');
+  const [difficultyLevel, setDifficultyLevel] = useState<'全部' | AbroadDifficultyLevel>('全部');
+
+  // 每所学校的难度分布 + 全平台各档计数，供难度条与图例使用
+  const difficultyOverview = useMemo(() => {
+    const total: Record<AbroadDifficultyLevel, number> = { reach: 0, high: 0, mid: 0, easy: 0 };
+    const schools = abroadDifficultyGroups.map((group) => {
+      const counts: Record<AbroadDifficultyLevel, number> = { reach: 0, high: 0, mid: 0, easy: 0 };
+      group.programs.forEach(([, , level]) => {
+        counts[level] += 1;
+      });
+      abroadDifficultyLevels.forEach((item) => {
+        total[item.key] += counts[item.key];
+      });
+      return { ...group, counts, programTotal: group.programs.length };
+    });
+    return {
+      schools,
+      total,
+      programTotal: schools.reduce((sum, school) => sum + school.programTotal, 0),
+    };
+  }, []);
+
+  // 按院校 / 难度过滤后仍保留院校分组，空分组不渲染
+  const difficultyGroups = useMemo(
+    () =>
+      difficultyOverview.schools
+        .filter((group) => difficultySchool === '全部' || group.schoolShort === difficultySchool)
+        .map((group) => ({
+          ...group,
+          programs: group.programs
+            .map(([program, programEn, level], index) => ({
+              key: `${group.schoolShort}-${index}`,
+              program,
+              programEn,
+              level,
+            }))
+            .filter((item) => difficultyLevel === '全部' || item.level === difficultyLevel),
+        }))
+        .filter((group) => group.programs.length > 0),
+    [difficultyOverview, difficultySchool, difficultyLevel]
+  );
 
   // 同一所学校的多行合并「地区 / 学校」单元格，只保留在每组首行
   const schoolRowSpans = useMemo(() => {
@@ -3536,7 +3776,7 @@ function StudyAbroadUpdatesPage() {
       <div className="career-hero">
         <div className="career-hero-badge">🌏 留学专区 · 申请新动态</div>
         <Title level={2}>留学申请<span className="career-hero-highlight">新动态</span></Title>
-        <Paragraph>港、新、英头部院校 2027 入学的申请窗口与截止日期，叠加最新审理规则变化，把网申节奏排到日历上</Paragraph>
+        <Paragraph>港、新、英头部院校 2027 入学的申请窗口与截止日期，叠加 108 个项目级录取难度画像与最新审理规则变化，把网申节奏排到日历上</Paragraph>
       </div>
 
       <Card
@@ -3549,7 +3789,7 @@ function StudyAbroadUpdatesPage() {
           type="info"
           showIcon
           message="表格是「项目级」时间窗口，不是录取难度参考"
-          description="港校多为分轮 + 滚动审理，项目可能在公告截止前满额关闭；请以目标项目官网最新页面为准。"
+          description="港校多为分轮 + 滚动审理，项目可能在公告截止前满额关闭；请以目标项目官网最新页面为准。项目难度的相对档位见下方「二、项目录取难度地图」。"
         />
         <Text type="secondary" className="abroad-table-tip">内容较多，可左右滑动表格查看完整信息</Text>
         <Table
@@ -3617,19 +3857,122 @@ function StudyAbroadUpdatesPage() {
         </Paragraph>
       </Card>
 
-      <Card className="career-resource-card" title="二、值得关注的政策与申请规则" style={{ marginBottom: 16 }}>
+      <Card
+        className="career-resource-card"
+        title="二、项目录取难度地图"
+        extra={<Text type="secondary" style={{ fontSize: 12 }}>{difficultyOverview.programTotal} 个项目 · {difficultyOverview.schools.length} 所院校</Text>}
+        style={{ marginBottom: 16 }}
+      >
+        <Alert
+          type="warning"
+          showIcon
+          message="难度是同校内的相对档位，不是录取概率"
+          description="同一所学校里不同项目的差距，往往大于不同学校之间的差距：计算机与金融科技类扎堆最严重，「交叉 + 新设」项目通常更宽松。请以自己的 GPA、先修课与实习科研匹配度为准。"
+        />
+
+        <div className="abroad-diff-legend">
+          {abroadDifficultyLevels.map((level) => (
+            <div className="abroad-diff-legend-item" key={level.key}>
+              <span className="abroad-diff-legend-head">
+                <i className="abroad-diff-dot" style={{ background: level.color }} />
+                <Text strong>{level.label}</Text>
+                <span className="abroad-diff-legend-count">{difficultyOverview.total[level.key]} 个</span>
+              </span>
+              <span className="abroad-diff-legend-desc">{level.desc}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="abroad-diff-overview">
+          {difficultyOverview.schools.map((row) => (
+            <button
+              type="button"
+              key={row.schoolShort}
+              className={`abroad-diff-overview-row${difficultySchool === row.schoolShort ? ' is-active' : ''}`}
+              onClick={() => setDifficultySchool(difficultySchool === row.schoolShort ? '全部' : row.schoolShort)}
+            >
+              <span className="abroad-diff-overview-school">{row.schoolShort}</span>
+              <span className="abroad-diff-bar">
+                {abroadDifficultyLevels.map((level) =>
+                  row.counts[level.key] > 0 ? (
+                    <span
+                      key={level.key}
+                      className="abroad-diff-bar-seg"
+                      style={{ width: `${(row.counts[level.key] / row.programTotal) * 100}%`, background: level.color }}
+                      title={`${level.label} ${row.counts[level.key]} 个`}
+                    />
+                  ) : null
+                )}
+              </span>
+              <span className="abroad-diff-overview-count">{row.programTotal}</span>
+            </button>
+          ))}
+        </div>
+        <Text type="secondary" className="abroad-diff-hint">
+          点选学校行或下方标签可按院校 / 难度筛选项目，再次点击已选学校即取消筛选
+        </Text>
+
+        <div className="abroad-diff-filters">
+          <div className="abroad-diff-filter-row">
+            <span className="abroad-diff-filter-label">院校</span>
+            <Tag.CheckableTag checked={difficultySchool === '全部'} onChange={() => setDifficultySchool('全部')}>
+              全部
+            </Tag.CheckableTag>
+            {difficultyOverview.schools.map((school) => (
+              <Tag.CheckableTag
+                key={school.schoolShort}
+                checked={difficultySchool === school.schoolShort}
+                onChange={() => setDifficultySchool(school.schoolShort)}
+              >
+                {school.schoolShort}
+              </Tag.CheckableTag>
+            ))}
+          </div>
+          <div className="abroad-diff-filter-row">
+            <span className="abroad-diff-filter-label">难度</span>
+            <Tag.CheckableTag checked={difficultyLevel === '全部'} onChange={() => setDifficultyLevel('全部')}>
+              全部
+            </Tag.CheckableTag>
+            {abroadDifficultyLevels.map((level) => (
+              <Tag.CheckableTag
+                key={level.key}
+                checked={difficultyLevel === level.key}
+                onChange={() => setDifficultyLevel(level.key)}
+              >
+                {level.label}
+              </Tag.CheckableTag>
+            ))}
+          </div>
+        </div>
+
+        {difficultyGroups.length === 0 && <Empty description="当前筛选下暂无项目" />}
+
+        {difficultyGroups.map((group) => (
+          <div className="abroad-diff-group" key={group.schoolShort}>
+            <div className="abroad-diff-group-head">
+              <Text strong>{group.school}</Text>
+              <span className="abroad-diff-group-count">{group.programs.length} 个项目</span>
+            </div>
+            <div className="abroad-diff-programs">
+              {group.programs.map((item) => (
+                <div className={`abroad-diff-program abroad-diff-program-${item.level}`} key={item.key}>
+                  <span className="abroad-diff-program-zh">{item.program}</span>
+                  <span className="abroad-diff-program-en">{item.programEn}</span>
+                  <span className={`abroad-diff-badge abroad-diff-badge-${item.level}`}>
+                    {abroadDifficultyLevels.find((level) => level.key === item.level)?.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </Card>
+
+      <Card className="career-resource-card" title="三、值得关注的政策与申请规则" style={{ marginBottom: 16 }}>
         <Paragraph type="secondary">
           2027 入学季的核心变化不在「截止日提前」，而在审理方式：分轮、滚动、名额先到先得，直接决定了提交顺序比截止日更重要。
         </Paragraph>
         {renderPoints(abroadUpdatePolicies)}
-      </Card>
-
-      <Card className="career-resource-card" title="三、把这张表用起来 · 执行建议" style={{ marginBottom: 16 }}>
-        {renderPoints(abroadUpdateActions)}
-        <div className="abroad-quote">
-          <p className="abroad-quote-text">把「最晚截止日」当计划线的人，通常赶的是名额最紧张的那一轮。</p>
-          <p className="abroad-quote-source">早轮提交、按签证身份区分截止、逐个项目核对要求，才是 2027 入学最稳的节奏。</p>
-        </div>
       </Card>
 
       <Card className="career-resource-card career-followup-cta">
@@ -3646,10 +3989,18 @@ function StudyAbroadUpdatesPage() {
 function CareerPlanningPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { pathname } = useLocation();
   const [jobsBoardOpen, setJobsBoardOpen] = useState(false);
   const [activeJobCategory, setActiveJobCategory] = useState('技术类');
   // 二级页面返回时可通过 ?tab=abroad 直接锚定对应专区，默认仍为求职专区
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'internship');
+
+  // 从其它页面（含留学等二级页）进入生涯规划时统一回到顶部展示；
+  // 依赖 pathname 而非整个 location，页内切换专区 Tab（仅 search 变化）不会强制回顶
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [pathname]);
+
   const handleTabChange = (key: string) => {
     setActiveTab(key);
     navigate(key === 'internship' ? '/career-planning' : `/career-planning?tab=${key}`, { replace: true });
@@ -3665,8 +4016,9 @@ function CareerPlanningPage() {
   const studyAbroadData = [
     { title: '趋势分析定选校', desc: '从十余年申请趋势看清当下竞争格局，按「港 > 新 > 英」梯度完成冲刺/主申/保底定位', tag: '定位', color: 'blue' },
     { title: 'GRE/TOEFL/IELTS备考指南', desc: '高效备考方法、资料推荐和分数目标设定', tag: '标化', color: 'orange' },
-    { title: '留学申请新动态', desc: '各校Deadline更新、录取数据分析、政策变化解读', tag: '动态', color: 'red' },
-    { title: '文书写作与CV打造', desc: 'SOP/PS撰写逻辑框架、CV排版技巧、推荐人选择策略', tag: '文书', color: 'purple' },
+    { title: '留学申请新动态', desc: '108 个项目的录取难度画像、各校 Deadline 更新与政策变化解读', tag: '动态', color: 'red' },
+    // 「文书写作与CV打造」暂不展示，恢复时取消整行注释即可
+    // { title: '文书写作与CV打造', desc: 'SOP/PS撰写逻辑框架、CV排版技巧、推荐人选择策略', tag: '文书', color: 'purple' },
   ];
 
   const internshipData = [
@@ -3675,6 +4027,79 @@ function CareerPlanningPage() {
     { title: '技术干货抢先读', desc: '精选大厂技术文章与面试干货，抢先掌握前沿技术动态与实战经验', tag: '干货', color: 'cyan' },
     { title: '1V1全流程辅导', desc: '职业性格评测、个人能力摸底、背景&简历提升、模拟面试、真实面试复盘、流程跟进等全流程陪跑', tag: '辅导', color: 'purple', highlight: true },
   ];
+
+  // 大厂实习的三重回报：经济 / 就业 / 深造，求职专区列表下方归纳展示
+  const internshipValueData = [
+    {
+      tag: '经济',
+      color: 'green',
+      title: '从消费端到生产端',
+      points: [
+        { title: '高薪回报与财务独立', detail: '头部大厂及券商IT岗实习日薪普遍在300-800元，核心算法与AI Agent岗位溢价更高。叠加每月1500-4000元房补或免费三餐班车，单月综合收入可达8k-20k，足以实现在校期间财务独立。' },
+        { title: '隐性资源与商业启蒙', detail: '零成本调用企业级顶配算力设备、正版开发工具及内部技术智库。直观洞悉行业底层商业逻辑。' },
+        { title: '风险抵御', detail: '提前完成原始资金与实战经验的双重储备。在面对考研失利或秋招波折时，拥有从容试错的底气。' },
+      ],
+    },
+    {
+      tag: '就业',
+      color: 'blue',
+      title: '打破信息差，锁定优质 Offer',
+      points: [
+        { title: '转正通道规避内卷', detail: '暑期实习是获取全职Offer最稳妥的路径。表现优异者可在秋招启动前提前锁定HC，直接避开百万大军过独木桥的极度内卷，实现降维打击。' },
+        { title: '头部大厂简历背书', detail: '一段头部大厂实习相当于通过了一次严苛筛选，后续投递中大型企业、外企或独角兽时，简历通过率显著跃升' },
+        { title: '实战历练重塑心智', detail: '告别校园CRUD，沉浸式体验亿级并发下的完整工业流水线。同步完成职场心智蜕变，掌握跨部门敏捷协同、需求落地与推进等高阶软实力' },
+      ],
+    },
+    {
+      tag: '深造',
+      color: 'purple',
+      title: '留学与科研的加速器',
+      points: [
+        { title: '硬核文书素材库', detail: '港新英 CS / AI / DS 项目看重 Motivation 与 Practical Impact，一段真实的算法落地或 Agent 开发经历，远胜「我热爱计算机」的空泛陈述。' },
+        { title: '高含金量业界推荐信', detail: '来自技术总监或Team Leader的强力推荐，能从“工业界应用潜力”维度提供稀缺的第三方背书' },
+        { title: '反哺精准选校定位', detail: '亲历工业界洗礼后，能清晰界定自身适合底层学术研究还是工程落地变现。这种深度自我认知，正是践行“一人一策定选校”的最坚实依据。' },
+      ],
+    },
+  ];
+
+  // 留学的三重回报：就业 / 深造 / 成长，与求职专区同款三栏呈现
+  const studyAbroadValueData = [
+    {
+      tag: '就业',
+      color: 'blue',
+      title: '打破内卷，构建差异化壁垒',
+      points: [
+        { title: '政策红利与落户', detail: 'QS 前 50/100 的留学生在北上广深杭蓉可享落户、租房补贴、创业基金与购车免税；多省定向选调向港三、新二、G5 开放，为想进体制内的同学留了另一条通道。' },
+        { title: '时间成本优势', detail: '英港新授课型硕士多为 1-1.5 年，AI 迭代极快的当下，抓住机会提早入局往往更有先发优势。' },
+        { title: '出海业务首选', detail: '字节、腾讯、新能源车企大举出海，熟悉当地商业规则与跨文化沟通的人成为刚需；NUS、IC、UCL、港大的校友网络还能提供内推与合作资源。' }      ],
+    },
+    {
+      tag: '深造',
+      color: 'purple',
+      title: '接轨国际学术标准',
+      points: [
+        { title: '前沿学术范式', detail: '英港新头部实验室常与 DeepMind、MSRA 等深度合作，能直接接触从传统算法到最新 LLM Agent 架构的一线研究，少走「重复造轮子」的弯路。' },
+        { title: '高含金量推荐信', detail: '海外教授的推荐信在全球学术圈流通性与认可度更高，一段 Master 或 RA 经历加上牛导背书，是申请北美、欧洲全奖 PhD 的核心筹码。' },
+        { title: '灵活学制试错', detail: '第一学期后可调整细分赛道、甚至跨院系选课，能在真正投入数年博士前低成本验证自己的科研兴趣与潜力。' }
+      ],
+    },
+    {
+      tag: '成长',
+      color: 'green',
+      title: '完成真正的个人蜕变',
+      points: [
+        { title: '批判性思维', detail: '海外教育更强调 Why 而非 How，面对海量信息与 AI 生成内容时具备独立判断、交叉验证与逻辑推演能力，形成自身学习探索方法论。' },
+        { title: '全球化视野', detail: '新加坡国际背景、伦敦的文化碰撞、香港的中西交汇，在多元环境里合作与磨合，有助于打破传统单一视角，拥有包容开放的心态思维。' },
+        { title: '独立与抗压', detail: '租房、签证、突发状况与高强度 Deadline 全英文考核，在陌生环境中真正锻炼心理韧性与，释放自身潜力。' }
+      ],
+    },
+  ];
+
+  // 各专区在 hero 内展示的三重回报（仅求职、留学两个专区有内容）
+  const heroValueData: Record<string, typeof internshipValueData> = {
+    internship: internshipValueData,
+    abroad: studyAbroadValueData,
+  };
 
   const studentCases = [
     { name: '张同学', school: '某211计算机', achievement: '成功保研至清华大学计算机系', period: '2023届', story: '大二开始规划，GPA排名前5%，两段科研经历+一篇论文，夏令营拿到清华、北大、浙大offer。', avatar: '🎓' },
@@ -4092,12 +4517,45 @@ function CareerPlanningPage() {
     />
   );
 
+  // 蓝色 hero 作为每个专区内容区的顶部横幅，使 Tabs 导航条位于页面最上方
+  const heroSection = (
+    <div className="career-hero">
+      <div className="career-hero-badge">🎯 生涯规划中心</div>
+      <Title level={2}>为你的未来，<span className="career-hero-highlight">量身定制路径</span></Title>
+      {/* 求职 / 留学专区在 hero 内展示各自的三重回报 */}
+      {heroValueData[activeTab] && (
+        <Row gutter={[16, 16]} className="career-value-strip">
+          {heroValueData[activeTab].map((block) => (
+            <Col xs={24} md={12} lg={8} key={block.tag}>
+              <div className="career-value-block">
+                <div className="career-value-head">
+                  <Tag color={block.color}>{block.tag}</Tag>
+                  <Text strong>{block.title}</Text>
+                </div>
+                <ul className="career-value-list">
+                  {block.points.map((point) => (
+                    <li key={point.title}>
+                      <Text strong>{point.title}</Text>
+                      {'：'}
+                      {point.detail}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Col>
+          ))}
+        </Row>
+      )}
+    </div>
+  );
+
   const tabItems = [
     {
       key: 'internship',
       label: <span><ProfileOutlined /> 求职专区</span>,
       children: (
         <div className="career-tab-content">
+          {heroSection}
           <div className="career-section-header">
             <Title level={4}>求职专区</Title>
             <Paragraph type="secondary">助你拿到心仪的大厂实习Offer，积累核心竞争力</Paragraph>
@@ -4116,6 +4574,7 @@ function CareerPlanningPage() {
       label: <span><RocketOutlined /> 留学专区</span>,
       children: (
         <div className="career-tab-content">
+          {heroSection}
           <div className="career-section-header">
             <Title level={4}>留学专区</Title>
             <Paragraph type="secondary">涵盖选校定位、标化备考、文书打造到申请提交的全流程指导</Paragraph>
@@ -4133,6 +4592,7 @@ function CareerPlanningPage() {
       label: <span><TrophyOutlined /> 保研专区</span>,
       children: (
         <div className="career-tab-content">
+          {heroSection}
           <div className="career-section-header">
             <Title level={4}>保研专区</Title>
             <Paragraph type="secondary">为目标保研的同学提供从规划到录取的全链路资料与信息</Paragraph>
@@ -4149,6 +4609,7 @@ function CareerPlanningPage() {
       label: <span><TeamOutlined /> 长期随访</span>,
       children: (
         <div className="career-tab-content">
+          {heroSection}
           <div className="career-section-header">
             <Title level={4}>长期随访 · 学员成长故事</Title>
             <Paragraph type="secondary">记录每一位同学的规划与成长历程，见证努力到收获的完整链路</Paragraph>
@@ -4217,19 +4678,7 @@ function CareerPlanningPage() {
   }
 
   return (
-    <div className="career-planning-page">
-      <div className="career-hero">
-        <div className="career-hero-badge">🎯 生涯规划中心</div>
-        <Title level={2}>为你的未来，<span className="career-hero-highlight">量身定制路径</span></Title>
-        <Paragraph>无论你选择保研、留学、考研还是就业，这里都有为你量身整理的路径资料与真实案例</Paragraph>
-        <div className="career-hero-stats">
-          <div className="career-hero-stat"><span className="career-hero-stat-num">5</span><span className="career-hero-stat-label">规划方向</span></div>
-          <div className="career-hero-stat-divider" />
-          <div className="career-hero-stat"><span className="career-hero-stat-num">200+</span><span className="career-hero-stat-label">精选资料</span></div>
-          <div className="career-hero-stat-divider" />
-          <div className="career-hero-stat"><span className="career-hero-stat-num">50+</span><span className="career-hero-stat-label">成功案例</span></div>
-        </div>
-      </div>
+    <div className="career-planning-page career-planning-home">
       <Tabs activeKey={activeTab} onChange={handleTabChange} items={tabItems} className="career-tabs" size="large" />
     </div>
   );
