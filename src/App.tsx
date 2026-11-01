@@ -89,6 +89,13 @@ function useLocalState<T>(key: string, fallback: T) {
 
 function AppShell() {
   const location = useLocation();
+
+  // 所有路由跳转都从页面顶部开始展示（含从卡片点击进入的各专区二级页）；
+  // 带 #resources 这类锚点的跳转交给学习资源页自身的锚点滚动逻辑，避免相互覆盖
+  useEffect(() => {
+    if (location.hash) return;
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [location.pathname]);
   const [isLoggedInRaw, setIsLoggedIn] = useLocalState('isLoggedIn', false);
   const [memberLevelRaw, setMemberLevel] = useLocalState<MemberLevel>('memberLevel', 'free');
   // 免费开放模式下，登录状态与会员等级强制放行（全站视为已登录的职场进阶版用户）
@@ -3989,17 +3996,16 @@ function StudyAbroadUpdatesPage() {
 function CareerPlanningPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { pathname } = useLocation();
   const [jobsBoardOpen, setJobsBoardOpen] = useState(false);
   const [activeJobCategory, setActiveJobCategory] = useState('技术类');
   // 二级页面返回时可通过 ?tab=abroad 直接锚定对应专区，默认仍为求职专区
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'internship');
 
-  // 从其它页面（含留学等二级页）进入生涯规划时统一回到顶部展示；
-  // 依赖 pathname 而非整个 location，页内切换专区 Tab（仅 search 变化）不会强制回顶
+  // 岗位集结号是页内二级视图（不换路由），上层的路由回顶 effect 不会触发：
+  // 进入与返回都手动回顶，否则会沿用上一个视图的滚动位置，一进来就停在页面中间
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
-  }, [pathname]);
+  }, [jobsBoardOpen]);
 
   const handleTabChange = (key: string) => {
     setActiveTab(key);
@@ -4015,8 +4021,8 @@ function CareerPlanningPage() {
 
   const studyAbroadData = [
     { title: '趋势分析定选校', desc: '从十余年申请趋势看清当下竞争格局，按「港 > 新 > 英」梯度完成冲刺/主申/保底定位', tag: '定位', color: 'blue' },
-    { title: 'GRE/TOEFL/IELTS备考指南', desc: '高效备考方法、资料推荐和分数目标设定', tag: '标化', color: 'orange' },
     { title: '留学申请新动态', desc: '108 个项目的录取难度画像、各校 Deadline 更新与政策变化解读', tag: '动态', color: 'red' },
+    { title: 'GRE/TOEFL/IELTS备考指南', desc: '高效备考方法、资料推荐和分数目标设定', tag: '标化', color: 'orange' },
     // 「文书写作与CV打造」暂不展示，恢复时取消整行注释即可
     // { title: '文书写作与CV打造', desc: 'SOP/PS撰写逻辑框架、CV排版技巧、推荐人选择策略', tag: '文书', color: 'purple' },
   ];
