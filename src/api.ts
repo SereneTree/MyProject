@@ -141,7 +141,9 @@ export function updateMe(payload: { phone: string; nickname?: string; school?: s
 }
 
 export function submitConsultationLead(payload: Record<string, string>) {
-  return request<{ data: { delivered: boolean; sentAt: string } }>('/api/consultation/leads', {
+  return request<{
+    data: { delivered: boolean; sentAt: string; channels?: { dingtalk: boolean; email: boolean } };
+  }>('/api/consultation/leads', {
     method: 'POST',
     body: JSON.stringify(payload)
   });

@@ -146,10 +146,11 @@ function AppShell() {
           { key: 'consultation', label: <Link to="/consultation">咨询服务</Link> }
         ]} />
         <Space className="header-actions" size={10}>
-          <Link to="/membership" className={`member-pill member-pill-${memberLevel}`}>
+          {/* 仅作状态展示，不再跳转会员页 */}
+          <span className={`member-pill member-pill-${memberLevel}`}>
             <CrownOutlined />
             <span>{FREE_OPEN_MODE ? '全站资料免费开放' : memberNames[memberLevel]}</span>
-          </Link>
+          </span>
         </Space>
       </Header>
       <Content className="content">
@@ -173,6 +174,9 @@ function AppShell() {
             )}
           />
           <Route path="/career-planning" element={<CareerPlanningPage />} />
+          <Route path="/career-planning/study-abroad-trends" element={<StudyAbroadTrendPage />} />
+          <Route path="/career-planning/study-abroad-tests" element={<StudyAbroadTestPage />} />
+          <Route path="/career-planning/study-abroad-updates" element={<StudyAbroadUpdatesPage />} />
           <Route path="/career-planning/tech-articles" element={<TechArticlesPage />} />
           <Route path="/career-planning/application-guide" element={<ApplicationGuidePage />} />
           <Route path="/career-planning/coaching" element={<CoachingPage />} />
@@ -2842,25 +2846,827 @@ function ComingSoonMask({ section }: { section: string }) {
   );
 }
 
+type StudyAbroadStage = { color: string; period: string; detail?: string; bullets?: string[]; highlight?: boolean };
+
+// 北邮（含海南学院）留学申请的三个演变阶段，2020 级至今最有参考价值
+const studyAbroadStages: StudyAbroadStage[] = [
+  {
+    color: 'blue',
+    period: '2012 级 - 2016 级 · 赴美为主',
+    detail: '大部分同学去美国，少部分去英联邦；“弃保”（放弃保研去留学）比例较高，整体氛围是全力竞争欧美名校。',
+  },
+  {
+    color: 'green',
+    period: '2016 级 - 2019 级 · 转向英港新',
+    detail: '受政策影响赴美签证受限，主阵地转向英国、香港、新加坡。此时“弃保”人数开始减少，英联邦顶级院校的申请竞争反而变小。',
+  },
+  {
+    color: 'orange',
+    period: '2020 级 - 至今 · 当前态势',
+    highlight: true,
+    bullets: [
+      '优先保研：绝大多数学生优先卷保研，“弃保”留学成为个案。',
+      '地区偏好：选择优先级为 港 > 新 > 英。',
+      '竞争红利：“弃保”人数大幅减少，英联邦头部院校的申请竞争变小，利好有留学意向同学。',
+      '心态转变：留学生更倾向于谋求毕业后稳定的工作，偏好生活节奏较慢、压力较小的城市。',
+    ],
+  },
+];
+
+const studyAbroadPrinciples = [
+  { title: '三维兼顾原则', detail: '院校和专业的选择必须同时兼顾三个维度：个人特质及兴趣、申请难度可行性、未来职业发展。' },
+  { title: '一人一策定制化', detail: '每个申请者和家庭的诉求不同，切忌盲目跟风，必须根据自身情况量身定制方案。' },
+  { title: '参考近期同类案例', detail: '北邮国院和海南学院的背景有其特殊性，应重点参考近三年国院及近两年海南学院（22 级第一届招生）的真实申请案例锚定自身位置。' },
+];
+
+const studyAbroadStrategies = [
+  { title: '认清局势', detail: '利用当前“弃保少”的现状，大胆冲击英联邦头部名校，享受竞争变小的红利。' },
+  { title: '明确方向', detail: '按照“港 > 新 > 英”的大趋势进行梯度选校，结合自身 GPA、语言、科研、实习等硬件条件在专业库中匹配。' },
+  { title: '拒绝盲从', detail: '摆弃信息焦虑，结合“个人兴趣 + 申请可行性 + 职业规划”制定一人一策，把留学当作自我提升的跳板而非逃避内卷的退路。' },
+];
+
+type StudyAbroadSchool = { school: string; note: string; programs: string[] };
+type StudyAbroadRegion = { key: string; label: string; color: string; summary: string; schools: StudyAbroadSchool[] };
+
+// 常申请的「英、港、新」头部院校与对口专业（选校简易自测清单）
+const studyAbroadRegions: StudyAbroadRegion[] = [
+  {
+    key: 'hk',
+    label: '🇭🇰 中国香港',
+    color: 'blue',
+    summary: '当前首选地区：项目选择最丰富，与通信、计算机、电子背景的对口度最高，也是近几届申请最集中的方向。',
+    schools: [
+      {
+        school: '香港大学（HKU）',
+        note: '近 16 个与通信 / 计算机 / 电子 / 数据背景匹配的专业',
+        programs: ['数据科学', '统计学', '金融科技', '人工智能', '计算机科学（网络安全方向）', '计算机科学（AI 方向）', '智能网络与信息工程', '机器人与智能系统', '电子商务', '生物医学创新'],
+      },
+      {
+        school: '香港科技大学（HKUST）',
+        note: '共 12 个方向，电信学对通信背景友好',
+        programs: ['人工智能', '金融科技', '金融数学（量化）', '商业分析', '大数据科技', '信息技术', '电信学（含通信机器学习）', '电子工程'],
+      },
+      {
+        school: '香港中文大学（CUHK）',
+        note: '共 12 个专业，信息工程与金融科技方向近年申请最多',
+        programs: ['计算机科学', '人工智能', '金融科技', '数据科学与商业统计', '信息工程', '机器人学', '数字经济与人工智能'],
+      },
+    ],
+  },
+  {
+    key: 'sg',
+    label: '🇸🇬 新加坡',
+    color: 'green',
+    summary: '次优选地区：项目更偏应用与就业导向，计算机硕士设有通用方向，对转专业相对友好。',
+    schools: [
+      {
+        school: '新加坡国立大学（NUS）',
+        note: '分 MSc 与 Master of Computing / Technology 两大类，共 12 个项目',
+        programs: ['数据科学与机器学习', '计算机硕士（AI 方向）', '计算机硕士（CS 方向）', '计算机硕士（信息系统方向）', '计算机硕士（信息安全方向）', '计算机硕士（通用转专业方向）', '技术硕士（AI 系统）', '技术硕士（企业商业分析）', '技术硕士（软件工程）', '精准健康与医学 × AI'],
+      },
+      {
+        school: '南洋理工大学（NTU）',
+        note: '共 10 个方向，EEE 下属项目对电子 / 通信背景友好',
+        programs: ['人工智能', '数据科学', '网络安全', '金融科技', '应用 AI 计算', '区块链', '生物医学数据科学', 'EEE 下属全部项目', '企业人工智能'],
+      },
+    ],
+  },
+  {
+    key: 'uk',
+    label: '🇬🇧 英国',
+    color: 'purple',
+    summary: '竞争相对较小：头部院校项目细分最全，非 CS 背景的转专业通道清晰，可用来补足梯度选校的冲刺与保底。',
+    schools: [
+      {
+        school: '帝国理工学院（IC）',
+        note: '共 15 个顶尖项目，Computing 与高级计算按背景分流',
+        programs: ['MSc Computing（面向非 CS 背景）', '高级计算（面向 CS 背景）', '人工智能', '软件工程', '安全可靠性', '视觉计算与机器人', '统计学', '金融科技'],
+      },
+      {
+        school: '伦敦大学学院（UCL）',
+        note: '专业多达 30 余个，交叉学科选择最丰富',
+        programs: ['计算机科学 MSc（转专业友好）', '机器学习', '人机交互', '计算金融', '医疗 AI', '物联网系统工程', '时空分析与大数据挖掘', '地理空间科学'],
+      },
+    ],
+  },
+];
+
+// 留学专区二级页：从趋势出发的选校定位方法论
+function StudyAbroadTrendPage() {
+  const navigate = useNavigate();
+  return (
+    <div className="career-planning-page">
+      <Button type="primary" style={{ marginBottom: 16 }} onClick={() => navigate('/career-planning?tab=abroad')}>← 返回留学专区</Button>
+      <div className="career-hero">
+        <div className="career-hero-badge">🌏 留学专区 · 趋势分析定选校</div>
+        <Title level={2}>趋势分析<span className="career-hero-highlight">定选校</span></Title>
+        <Paragraph>从十余年申请趋势看清竞争格局，结合港、新、英头部院校专业库，把选校定位做成一套可复用的方法论</Paragraph>
+      </div>
+
+      <Card className="career-resource-card" title="一、留学大背景与趋势分析 · 经验篇" style={{ marginBottom: 16 }}>
+        <Timeline
+          items={studyAbroadStages.map((stage) => ({
+            color: stage.color,
+            children: (
+              <>
+                {stage.highlight ? (
+                  <Text strong className="abroad-stage-highlight">
+                    <CrownOutlined className="abroad-stage-crown" />
+                    {stage.period}
+                  </Text>
+                ) : (
+                  <Text strong>{stage.period}</Text>
+                )}
+                {stage.detail && (
+                  <Paragraph type="secondary" style={{ margin: '4px 0 0' }}>{stage.detail}</Paragraph>
+                )}
+                {stage.bullets && (
+                  <ul className="abroad-stage-bullets">
+                    {stage.bullets.map((b) => <li key={b}>{b}</li>)}
+                  </ul>
+                )}
+              </>
+            ),
+          }))}
+        />
+      </Card>
+
+      <Card className="career-resource-card" title="二、选校定位的核心诀窍 · 方法论篇" style={{ marginBottom: 16 }}>
+        <Paragraph type="secondary">
+          在 AI 时代，申请者并不缺信息，缺的是甄别信息的能力和形成个人方法论的能力。以下几条是判断与取舍的底层依据。
+        </Paragraph>
+        {studyAbroadPrinciples.map((p, index) => (
+          <div className="abroad-item" key={p.title}>
+            <span className="abroad-item-index">{String(index + 1).padStart(2, '0')}</span>
+            <div className="abroad-item-body">
+              <Text strong>{p.title}</Text>
+              <Paragraph type="secondary" style={{ margin: '2px 0 0' }}>{p.detail}</Paragraph>
+            </div>
+          </div>
+        ))}
+        <div className="abroad-quote">
+          <p className="abroad-quote-text">“留学不是保研的退路，更不是逃避考研上岸风险的避风港。留学是一场个人蜕变的开始。”</p>
+          <p className="abroad-quote-source">端正留学心态，带着正确的认知去规划，才能做好选校。</p>
+        </div>
+      </Card>
+
+      <Card className="career-resource-card" title="三、热门选校及专业信息库 · 干货篇" style={{ marginBottom: 16 }}>
+        <Paragraph type="secondary">
+          基于北邮学生的专业背景（通信、计算机、电子、数据等），以下为当前常申请的「英、港、新」三大地区头部院校及对口专业，可作为选校的「简易自测」清单。
+        </Paragraph>
+        <Tabs
+          defaultActiveKey="hk"
+          size="large"
+          className="abroad-region-tabs"
+          items={studyAbroadRegions.map((region) => ({
+            key: region.key,
+            label: region.label,
+            children: (
+              <>
+                <Paragraph type="secondary" className="abroad-region-summary">{region.summary}</Paragraph>
+                {region.schools.map((school) => (
+                  <div className="abroad-school" key={school.school}>
+                    <Text strong className="abroad-school-name">{school.school}</Text>
+                    <Paragraph type="secondary" className="abroad-school-note">{school.note}</Paragraph>
+                    <div className="abroad-program-tags">
+                      {school.programs.map((program) => (
+                        <Tag key={program} color={region.color}>{program}</Tag>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </>
+            ),
+          }))}
+        />
+      </Card>
+
+      <Card className="career-resource-card" title="四、总结建议" style={{ marginBottom: 16 }}>
+        {studyAbroadStrategies.map((s, index) => (
+          <div className="abroad-item" key={s.title}>
+            <span className="abroad-item-index">{String(index + 1).padStart(2, '0')}</span>
+            <div className="abroad-item-body">
+              <Text strong>{s.title}</Text>
+              <Paragraph type="secondary" style={{ margin: '2px 0 0' }}>{s.detail}</Paragraph>
+            </div>
+          </div>
+        ))}
+      </Card>
+
+      <Card className="career-resource-card career-followup-cta">
+        <div style={{ textAlign: 'center' }}>
+          <Title level={5}>想结合自己的 GPA、语言与项目背景做一次选校定位？</Title>
+          <Paragraph type="secondary">对照趋势与院校专业库，先把「冲刺 / 主申 / 保底」的梯度排出来</Paragraph>
+          <Button type="primary" size="large" onClick={() => navigate('/consultation')}>立即预约 1v1 咨询</Button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+type AbroadTestPoint = { title: string; detail: string };
+type AbroadTestGuide = { key: string; label: string; color: string; trends: AbroadTestPoint[]; keyPoints: AbroadTestPoint[] };
+
+// 三科标化：改革后的考情变化与分科备考要点
+const abroadTestGuides: AbroadTestGuide[] = [
+  {
+    key: 'toefl',
+    label: 'TOEFL 托福',
+    color: 'blue',
+    trends: [
+      { title: '全面缩短', detail: '自 2023 年 7 月起，考试时间从 3 小时大幅缩减至 2 小时以内，取消加试，阅读和听力篇章减少，对考生的体力消耗降低，但容错率也随之下降。' },
+      { title: '拼分政策（MyBest Scores）', detail: '越来越多院校接受两年内各单项最高分的拼凑成绩，但部分顶尖名校（如 IC、NUS 的部分项目）仍要求单次考试成绩。' },
+      { title: '家庭版常态化', detail: 'TOEFL Home Edition 被广泛接受，但部分高校对其认可度存在波动，建议优先选择线下考点。' },
+    ],
+    keyPoints: [
+      { title: '得听力者得天下', detail: '改革后听力依然是核心（听力、口语、写作均涉及听音）。需坚持精听 TPO，训练边听边记笔记的能力。' },
+      { title: '学术词汇量', detail: '托福侧重北美大学课堂真实语境，需熟练掌握约 8000-10000 学术词汇。' },
+      { title: '写作适应新题型', detail: '新增“学术讨论写作（Academic Discussion）”，要求在 10 分钟内阅读材料并发表观点，考验快速构思和精准表达。' },
+    ],
+  },
+  {
+    key: 'ielts',
+    label: 'IELTS 雅思',
+    color: 'green',
+    trends: [
+      { title: '机考全面普及', detail: '机考场次远超纸笔考，出分极快（通常 3-5 天），且支持单科重考（One Skill Retake, OSR）政策正在全球逐步落地，考生可在 60 天内仅重考未达标单科。' },
+      { title: 'UKVI 与普通 A 类的区分', detail: '赴英申请若需配语言班，必须考取用于英国签证及移民的雅思（UKVI）；直录则普通 A 类即可，港新地区通常两者皆认。' },
+      { title: '评分尺度微调', detail: '口语和写作的压分现象在部分地区依然存在，考生需更加注重逻辑框架而非单纯堆砌词汇。' },
+    ],
+    keyPoints: [
+      { title: '同义替换是灵魂', detail: '无论是阅读还是听力，雅思的核心考点在于题干与原文的同义替换（Paraphrasing）。' },
+      { title: '口语素材去模板化', detail: '考官对背诵痕迹极度敏感。需结合自身真实经历（如北邮的科研项目、实习故事）构建语料库，追求流利度与自然交流感。' },
+      { title: '写作逻辑重于词藻', detail: '大作文（Task 2）重点考察 TR（任务回应）和 CC（连贯与衔接），切忌堆砌生僻词而忽视段落间的逻辑推演。' },
+    ],
+  },
+  {
+    key: 'gre',
+    label: 'GRE',
+    color: 'purple',
+    trends: [
+      { title: '重大改革（变短）', detail: '2023 年 9 月起，GRE 总时长从近 4 小时缩减至 1 小时 58 分钟。取消了 Argument 写作，阅读和填空题目数量减少，无中场休息。' },
+      { title: 'Optional 趋势延续', detail: '后疫情时代，大量美国及部分英港新项目仍将 GRE 设为 Optional（可选），但对于北邮学生常申的 CS、AI、DS、EE 等量化强相关专业，一个高分 GRE（尤其是 Quant 满分或接近满分）仍是核心加分项。' },
+      { title: '容错率极低', detail: '由于题量大幅减少，每道题的分值权重上升，粗心导致的失误代价极大。' },
+    ],
+    keyPoints: [
+      { title: 'Verbal（语文）靠硬核积累', detail: '填空题高度依赖 GRE 专属词汇（如“要你命 3000”等），需多轮滚动记忆；阅读理解需掌握长难句拆解技巧，适应高强度的逻辑推理。' },
+      { title: 'Quant（数学）求稳不求快', detail: '对北邮理工科学生而言知识点不难，但陷阱多（如数据充分性判断）。改革后题量少，必须保证 168-170 的绝对高分。' },
+      { title: '自适应机制（Section-level Adaptive）', detail: '第一个 Section 的表现决定第二个 Section 的难度。务必在第一个 Section 稳扎稳打，进入 Hard 模式才能冲击高分上限。' },
+    ],
+  },
+];
+
+// 标化备考时间轴（以北邮学生为例）
+const abroadTestTimeline: StudyAbroadStage[] = [
+  { color: 'blue', period: '大一 / 大二', detail: '主攻 GPA，同步积累英语基础（四六级高分通过，开始接触托福 / 雅思词汇）。' },
+  { color: 'blue', period: '大二下 / 大三上', detail: '集中攻克 TOEFL / IELTS，争取首考达标（托福 100+ / 雅思 7.0+）。' },
+  { color: 'green', period: '大三下', detail: '若目标为顶尖量化项目，启动 GRE 备考，利用理工科数学优势速战速决。' },
+  { color: 'orange', period: '大三暑假前', detail: '所有标化成绩应全部出分，大四开学全力投入文书和网申。' },
+];
+
+const abroadTestChoices: AbroadTestPoint[] = [
+  { title: 'TOEFL vs IELTS', detail: '主攻美国必选 TOEFL；主攻英联邦（英港新）首选 IELTS，但目前港新英均双认。结合个人习惯：擅长学术长难句和机考打字选托福，擅长生活化场景和面对面口语选雅思。' },
+  { title: '是否需要 GRE', detail: '查阅目标项目官网。若申请 NUS / NTU 的计算机硕士、帝国理工 / UCL 的量化或 AI 方向，强烈建议提交 GRE 以证明数理能力。' },
+];
+
+type AbroadScoreRow = { region: string; school: string; programs: string; toefl: string; ielts: string; gre: string; note: string };
+
+// 趋势页所列港/新/英七所院校的院校级语言门槛（具体项目以官网最新要求为准）
+const abroadScoreRows: AbroadScoreRow[] = [
+  {
+    region: '中国香港',
+    school: '香港大学（HKU）',
+    programs: '数据科学、统计学、金融科技、计算机科学、人工智能等 9 个方向',
+    toefl: '80（部分项目 93）',
+    ielts: '6.0（各项 ≥5.5）',
+    gre: '不强制；金融科技、统计类建议提交',
+    note: '计算机与数据类实际录取多集中 TOEFL 90+ / IELTS 6.5+',
+  },
+  {
+    region: '中国香港',
+    school: '香港科技大学（HKUST）',
+    programs: '人工智能、金融科技、大数据科技、电信学、电子工程等 8 个方向',
+    toefl: '80',
+    ielts: '6.5（各项 ≥5.5）',
+    gre: '不强制；量化方向建议提交',
+    note: '电信学、电子工程对通信背景友好，语言门槛相对宽松',
+  },
+  {
+    region: '中国香港',
+    school: '香港中文大学（CUHK）',
+    programs: '计算机科学、人工智能、金融科技、信息工程等 7 个方向',
+    toefl: '79',
+    ielts: '6.5',
+    gre: '不强制',
+    note: '信息工程、金融科技对单项有要求，热门项目实际看 IELTS 6.5+',
+  },
+  {
+    region: '新加坡',
+    school: '新加坡国立大学（NUS）',
+    programs: '数据科学与机器学习、计算机硕士（AI / CS / 通用方向）、技术硕士等 10 个方向',
+    toefl: '85（计算机类常见 90+）',
+    ielts: '6.0（部分项目 6.5）',
+    gre: '计算机硕士建议提交（Quant 高分）',
+    note: '通用方向对转专业友好，语言要求需按具体项目确认',
+  },
+  {
+    region: '新加坡',
+    school: '南洋理工大学（NTU）',
+    programs: '人工智能、数据科学、网络安全、金融科技、EEE 下属项目等 9 个方向',
+    toefl: '90',
+    ielts: '6.5',
+    gre: '建议提交（部分项目强制）',
+    note: 'EEE 下属项目对电子 / 通信背景友好',
+  },
+  {
+    region: '英国',
+    school: '帝国理工学院（IC）',
+    programs: '高级计算、人工智能、软件工程、视觉计算与机器人、金融科技等 8 个项目',
+    toefl: '92（各项 ≥20）',
+    ielts: '6.5（各项 ≥6.0）',
+    gre: '不强制；量化 / AI 方向建议提交',
+    note: '上述为 Standard 档，部分项目按 Higher 档（IELTS 7.0 / TOEFL 100）',
+  },
+  {
+    region: '英国',
+    school: '伦敦大学学院（UCL）',
+    programs: '计算机科学、机器学习、人机交互、计算金融、医疗 AI 等 8 个项目',
+    toefl: '92（读写 ≥24，听说 ≥20）',
+    ielts: '6.5（各项 ≥6.0）',
+    gre: '不强制',
+    note: '上述为 Level 2，机器学习、计算金融等部分专业按 Level 3（IELTS 7.0）',
+  },
+];
+
+// 标化备考二级页：新形势 + 时间轴/选择策略 + 分科要点 + 总结箴言
+function StudyAbroadTestPage() {
+  const navigate = useNavigate();
+
+  const renderPoints = (points: AbroadTestPoint[]) => (
+    <div>
+      {points.map((p, index) => (
+        <div className="abroad-item" key={p.title}>
+          <span className="abroad-item-index">{String(index + 1).padStart(2, '0')}</span>
+          <div className="abroad-item-body">
+            <Text strong>{p.title}</Text>
+            <Paragraph type="secondary" style={{ margin: '2px 0 0' }}>{p.detail}</Paragraph>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  return (
+    <div className="career-planning-page">
+      <Button type="primary" style={{ marginBottom: 16 }} onClick={() => navigate('/career-planning?tab=abroad')}>← 返回留学专区</Button>
+      <div className="career-hero">
+        <div className="career-hero-badge">🌏 留学专区 · 标化备考</div>
+        <Title level={2}>GRE/TOEFL/IELTS<span className="career-hero-highlight">备考指南</span></Title>
+        <Paragraph>改革后的托福、雅思、GRE 考情变化，配合时间轴安排与分科备考要点，一页看清标化精力该怎么分配</Paragraph>
+      </div>
+
+      <Card className="career-resource-card" title="一、当下新形势" style={{ marginBottom: 16 }}>
+        <Paragraph type="secondary">
+          三科考试近两年都经历了结构性调整：长度变短、评分与送分规则在变，备考策略也必须跟着变。
+        </Paragraph>
+        <Tabs
+          defaultActiveKey="toefl"
+          size="large"
+          className="abroad-tabs"
+          items={abroadTestGuides.map((guide) => ({
+            key: guide.key,
+            label: guide.label,
+            children: renderPoints(guide.trends),
+          }))}
+        />
+      </Card>
+
+      <Card className="career-resource-card" title="二、备考指南" style={{ marginBottom: 16 }}>
+        <Text strong className="abroad-subtitle">整体时间轴规划（以北邮学生为例）</Text>
+        <Timeline
+          style={{ marginTop: 12 }}
+          items={abroadTestTimeline.map((stage) => ({
+            color: stage.color,
+            children: (
+              <>
+                <Text strong>{stage.period}</Text>
+                <Paragraph type="secondary" style={{ margin: '4px 0 0' }}>{stage.detail}</Paragraph>
+              </>
+            ),
+          }))}
+        />
+        <Divider style={{ margin: '8px 0 18px' }} />
+        <Text strong className="abroad-subtitle">考试选择策略</Text>
+        <div style={{ marginTop: 12 }}>{renderPoints(abroadTestChoices)}</div>
+      </Card>
+
+      <Card className="career-resource-card" title="三、目标院校语言分数线速查" style={{ marginBottom: 16 }}>
+        <Alert
+          type="info"
+          showIcon
+          message="下表是院校级最低门槛，不是录取安全线"
+          description="各校不同项目可能有更高的总分或单项要求，实际录取分数普遍高于最低线；请以目标项目官网最新要求为准。"
+        />
+        <Table
+          style={{ marginTop: 16 }}
+          size="small"
+          pagination={false}
+          rowKey="school"
+          scroll={{ x: 980 }}
+          dataSource={abroadScoreRows}
+          columns={[
+            { title: '地区', dataIndex: 'region', width: 90 },
+            { title: '院校', dataIndex: 'school', width: 180 },
+            { title: '对应专业方向', dataIndex: 'programs', width: 240 },
+            { title: 'TOEFL iBT', dataIndex: 'toefl', width: 130 },
+            { title: 'IELTS', dataIndex: 'ielts', width: 140 },
+            { title: 'GRE', dataIndex: 'gre', width: 200 },
+          ]}
+        />
+        <Paragraph type="secondary" style={{ margin: '12px 0 0', fontSize: 12 }}>
+          注：分数线为总分门槛，括号内为单项要求；GRE 一列仅代表是否需要提交，Quant 分数对 CS / AI / DS / EE 方向仍是核心加分项。
+        </Paragraph>
+      </Card>
+      
+      <Card className="career-resource-card" title="四、准备要点" style={{ marginBottom: 16 }}>
+        {abroadTestGuides.map((guide) => (
+          <div className="abroad-test-block" key={guide.key}>
+            <div className="abroad-test-block-head">
+              <Tag color={guide.color}>{guide.label}</Tag>
+              <Text strong>备考要点</Text>
+            </div>
+            {renderPoints(guide.keyPoints)}
+          </div>
+        ))}
+      </Card>
+
+      <Card className="career-resource-card" title="五、总结箴言" style={{ marginBottom: 16 }}>
+        <Paragraph>
+          结合前文“一人一策定选校”的方法论，标化考试的准备同样适用：不要陷入“唯分数论”的信息冗余中。对于北邮学子而言，GPA 和专业背景（科研 / 竞赛）是基本盘，语言成绩是“敲门砖”（过线即可，边际效益递减），GRE 是“加速器”。合理分配精力，尽早出分，将更多时间留给软背景的打造，才是 AI 时代最高效的备考之道。
+        </Paragraph>
+        <div className="abroad-quote">
+          <p className="abroad-quote-text">基本盘在 GPA 与专业背景，敲门砖是语言成绩，加速器是 GRE。</p>
+          <p className="abroad-quote-source">尽早出分，把省下来的时间投给科研、竞赛与项目。</p>
+        </div>
+      </Card>
+
+      <Card className="career-resource-card career-followup-cta">
+        <div style={{ textAlign: 'center' }}>
+          <Title level={5}>想结合目标院校定一条标化出分时间线？</Title>
+          <Paragraph type="secondary">先看自己的 GPA 与目标项目，再决定托雅怎么选、GRE 要不要考</Paragraph>
+          <Button type="primary" size="large" onClick={() => navigate('/consultation')}>立即预约 1v1 咨询</Button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+type AbroadUpdateDeadline = { label?: string; value?: string; text?: string };
+type AbroadUpdateLink = { label: string; href: string };
+type AbroadUpdateRow = {
+  key: string;
+  region: string;
+  regionColor: string;
+  school: string;
+  programs: string;
+  deadlines: AbroadUpdateDeadline[];
+  note?: string;
+  links: AbroadUpdateLink[];
+};
+type AbroadUpdatePoint = { title: string; detail: string };
+
+// 港 / 新 / 英头部院校 2027 入学（2027/28 学年）的申请窗口，均为项目级时间
+const abroadUpdateRows: AbroadUpdateRow[] = [
+  {
+    key: 'hku-ai',
+    region: '中国香港',
+    regionColor: 'blue',
+    school: '香港大学 HKU',
+    programs: 'MSc Artificial Intelligence',
+    deadlines: [
+      { label: '主轮', value: '2026-11-16 中午' },
+      { label: '清算轮', value: '2027-02-01 中午' },
+    ],
+    note: '主轮申请优先审理',
+    links: [{ label: '官网', href: 'https://www.scifac.hku.hk/prospective/tpg/ArtificialIntelligence' }],
+  },
+  {
+    key: 'hku-mds',
+    region: '中国香港',
+    regionColor: 'blue',
+    school: '香港大学 HKU',
+    programs: 'Master of Data Science',
+    deadlines: [
+      { label: '主轮', value: '2026-12-01 中午' },
+      { label: '清算轮', value: '2027-04-30 中午' },
+    ],
+    links: [{ label: '官网', href: 'https://mdasc.cds.hku.hk/admissions-2027-28/' }],
+  },
+  {
+    key: 'hkust-ai-bdt',
+    region: '中国香港',
+    regionColor: 'blue',
+    school: '香港科技大学 HKUST',
+    programs: 'MSc Artificial Intelligence、MSc Big Data Technology',
+    deadlines: [
+      { label: '第一轮', value: '2026-12-01' },
+      { label: '第二轮', value: '2027-03-01' },
+    ],
+    note: '采用竞争性、滚动审理，建议尽早提交',
+    links: [
+      { label: 'AI 项目', href: 'https://seng.hkust.edu.hk/academics/taught-postgraduate/msc-ai' },
+      { label: 'BDT 项目', href: 'https://seng.hkust.edu.hk/academics/taught-postgraduate/msc-bdt' },
+    ],
+  },
+  {
+    key: 'cuhk-cs',
+    region: '中国香港',
+    regionColor: 'blue',
+    school: '香港中文大学 CUHK',
+    programs: 'MSc Computer Science',
+    deadlines: [{ label: '截止', value: '2027-01-31' }],
+    links: [{ label: '官网', href: 'https://msc.cse.cuhk.edu.hk/?lang=en&page_id=90' }],
+  },
+  {
+    key: 'cuhk-ai-fintech',
+    region: '中国香港',
+    regionColor: 'blue',
+    school: '香港中文大学 CUHK',
+    programs: 'MSc Artificial Intelligence、MSc Financial Technology',
+    deadlines: [{ label: '四轮', value: '2026-10-02 · 2026-11-06 · 2026-12-31 · 2027-02-28' }],
+    note: '滚动审理，名额满后可能不再考虑后续申请',
+    links: [{ label: '官网', href: 'https://www.gs.cuhk.edu.hk/admissions/application-deadline' }],
+  },
+  {
+    key: 'nus-mcomp',
+    region: '新加坡',
+    regionColor: 'green',
+    school: '新加坡国立大学 NUS',
+    programs: 'MComp（含 General Track；）',
+    deadlines: [{ label: '2027 年 8 月入学', value: '2026-10-01 至 2027-01-31' }],
+    note: '该项目自 AY2025 起每年只有 8 月一轮入学',
+    links: [{ label: '官网', href: 'https://www.comp.nus.edu.sg/programmes/pg/mcomp-gen/application/' }],
+  },
+  {
+    key: 'ntu',
+    region: '新加坡',
+    regionColor: 'green',
+    school: '南洋理工大学 NTU',
+    programs: 'AI、数据科学、计算机及相关授课型项目',
+    deadlines: [
+      { text: '不同学院和项目的截止日不同：学校总招生指南列出了 2027/28 各项目的申请窗口，不能用一个日期代表所有 NTU 项目。' },
+    ],
+    note: '需从具体目标项目页面确认',
+    links: [{ label: '招生指南', href: 'https://www.ntu.edu.sg/admissions/graduate/cwadmissionguide' }],
+  },
+  {
+    key: 'imperial',
+    region: '英国',
+    regionColor: 'purple',
+    school: '帝国理工 Imperial',
+    programs: 'AI、Computing、Advanced Computing 等',
+    deadlines: [{ label: '后续轮次', value: '2027-01-06 · 03-10 · 04-28' }],
+    note: '多数计算机项目采用分轮申请；项目可能提前满额关闭，不要把最后一轮当成稳妥截止日',
+    links: [{ label: 'AI 项目', href: 'https://www.imperial.ac.uk/study/courses/postgraduate-taught/artificial-intelligence/' }],
+  },
+  {
+    key: 'ucl',
+    region: '英国',
+    regionColor: 'purple',
+    school: '伦敦大学学院 UCL',
+    programs: 'Computer Science、Machine Learning、Computational Statistics and Machine Learning 等',
+    deadlines: [
+      { label: '需签证', value: '2027-03-22' },
+      { label: '不需签证', value: '2027-08-27' },
+    ],
+    note: '以 MSc Computer Science 为例；多个项目 2027 入学页面已开放，且可能在公告截止前因满额关闭',
+    links: [{ label: '官网', href: 'https://www.ucl.ac.uk/study/prospective-students/graduate/courses/computer-science-msc' }],
+  },
+];
+
+// 2027 入学季值得关注的审理规则与政策变化
+const abroadUpdatePolicies: AbroadUpdatePoint[] = [
+  {
+    title: '港校普遍是分轮 + 滚动审理',
+    detail: 'HKU 明确主轮优先；HKUST 和 CUHK 也提示竞争性或滚动审理。实际策略是尽量赶早轮，不能只看最终截止日。',
+  },
+  {
+    title: 'NUS MComp 的入学节奏已收敛到每年 8 月一轮',
+    detail: '项目页面注明自 AY2025 起仅有 August intake；不要套用旧年份的多轮次，也不要把其他项目的日期套用过来。',
+  },
+  {
+    title: 'Imperial 使用固定申请轮次',
+    detail: '2027 入学项目页面已显示轮次截止和预计决定日期，晚轮仍存在名额不确定性。',
+  },
+  {
+    title: 'UCL 要区分是否需要签证的截止时间',
+    detail: '同一课程可能有不同截止日，而且官方说明项目可能在公告截止前因名额满而关闭；部分项目还限制一个申请周期最多申请两个研究生课程。',
+  },
+  {
+    title: '项目名称相近不代表背景要求相同',
+    detail: '例如「AI」项目有的欢迎跨专业、有的要求计算机工程背景；申请前要检查该专业的先修课、工作经验、英语要求和推荐材料，不能只凭方向标签判断适配度。',
+  },
+];
+
+// 把时间表落到执行动作上的四条建议
+const abroadUpdateActions: AbroadUpdatePoint[] = [
+  {
+    title: '按早轮排期，不按最后截止日排期',
+    detail: '港校主轮 / 早期轮次优先且滚动放位，把目标定在主轮提交，清算轮只作为补申备份。',
+  },
+  {
+    title: '先确认自己的签证身份，再锁定 UCL 截止日',
+    detail: '需签证申请人要按 2027-03-22 这类更早的截止倒推语言出分与文书定稿时间。',
+  },
+  {
+    title: '学校总截止不能替代项目截止',
+    detail: 'NTU 与港校内部项目差异明显，逐个目标项目单独记录窗口，避免用同一个日期覆盖全部申请。',
+  },
+  {
+    title: '同名前先核对先修课与背景要求',
+    detail: '把目标项目的先修课、编程与数学要求、英语单项、推荐材料列成核对表，再决定冲刺 / 主申 / 保底的分布。',
+  },
+];
+
+// 留学专区二级页：2027 入学申请时间表 + 审理规则变化
+function StudyAbroadUpdatesPage() {
+  const navigate = useNavigate();
+
+  // 同一所学校的多行合并「地区 / 学校」单元格，只保留在每组首行
+  const schoolRowSpans = useMemo(() => {
+    const spans: Record<string, number> = {};
+    let currentGroup = '';
+    let groupStartKey = '';
+    let groupCount = 0;
+
+    abroadUpdateRows.forEach((row) => {
+      const group = `${row.region}|${row.school}`;
+      if (group !== currentGroup) {
+        if (groupStartKey) spans[groupStartKey] = groupCount;
+        currentGroup = group;
+        groupStartKey = row.key;
+        groupCount = 1;
+        return;
+      }
+      groupCount += 1;
+      spans[row.key] = 0;
+    });
+    if (groupStartKey) spans[groupStartKey] = groupCount;
+
+    return spans;
+  }, []);
+
+  const renderPoints = (points: AbroadUpdatePoint[]) => (
+    <div>
+      {points.map((p, index) => (
+        <div className="abroad-item" key={p.title}>
+          <span className="abroad-item-index">{String(index + 1).padStart(2, '0')}</span>
+          <div className="abroad-item-body">
+            <Text strong>{p.title}</Text>
+            <Paragraph type="secondary" style={{ margin: '2px 0 0' }}>{p.detail}</Paragraph>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  return (
+    <div className="career-planning-page">
+      <Button type="primary" style={{ marginBottom: 16 }} onClick={() => navigate('/career-planning?tab=abroad')}>← 返回留学专区</Button>
+      <div className="career-hero">
+        <div className="career-hero-badge">🌏 留学专区 · 申请新动态</div>
+        <Title level={2}>留学申请<span className="career-hero-highlight">新动态</span></Title>
+        <Paragraph>港、新、英头部院校 2027 入学的申请窗口与截止日期，叠加最新审理规则变化，把网申节奏排到日历上</Paragraph>
+      </div>
+
+      <Card
+        className="career-resource-card"
+        title="一、2027 入学申请时间与截止日期"
+        extra={<Text type="secondary" style={{ fontSize: 12 }}>更新于 2026 年 10 月</Text>}
+        style={{ marginBottom: 16 }}
+      >
+        <Alert
+          type="info"
+          showIcon
+          message="表格是「项目级」时间窗口，不是录取难度参考"
+          description="港校多为分轮 + 滚动审理，项目可能在公告截止前满额关闭；请以目标项目官网最新页面为准。"
+        />
+        <Text type="secondary" className="abroad-table-tip">内容较多，可左右滑动表格查看完整信息</Text>
+        <Table
+          className="abroad-update-table"
+          style={{ marginTop: 8 }}
+          size="middle"
+          pagination={false}
+          rowKey="key"
+          scroll={{ x: 1120 }}
+          dataSource={abroadUpdateRows}
+          columns={[
+            {
+              title: '学校',
+              dataIndex: 'school',
+              width: 210,
+              fixed: 'left',
+              onCell: (row) => ({ rowSpan: schoolRowSpans[row.key] }),
+              render: (_: string, row: AbroadUpdateRow) => (
+                <Text strong className="abroad-update-school-name">{row.school}</Text>
+              ),
+            },
+            {
+              title: '项目示例',
+              dataIndex: 'programs',
+              width: 320,
+              render: (value: string) => <p className="abroad-update-programs">{value}</p>,
+            },
+            {
+              title: '2027 入学申请时间或截止日期',
+              dataIndex: 'deadlines',
+              width: 450,
+              render: (_: AbroadUpdateDeadline[], row: AbroadUpdateRow) => (
+                <div className="abroad-deadline-list">
+                  {row.deadlines.map((deadline, index) => (
+                    <div className="abroad-deadline-line" key={`${row.key}-${index}`}>
+                      {deadline.label && <Tag color="orange">{deadline.label}</Tag>}
+                      {deadline.value
+                        ? <Text strong>{deadline.value}</Text>
+                        : <Text type="secondary">{deadline.text}</Text>}
+                    </div>
+                  ))}
+                  {row.note && <div className="abroad-deadline-note">{row.note}</div>}
+                </div>
+              ),
+            },
+            {
+              title: '官网',
+              dataIndex: 'links',
+              width: 140,
+              align: 'center',
+              render: (_: AbroadUpdateLink[], row: AbroadUpdateRow) => (
+                <div className="abroad-update-links">
+                  {row.links.map((link) => (
+                    <a key={link.href} href={link.href} target="_blank" rel="noopener noreferrer">
+                      {link.label} ↗
+                    </a>
+                  ))}
+                </div>
+              ),
+            },
+          ]}
+        />
+        <Paragraph type="secondary" style={{ margin: '12px 0 0', fontSize: 12 }}>
+          注：截止时间标注「中午」的以官网公布的当地时间为准；轮次日期可能因项目调整变化，提交前请再核对一次项目页面。
+        </Paragraph>
+      </Card>
+
+      <Card className="career-resource-card" title="二、值得关注的政策与申请规则" style={{ marginBottom: 16 }}>
+        <Paragraph type="secondary">
+          2027 入学季的核心变化不在「截止日提前」，而在审理方式：分轮、滚动、名额先到先得，直接决定了提交顺序比截止日更重要。
+        </Paragraph>
+        {renderPoints(abroadUpdatePolicies)}
+      </Card>
+
+      <Card className="career-resource-card" title="三、把这张表用起来 · 执行建议" style={{ marginBottom: 16 }}>
+        {renderPoints(abroadUpdateActions)}
+        <div className="abroad-quote">
+          <p className="abroad-quote-text">把「最晚截止日」当计划线的人，通常赶的是名额最紧张的那一轮。</p>
+          <p className="abroad-quote-source">早轮提交、按签证身份区分截止、逐个项目核对要求，才是 2027 入学最稳的节奏。</p>
+        </div>
+      </Card>
+
+      <Card className="career-resource-card career-followup-cta">
+        <div style={{ textAlign: 'center' }}>
+          <Title level={5}>想按自己的背景把这几张时间表排成一条申请日历？</Title>
+          <Paragraph type="secondary">结合 GPA、语言出分计划与目标项目，倒推每一轮的提交节点</Paragraph>
+          <Button type="primary" size="large" onClick={() => navigate('/consultation')}>立即预约 1v1 咨询</Button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 function CareerPlanningPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [jobsBoardOpen, setJobsBoardOpen] = useState(false);
   const [activeJobCategory, setActiveJobCategory] = useState('技术类');
+  // 二级页面返回时可通过 ?tab=abroad 直接锚定对应专区，默认仍为求职专区
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'internship');
+  const handleTabChange = (key: string) => {
+    setActiveTab(key);
+    navigate(key === 'internship' ? '/career-planning' : `/career-planning?tab=${key}`, { replace: true });
+  };
 
   const postgraduateData = [
     { title: '保研时间线全攻略', desc: '从大一到大三的完整保研规划路径，包括成绩、科研、竞赛准备节点', tag: '规划', color: 'blue' },
     { title: '保研材料清单与写作指导', desc: '个人陈述、推荐信、简历等核心材料的模板与撰写技巧', tag: '材料', color: 'green' },
-    { title: '夏令营/预推免申请策略', desc: '如何选择目标院校、提高入营率、面试表现加分项', tag: '申请', color: 'purple' },
     { title: '计算机方向保研面试高频问题', desc: '数据结构、操作系统、项目经验等面试常见问题梳理', tag: '面试', color: 'orange' },
     { title: '保研信息差速递（持续更新）', desc: '各校夏令营开放时间、往年数据、最新政策变动汇总', tag: '动态', color: 'red' },
   ];
 
   const studyAbroadData = [
-    { title: '留学选校定位方法论', desc: '根据GPA、科研、实习等背景，科学定位冲刺/主申/保底院校', tag: '定位', color: 'blue' },
-    { title: 'CS方向留学申请时间线', desc: '从标化考试到文书提交的完整时间规划（美/英/港/新）', tag: '规划', color: 'green' },
-    { title: '文书写作与CV打造', desc: 'SOP/PS撰写逻辑框架、CV排版技巧、推荐人选择策略', tag: '文书', color: 'purple' },
+    { title: '趋势分析定选校', desc: '从十余年申请趋势看清当下竞争格局，按「港 > 新 > 英」梯度完成冲刺/主申/保底定位', tag: '定位', color: 'blue' },
     { title: 'GRE/TOEFL/IELTS备考指南', desc: '高效备考方法、资料推荐和分数目标设定', tag: '标化', color: 'orange' },
-    { title: '最新留学申请动态', desc: '各校Deadline更新、录取数据分析、政策变化解读', tag: '动态', color: 'red' },
+    { title: '留学申请新动态', desc: '各校Deadline更新、录取数据分析、政策变化解读', tag: '动态', color: 'red' },
+    { title: '文书写作与CV打造', desc: 'SOP/PS撰写逻辑框架、CV排版技巧、推荐人选择策略', tag: '文书', color: 'purple' },
   ];
 
   const internshipData = [
@@ -3251,7 +4057,7 @@ function CareerPlanningPage() {
         <List.Item>
           <Card
             className="career-resource-card"
-            hoverable
+            hoverable={Boolean(onItemClick)}
             onClick={onItemClick ? () => onItemClick(item) : undefined}
           >
             <div className="career-resource-header">
@@ -3314,10 +4120,11 @@ function CareerPlanningPage() {
             <Title level={4}>留学专区</Title>
             <Paragraph type="secondary">涵盖选校定位、标化备考、文书打造到申请提交的全流程指导</Paragraph>
           </div>
-          <div className="career-coming-soon-body">
-            {renderResourceList(studyAbroadData)}
-            <ComingSoonMask section="留学专区" />
-          </div>
+          {renderResourceList(studyAbroadData, (item) => {
+            if (item.title === '趋势分析定选校') navigate('/career-planning/study-abroad-trends');
+            if (item.title === 'GRE/TOEFL/IELTS备考指南') navigate('/career-planning/study-abroad-tests');
+            if (item.title === '留学申请新动态') navigate('/career-planning/study-abroad-updates');
+          })}
         </div>
       ),
     },
@@ -3423,7 +4230,7 @@ function CareerPlanningPage() {
           <div className="career-hero-stat"><span className="career-hero-stat-num">50+</span><span className="career-hero-stat-label">成功案例</span></div>
         </div>
       </div>
-      <Tabs defaultActiveKey="internship" items={tabItems} className="career-tabs" size="large" />
+      <Tabs activeKey={activeTab} onChange={handleTabChange} items={tabItems} className="career-tabs" size="large" />
     </div>
   );
 }

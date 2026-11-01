@@ -1409,6 +1409,100 @@ async function sendDingTalkNotification(lead) {
   console.log('[DingTalk] 通知发送成功');
 }
 
+// --- 邮件通知（SMTP）---
+// 与钉钉群通知并行发送，任一通道成功即视为送达；
+// 未配置 SMTP 凭据时该通道抛错，仅记录日志，不影响钉钉通道
+const escapeHtml = (value) =>
+  String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[ch]);
+
+let mailTransportPromise = null;
+
+async function getMailTransport() {
+  const host = (process.env.MAIL_SMTP_HOST || 'smtp.sina.com').trim();
+  const port = Number(process.env.MAIL_SMTP_PORT || 465);
+  const user = (process.env.MAIL_SMTP_USER || '').trim();
+  const pass = (process.env.MAIL_SMTP_PASS || '').trim();
+
+  if (!user || !pass) {
+    throw new Error('未配置 MAIL_SMTP_USER / MAIL_SMTP_PASS，无法发送邮件通知');
+  }
+
+  // 复用同一个 transporter，避免每次提交都重新建连；创建失败时重置以便下次重试
+  if (!mailTransportPromise) {
+    mailTransportPromise = import('nodemailer')
+      .then(({ default: nodemailer }) =>
+        nodemailer.createTransport({
+          host,
+          port,
+          secure: port === 465,
+          auth: { user, pass },
+          connectionTimeout: 8000,
+          greetingTimeout: 8000,
+          socketTimeout: 12000
+        })
+      )
+      .catch((error) => {
+        mailTransportPromise = null;
+        throw error;
+      });
+  }
+
+  return mailTransportPromise;
+}
+
+async function sendEmailNotification(lead) {
+  const transporter = await getMailTransport();
+
+  const user = (process.env.MAIL_SMTP_USER || '').trim();
+  const to = (process.env.MAIL_TO || 'boyu199799@sina.com').trim();
+  const from = (process.env.MAIL_FROM || '').trim() || `CS 成长规划平台 <${user}>`;
+
+  const now = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+  const gradeRaw = lead.grade || lead.gradeId || '';
+  const gradeText = gradeLabelMap[gradeRaw] || gradeRaw || '-';
+  const rows = [
+    ['姓名', lead.name],
+    ['联系方式', lead.contact],
+    ['学校', lead.school],
+    ['专业', lead.major],
+    ['年级', gradeText],
+    ['咨询方向', lead.goal],
+    ['当前困惑', lead.description],
+    ['提交时间', now]
+  ];
+
+  const html = `
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;color:#1f2937;">
+      <h2 style="margin:0 0 16px;font-size:18px;">新的咨询意向</h2>
+      <table cellspacing="0" cellpadding="10" style="border-collapse:collapse;font-size:14px;line-height:1.7;">
+        ${rows
+          .map(
+            ([label, value]) =>
+              `<tr><td style="border:1px solid #e5e7eb;background:#f9fafb;font-weight:600;white-space:nowrap;">${escapeHtml(label)}</td><td style="border:1px solid #e5e7eb;">${escapeHtml(value || '-').replace(/\n/g, '<br />')}</td></tr>`
+          )
+          .join('')}
+      </table>
+      <p style="margin-top:16px;font-size:12px;color:#9ca3af;">来自 CS 成长规划平台 · 1 对 1 咨询意向表单</p>
+    </div>`;
+
+  const text = ['新的咨询意向', '', ...rows.map(([label, value]) => `${label}: ${value || '-'}`)].join('\n');
+
+  await transporter.sendMail({
+    from,
+    to,
+    subject: `[新咨询意向] ${lead.name || '未填写姓名'} - ${lead.school || '未知学校'} - ${gradeText}`,
+    text,
+    html
+  });
+  console.log('[Mail] 通知邮件发送成功 ->', to);
+}
+
 app.post('/api/consultation/leads', async (req, res) => {
   const { name, contact, school, major, grade, gradeId, goal, description } = req.body || {};
 
@@ -1416,14 +1510,35 @@ app.post('/api/consultation/leads', async (req, res) => {
     return res.status(400).json({ message: '请填写必要信息' });
   }
 
-  try {
-    // 不落库，直接推送到钉钉群；等待结果以便前端得知是否真正送达
-    await sendDingTalkNotification({ name, contact, school, major, grade, gradeId, goal, description });
-    return res.json({ data: { delivered: true, sentAt: new Date().toISOString() } });
-  } catch (error) {
-    console.error('[DingTalk] 通知发送失败:', error.message);
-    return res.status(502).json({ message: '消息未能发送到钉钉群，请稍后重试或直接联系顾问' });
+  const lead = { name, contact, school, major, grade, gradeId, goal, description };
+
+  // 不落库：钉钉群与邮件双通道并行推送，等待结果以便前端得知是否真正送达
+  const [dingtalkResult, mailResult] = await Promise.allSettled([
+    sendDingTalkNotification(lead),
+    sendEmailNotification(lead)
+  ]);
+
+  const dingtalkOk = dingtalkResult.status === 'fulfilled';
+  const mailOk = mailResult.status === 'fulfilled';
+
+  if (dingtalkResult.status === 'rejected') {
+    console.error('[DingTalk] 通知发送失败:', dingtalkResult.reason?.message || dingtalkResult.reason);
   }
+  if (mailResult.status === 'rejected') {
+    console.error('[Mail] 通知邮件发送失败:', mailResult.reason?.message || mailResult.reason);
+  }
+
+  if (!dingtalkOk && !mailOk) {
+    return res.status(502).json({ message: '消息未能送达，请稍后重试或直接联系顾问' });
+  }
+
+  return res.json({
+    data: {
+      delivered: true,
+      channels: { dingtalk: dingtalkOk, email: mailOk },
+      sentAt: new Date().toISOString()
+    }
+  });
 });
 
 // ==========================================
