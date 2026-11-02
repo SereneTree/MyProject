@@ -1,4 +1,4 @@
-import { ArrowLeftOutlined, BookOutlined, CrownOutlined, DownloadOutlined, FileTextOutlined, FormOutlined, LockOutlined, ProfileOutlined, ReadOutlined, RocketOutlined, SoundOutlined, TeamOutlined, TrophyOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, ArrowRightOutlined, BookOutlined, CrownOutlined, DownloadOutlined, FileTextOutlined, FormOutlined, LockOutlined, ProfileOutlined, ReadOutlined, RocketOutlined, SoundOutlined, TeamOutlined, TrophyOutlined } from '@ant-design/icons';
 import { Alert, Badge, Button, Card, Col, Collapse, Divider, Empty, Form, Input, Layout, List, Menu, message, Radio, Row, Select, Space, Spin, Statistic, Table, Tabs, Tag, Timeline, Typography } from 'antd';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -4194,34 +4194,22 @@ function CareerPlanningPage() {
   // 大厂实习的三重回报：经济 / 就业 / 深造，求职专区列表下方归纳展示
   const internshipValueData = [
     {
-      tag: '经济',
+      tag: '独立',
       color: 'green',
-      title: '从消费端到生产端',
-      points: [
-        { title: '高薪回报与财务独立', detail: '头部大厂及券商IT岗实习日薪普遍在300-800元，核心算法与AI Agent岗位溢价更高。叠加每月1500-4000元房补或免费三餐班车，单月综合收入可达8k-20k，足以实现在校期间财务独立。' },
-        { title: '隐性资源与商业启蒙', detail: '零成本调用企业级顶配算力设备、正版开发工具及内部技术智库。直观洞悉行业底层商业逻辑。' },
-        { title: '风险抵御', detail: '提前完成原始资金与实战经验的双重储备。在面对考研失利或秋招波折时，拥有从容试错的底气。' },
-      ],
+      title: '经济独立，讲话硬气',
+      summary: '头部大厂实习日薪 200-800 元，叠加房补与餐补，单月综合收入可达 8k-20k，在校期间就能实现财务独立。',
     },
     {
       tag: '就业',
       color: 'blue',
       title: '打破信息差，锁定优质 Offer',
-      points: [
-        { title: '转正通道规避内卷', detail: '暑期实习是获取全职Offer最稳妥的路径。表现优异者可在秋招启动前提前锁定HC，直接避开百万大军过独木桥的极度内卷，实现降维打击。' },
-        { title: '头部大厂简历背书', detail: '一段头部大厂实习相当于通过了一次严苛筛选，后续投递中大型企业、外企或独角兽时，简历通过率显著跃升' },
-        { title: '实战历练重塑心智', detail: '告别校园CRUD，沉浸式体验亿级并发下的完整工业流水线。同步完成职场心智蜕变，掌握跨部门敏捷协同、需求落地与推进等高阶软实力' },
-      ],
+      summary: '暑期实习是最稳的转正通道，一段头部大厂背书能让后续简历通过率显著跃升。',
     },
     {
       tag: '深造',
       color: 'purple',
       title: '留学与科研的加速器',
-      points: [
-        { title: '硬核文书素材库', detail: '港新英 CS / AI / DS 项目看重 Motivation 与 Practical Impact，一段真实的算法落地或 Agent 开发经历，远胜「我热爱计算机」的空泛陈述。' },
-        { title: '高含金量业界推荐信', detail: '来自技术总监或Team Leader的强力推荐，能从“工业界应用潜力”维度提供稀缺的第三方背书' },
-        { title: '反哺精准选校定位', detail: '亲历工业界洗礼后，能清晰界定自身适合底层学术研究还是工程落地变现。这种深度自我认知，正是践行“一人一策定选校”的最坚实依据。' },
-      ],
+      summary: '真实的算法落地或 Agent 项目经历，是港新英 CS / AI / DS 申请里最硬的文书素材与推荐信来源。',
     },
   ];
 
@@ -4231,30 +4219,19 @@ function CareerPlanningPage() {
       tag: '就业',
       color: 'blue',
       title: '打破内卷，构建差异化壁垒',
-      points: [
-        { title: '政策红利与落户', detail: 'QS 前 50/100 的留学生在北上广深杭蓉可享落户、租房补贴、创业基金与购车免税；多省定向选调向港三、新二、G5 开放，为想进体制内的同学留了另一条通道。' },
-        { title: '时间成本优势', detail: '英港新授课型硕士多为 1-1.5 年，AI 迭代极快的当下，抓住机会提早入局往往更有先发优势。' },
-        { title: '出海业务首选', detail: '字节、腾讯、新能源车企大举出海，熟悉当地商业规则与跨文化沟通的人成为刚需；NUS、IC、UCL、港大的校友网络还能提供内推与合作资源。' }      ],
+      summary: 'QS 前 50/100 可享落户、补贴与购车免税，1-1.5 年学制叠加海外背景，让你比同龄人早一步入场。',
     },
     {
       tag: '深造',
       color: 'purple',
       title: '接轨国际学术标准',
-      points: [
-        { title: '前沿学术范式', detail: '英港新头部实验室常与 DeepMind、MSRA 等深度合作，能直接接触从传统算法到最新 LLM Agent 架构的一线研究，少走「重复造轮子」的弯路。' },
-        { title: '高含金量推荐信', detail: '海外教授的推荐信在全球学术圈流通性与认可度更高，一段 Master 或 RA 经历加上牛导背书，是申请北美、欧洲全奖 PhD 的核心筹码。' },
-        { title: '灵活学制试错', detail: '第一学期后可调整细分赛道、甚至跨院系选课，能在真正投入数年博士前低成本验证自己的科研兴趣与潜力。' }
-      ],
+      summary: '头部实验室常与 DeepMind、MSRA 深度合作，名校教授推荐信在申请全奖 PhD 时含金量更高。',
     },
     {
       tag: '成长',
       color: 'green',
       title: '完成真正的个人蜕变',
-      points: [
-        { title: '批判性思维', detail: '海外教育更强调 Why 而非 How，面对海量信息与 AI 生成内容时具备独立判断、交叉验证与逻辑推演能力，形成自身学习探索方法论。' },
-        { title: '全球化视野', detail: '新加坡国际背景、伦敦的文化碰撞、香港的中西交汇，在多元环境里合作与磨合，有助于打破传统单一视角，拥有包容开放的心态思维。' },
-        { title: '独立与抗压', detail: '租房、签证、突发状况与高强度 Deadline 全英文考核，在陌生环境中真正锻炼心理韧性与，释放自身潜力。' }
-      ],
+      summary: '全英文高压环境与多元文化协作，练出独立判断、全球化视野与抗压能力。',
     },
   ];
 
@@ -4642,38 +4619,49 @@ function CareerPlanningPage() {
     <List
       dataSource={data}
       renderItem={(item) => (
-        <List.Item>
+        <List.Item className={onItemClick ? 'career-list-item--clickable' : 'career-list-item--static'}>
           <Card
-            className="career-resource-card"
+            className={`career-resource-card${onItemClick ? ' career-resource-card--clickable' : ''}`}
             hoverable={Boolean(onItemClick)}
             onClick={onItemClick ? () => onItemClick(item) : undefined}
           >
-            <div className="career-resource-header">
-              {/* highlight 卡片：皇冠包在与其它卡片同款的金色小标签里 */}
-              {item.highlight ? (
-                <Tag
-                  color="gold"
-                  style={{
-                    // 不覆盖 marginInlineEnd，保留 antd 默认 8px，与文字标签的标签→标题间距一致
-                    paddingInline: 7,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    // 与其他文字标签（宽 40 / 高 22）保持同尺寸
-                    minWidth: 40,
-                    height: 22,
-                  }}
-                >
-                  <CrownOutlined style={{ fontSize: 16 }} />
-                </Tag>
-              ) : (
-                <Tag color={item.color}>{item.tag}</Tag>
+            <div className="career-resource-main">
+              <div className="career-resource-body">
+                <div className="career-resource-header">
+                  {/* highlight 卡片：皇冠包在与其它卡片同款的金色小标签里 */}
+                  {item.highlight ? (
+                    <Tag
+                      color="gold"
+                      style={{
+                        // 不覆盖 marginInlineEnd，保留 antd 默认 8px，与文字标签的 标签→标题间距一致
+                        paddingInline: 7,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        // 与其他文字标签（宽 40 / 高 22）保持同尺寸
+                        minWidth: 40,
+                        height: 22,
+                      }}
+                    >
+                      <CrownOutlined style={{ fontSize: 16 }} />
+                    </Tag>
+                  ) : (
+                    <Tag color={item.color}>{item.tag}</Tag>
+                  )}
+                  <Text className="career-resource-title" strong style={item.highlight ? { color: '#b8860b' } : undefined}>
+                    {item.title}
+                  </Text>
+                </div>
+                <Paragraph type="secondary" className="career-resource-desc">{item.desc}</Paragraph>
+              </div>
+              {/* 右侧固定一个「查看详情」入径：卡片整体可点，这里只做可点击的视觉提示 */}
+              {onItemClick && (
+                <span className="career-resource-action" aria-hidden="true">
+                  查看详情
+                  <ArrowRightOutlined />
+                </span>
               )}
-              <Text className="career-resource-title" strong style={item.highlight ? { color: '#b8860b' } : undefined}>
-                {item.title}
-              </Text>
             </div>
-            <Paragraph type="secondary" className="career-resource-desc">{item.desc}</Paragraph>
           </Card>
         </List.Item>
       )}
@@ -4695,15 +4683,7 @@ function CareerPlanningPage() {
                   <Tag color={block.color}>{block.tag}</Tag>
                   <Text strong>{block.title}</Text>
                 </div>
-                <ul className="career-value-list">
-                  {block.points.map((point) => (
-                    <li key={point.title}>
-                      <Text strong>{point.title}</Text>
-                      {'：'}
-                      {point.detail}
-                    </li>
-                  ))}
-                </ul>
+                <p className="career-value-summary">{block.summary}</p>
               </div>
             </Col>
           ))}

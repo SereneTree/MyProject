@@ -1910,6 +1910,82 @@ a.member-pill:hover {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
+/* 可点击的专区卡片：整块上浮 + 描边转品牌蓝，配右侧按钮滑入提示 */
+.career-resource-card--clickable {
+  cursor: pointer;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.career-resource-card--clickable:hover {
+  transform: translateY(-3px);
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.14);
+}
+
+/* 左侧文案 + 右侧「查看详情」，正文自适应剩余宽度 */
+.career-resource-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.career-resource-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.career-resource-action {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: #f1f5fb;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.22s ease, color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.career-resource-action .anticon {
+  font-size: 12px;
+  transition: transform 0.22s ease;
+}
+
+.career-resource-card--clickable:hover .career-resource-action {
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.28);
+}
+
+.career-resource-card--clickable:hover .career-resource-action .anticon {
+  transform: translateX(3px);
+}
+
+/* 窄屏下「查看详情」贴顶部对齐，不再垂直居中挤压正文 */
+@media (max-width: 576px) {
+  .career-resource-main {
+    align-items: flex-start;
+  }
+
+  .career-resource-action {
+    padding: 5px 11px;
+    font-size: 12px;
+  }
+}
+
+/* 不可点击的条目（如保研专区占位卡片）不要显示手型光标与悬停底色，避免虚假可点提示 */
+.career-list-item--static,
+.career-list-item--static .career-resource-card {
+  cursor: default;
+}
+
+.career-list-item--static:hover {
+  background: transparent;
+}
+
 .career-resource-header {
   display: flex;
   align-items: center;
@@ -2569,20 +2645,12 @@ a.member-pill:hover {
   margin: 0;
 }
 
-.career-value-list {
+/* 每块只留一句话，避免三栏各堆三段长文 */
+.career-value-summary {
   margin: 0;
-  padding-left: 18px;
-  font-size: 13px;
-  line-height: 1.85;
   color: #475569;
-}
-
-.career-value-list li + li {
-  margin-top: 8px;
-}
-
-.career-value-list .ant-typography strong {
-  color: #1e293b;
+  font-size: 13px;
+  line-height: 1.8;
 }
 
 @media (max-width: 768px) {
