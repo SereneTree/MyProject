@@ -1652,10 +1652,12 @@ a.member-pill:hover {
   background: linear-gradient(160deg, #1d4ed8 0%, #60a5fa 100%);
 }
 
+/* 头像与内容等高（stretch），但封顶高度：内容特别长时不会把人物拉成细长条 */
 .coaching-mentor--with-portrait .coaching-mentor-portrait {
   align-self: stretch;
   width: 208px;
   height: auto;
+  max-height: 380px;
   flex: 0 0 208px;
 }
 
@@ -1996,6 +1998,7 @@ a.member-pill:hover {
   .coaching-mentor--with-portrait .coaching-mentor-portrait {
     flex-basis: 156px;
     width: 156px;
+    max-height: 300px;
   }
 
   .coaching-mentor-highlight {
@@ -3047,10 +3050,6 @@ a.member-pill:hover {
 
 .followup-detail-avatar {
   font-size: 20px;
-}
-
-.followup-detail-tag {
-  margin-inline-end: 0;
 }
 
 .followup-detail-summary {
