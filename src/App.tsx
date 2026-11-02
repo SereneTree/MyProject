@@ -2553,14 +2553,21 @@ type CoachingStep = { title: string; detail: string; color: string; bullets?: st
 // 师资力量：一位导师 = 头部（姓名/角色/学历）+ 一句背景 + 经历与 Offer 分组
 // 经历与 Offer 统一用 label/value 二元组，方便后续追加导师
 type CoachingMentorRow = { label: string; value: string };
+// 数字战绩：大号数值 + 小字说明，用作师资卡片的第一视觉焦点
+type CoachingMentorHighlight = { value: string; label: string };
 type CoachingMentor = {
   name: string;
   role: string;
   education: string;
   summary: string;
+  // 右侧虚拟人物头像；未配置时退化为无图单栏布局
+  avatar?: string;
+  highlights?: CoachingMentorHighlight[];
   expertise?: string[];
+  // 经历 / Offer 任一侧为空时整列不渲染，两列都空则整个分组不渲染
   experiences: CoachingMentorRow[];
-  offers: CoachingMentorRow[];
+  offersTitle?: string;
+  offers?: CoachingMentorRow[];
 };
 
 // 能力地图：无配图方向（商科）用它替代研发方向的 AI 知识体系卡
@@ -2588,13 +2595,55 @@ const coachingTracks: CoachingTrack[] = [
     key: 'rd',
     label: '💻 研发',
     stepsTitle: '三阶段陪跑流程',
-    origin: '做陪跑的初衷很简单：我大学那几年，最盼的就是身边有个学长带。那些绕过的弯、错过的机会，学弟学妹们不必再经历一遍——这条路上的经验，我直接给你。',
+    origin: '做陪跑的初衷很简单：我大学那几年，最盼的就是身边有个学长带。那些绕过的弯、错过的机会，学弟学妹们不必再经历一遍——这条路上的经验，我们直接给你。',
     pains: [
       '⏳ 学期与假期拥有大段可支配时间，却缺少清晰的能力积累路径',
       '🧩 校内课程与企业岗位要求的知识结构之间，找不到明确的结合点',
       '📅 对校招应当准备什么、关键时间节点如何安排，缺乏系统认知',
       '📉 面试被追问项目细节时难以展开，缺少可深入阐述的技术叙事',
       '🤖 大模型与 Agent 已成为行业共识，自身却缺少可展示的项目积累',
+    ],
+    mentors: [
+      {
+        name: 'W 学长',
+        role: '金融科技 & Agent应用专家',
+        education: '北邮毕业生',
+        avatar: '/coaching/mentor-w-flat.jpg',
+        summary: '金融Agent一线实战＋校招 / 社招面试官视角，帮你把项目讲成面试官真正想听的样子。',
+        highlights: [
+          { value: '6 年+', label: '头部金融平台经验' },
+          { value: '近千万级', label: '日活 Agent 产品' },
+          { value: '2 年', label: '团队管理经验' },
+          { value: '100+', label: '过往考察面试候选人' },
+        ],
+        expertise: ['金融 Agent 开发求职', '项目经历重构', '全真模拟面试', 'Offer 选择规划'],
+        experiences: [
+          // { label: '背景', value: '6 年+ 头部金融平台技术经验，2 年+ 团队管理经历' },
+          // { label: '项目', value: '主导研发百万级日活金融 Agent 产品，拥有 3 年 Agent 应用落地实战经验' },
+          // { label: '行业', value: '深耕银行、证券等金融机构，精通金融科技业务环境与技术架构' },
+          // { label: '面试', value: '常年担任校招 / 社招面试官，累计面试 60 余人，精准把控大厂招聘标准与考察重点' },
+        ],
+      },
+      {
+        name: 'L 学长',
+        role: '一线大厂 & AI前沿技术专家',
+        education: '北邮毕业生',
+        avatar: '/coaching/mentor-l-flat.jpg',
+        summary: '从亿级流量业务线到大厂面试席，帮你在项目里挖出真正能加分的技术亮点。',
+        highlights: [
+          { value: '5 年+', label: 'BAT 等一线大厂' },
+          { value: '亿级', label: '流量业务线主导' },
+          { value: '4 年+', label: '搜推 / 电商经验' },
+          { value: '3 年+', label: 'Agent工程化落地经验' },
+        ],
+        expertise: ['互联网大厂求职冲刺', '项目亮点提炼', 'AI 前沿技术实战', '差异化备考策略'],
+        experiences: [
+          // { label: '背景', value: '5 年+ BAT 及一线大厂核心研发经验' },
+          // { label: '项目', value: '主导内容消费、电商交易、本地生活等亿级流量业务线开发，Agent 工程化落地经验丰富' },
+          // { label: '面试', value: '大厂校招面试官，善于深挖项目技术难点与简历亮点' },
+          // { label: '资源', value: '持续追踪 AI 前沿动向，掌握一手技术实践资料' },
+        ],
+      },
     ],
     steps: [
       {
@@ -2646,7 +2695,7 @@ const coachingTracks: CoachingTrack[] = [
       {
         name: 'Y老师',
         role: '商科方向主导师',
-        education: '北外、HEC Paris 战略管理研究生（欧洲第一商学院）',
+        education: 'HEC Paris 战略管理研究生（欧洲第一商学院）',
         summary: '从 0 到 1 跨界商科，成为咨询、互联网战略与快消行业的全能型选手。',
         expertise: ['面试辅导', 'Mock Case', '快消 / 互联网 / 咨询行业岗位介绍与选择'],
         experiences: [
@@ -2711,6 +2760,8 @@ function CoachingTrackPanel({ track, onConsult }: { track: CoachingTrack; onCons
       ))}
     </ul>
   );
+  // 经历 / Offer 为空时整列跳过，避免渲染空标题与空列表造成空白
+  const hasRows = (rows?: CoachingMentorRow[]) => Boolean(rows && rows.length > 0);
   return (
     <div>
       {hasHero && (
@@ -2740,18 +2791,37 @@ function CoachingTrackPanel({ track, onConsult }: { track: CoachingTrack; onCons
         </section>
       )}
       {track.mentors && track.mentors.length > 0 && (
-        <Card className="career-resource-card" title="师资力量" style={{ marginBottom: 16 }}>
+        <Card className="career-resource-card" title="学长团队" style={{ marginBottom: 16 }}>
           {track.mentors.map((mentor) => (
-            <article className="coaching-mentor" key={mentor.name}>
-              <header className="coaching-mentor-head">
-                <div className="coaching-mentor-avatar" aria-hidden="true">{mentor.name.slice(0, 1)}</div>
-                <div className="coaching-mentor-meta">
-                  <div className="coaching-mentor-name">
-                    {mentor.name}
-                    <span className="coaching-mentor-role">{mentor.role}</span>
+            <article className={`coaching-mentor${mentor.avatar ? ' coaching-mentor--with-portrait' : ''}`} key={mentor.name}>
+              <div className="coaching-mentor-main">
+                <header className="coaching-mentor-head">
+                  {!mentor.avatar && (
+                    <div className="coaching-mentor-avatar" aria-hidden="true">{mentor.name.slice(0, 1)}</div>
+                  )}
+                  <div className="coaching-mentor-meta">
+                    <div className="coaching-mentor-name">
+                      {mentor.name}
+                      <span className="coaching-mentor-role">{mentor.role}</span>
+                      {mentor.education && (
+                        <span className="coaching-mentor-edu-tag">
+                          <ReadOutlined />
+                          {mentor.education}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="coaching-mentor-edu">{mentor.education}</div>
-                </div>
+                </header>
+                {mentor.highlights && mentor.highlights.length > 0 && (
+                  <ul className="coaching-mentor-highlights">
+                    {mentor.highlights.map((item) => (
+                      <li className="coaching-mentor-highlight" key={item.label}>
+                        <span className="coaching-mentor-highlight-value">{item.value}</span>
+                        <span className="coaching-mentor-highlight-label">{item.label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 {mentor.expertise && mentor.expertise.length > 0 && (
                   <div className="coaching-mentor-expertise">
                     <span className="coaching-mentor-expertise-label">擅长</span>
@@ -2762,18 +2832,29 @@ function CoachingTrackPanel({ track, onConsult }: { track: CoachingTrack; onCons
                     </div>
                   </div>
                 )}
-              </header>
-              <p className="coaching-mentor-summary">{mentor.summary}</p>
-              <div className="coaching-mentor-grid">
-                <section className="coaching-mentor-col">
-                  <div className="coaching-mentor-col-title">实习与任职经历</div>
-                  {renderMentorRows(mentor.experiences)}
-                </section>
-                <section className="coaching-mentor-col coaching-mentor-col--offers">
-                  <div className="coaching-mentor-col-title">Offer 战绩</div>
-                  {renderMentorRows(mentor.offers)}
-                </section>
+                {/* 一句话定位下移：作为经历列表的引导句，取代原来的栏目小标题 */}
+                <p className="coaching-mentor-summary">{mentor.summary}</p>
+                {hasRows(mentor.experiences) || hasRows(mentor.offers) ? (
+                  <div className={`coaching-mentor-grid${hasRows(mentor.experiences) && hasRows(mentor.offers) ? '' : ' coaching-mentor-grid--single'}`}>
+                    {hasRows(mentor.experiences) && (
+                      <section className="coaching-mentor-col">
+                        {renderMentorRows(mentor.experiences)}
+                      </section>
+                    )}
+                    {hasRows(mentor.offers) && (
+                      <section className="coaching-mentor-col coaching-mentor-col--offers">
+                        <div className="coaching-mentor-col-title">{mentor.offersTitle || 'Offer 战绩'}</div>
+                        {renderMentorRows(mentor.offers || [])}
+                      </section>
+                    )}
+                  </div>
+                ) : null}
               </div>
+              {mentor.avatar && (
+                <figure className="coaching-mentor-portrait">
+                  <img src={mentor.avatar} alt={`${mentor.name} 虚拟形象`} loading="lazy" />
+                </figure>
+              )}
             </article>
           ))}
         </Card>
@@ -4475,7 +4556,7 @@ function CareerPlanningPage() {
     {
       tag: '独立',
       color: 'green',
-      title: '经济独立，讲话硬气',
+      title: '经济独立不求人',
       summary: '头部大厂实习日薪 200-800 元，叠加房补与餐补，单月综合收入可达 8k-20k，在校期间就能实现财务独立。',
     },
     {

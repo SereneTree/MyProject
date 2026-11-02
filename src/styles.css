@@ -1622,9 +1622,49 @@ a.member-pill:hover {
   line-height: 1.9;
 }
 
-/* 师资力量：左头像 + 右侧姓名/角色/擅长，下方经历与 Offer 两栏 */
+/* 师资力量：左信息 + 右侧虚拟人物头像，数字战绩作为第一视觉焦点 */
 .coaching-mentor {
+  display: flex;
+  align-items: flex-start;
+  gap: 22px;
   padding-top: 2px;
+}
+
+/* 有头像时头像与左列内容等高（stretch），顶部对齐并保留上方间距 */
+.coaching-mentor--with-portrait {
+  align-items: stretch;
+}
+
+.coaching-mentor-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* 右侧人物形象：竖向大图，高度跟随卡片内容 */
+.coaching-mentor-portrait {
+  position: relative;
+  flex: 0 0 208px;
+  margin: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  box-shadow: 0 16px 32px rgba(37, 99, 235, 0.18);
+  background: linear-gradient(160deg, #1d4ed8 0%, #60a5fa 100%);
+}
+
+.coaching-mentor--with-portrait .coaching-mentor-portrait {
+  align-self: stretch;
+  width: 208px;
+  height: auto;
+  flex: 0 0 208px;
+}
+
+.coaching-mentor-portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 18%;
 }
 
 /* 同一方向有多个导师时用虚线分隔 */
@@ -1682,16 +1722,32 @@ a.member-pill:hover {
   font-weight: 600;
 }
 
-.coaching-mentor-edu {
-  margin-top: 5px;
-  color: #64748b;
-  font-size: 13.5px;
-  line-height: 1.65;
+/* 毕业院校：金色实底强调，作为强背书与浅蓝角色标签形成主次对比 */
+.coaching-mentor-edu-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 2px 10px;
+  border: 1px solid rgba(184, 134, 11, 0.32);
+  border-radius: 6px;
+  background: linear-gradient(135deg, #e8b93f 0%, #b8860b 100%);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  line-height: 1.7;
+  box-shadow: 0 2px 8px rgba(184, 134, 11, 0.26);
 }
 
-/* 一句话背景：细竖线引导，不用整块底色 */
+.coaching-mentor-edu-tag .anticon {
+  font-size: 12px;
+  color: #ffffff;
+}
+
+/* 一句话定位：细竖线引导，作为姓名下的副标题 */
 .coaching-mentor-summary {
-  margin: 16px 0 0;
+  margin: 14px 0 0;
   padding-left: 14px;
   border-left: 3px solid #bfdbfe;
   color: #1e293b;
@@ -1700,12 +1756,54 @@ a.member-pill:hover {
   line-height: 1.8;
 }
 
+/* 数字战绩：四块浅蓝渐变卡，数值大号蓝色，成为卡片最强视觉点 */
+.coaching-mentor-highlights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.coaching-mentor-highlight {
+  flex: 1 1 104px;
+  min-width: 100px;
+  padding: 10px 13px;
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  border-radius: 12px;
+  background: linear-gradient(150deg, rgba(37, 99, 235, 0.1) 0%, rgba(37, 99, 235, 0.02) 100%);
+}
+
+.coaching-mentor-highlight-value {
+  display: block;
+  color: #1d4ed8;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  line-height: 1.25;
+}
+
+.coaching-mentor-highlight-label {
+  display: block;
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
 /* 经历与 Offer 两栏：左边纯文本列表，右边浅蓝战绩卡 */
 .coaching-mentor-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
   gap: 18px;
   margin-top: 16px;
+}
+
+/* 只有经历一栏（未配置 Offer 战绩）时占满整行，避免右侧留白 */
+.coaching-mentor-grid--single {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .coaching-mentor-col-title {
@@ -1747,8 +1845,8 @@ a.member-pill:hover {
 .coaching-mentor-value {
   flex: 1;
   min-width: 0;
-  color: #0f172a;
-  font-size: 14px;
+  color: #334155;
+  font-size: 13.5px;
   font-weight: 500;
   line-height: 1.7;
 }
@@ -1773,13 +1871,13 @@ a.member-pill:hover {
   color: #1d4ed8;
 }
 
-/* 擅长方向：与姓名块同行靠右，窄屏自动换行 */
+/* 擅长方向：副标题下方独立一行，描边胶囊弱化于数字战绩 */
 .coaching-mentor-expertise {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  margin-left: auto;
+  margin-top: 14px;
 }
 
 .coaching-mentor-expertise-label {
@@ -1797,9 +1895,10 @@ a.member-pill:hover {
 
 .coaching-mentor-expertise-tag {
   padding: 3px 11px;
-  border-radius: 6px;
-  background: #f1f5f9;
-  color: #334155;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1d4ed8;
   font-size: 12.5px;
   font-weight: 600;
   line-height: 1.7;
@@ -1888,7 +1987,19 @@ a.member-pill:hover {
 
   .coaching-mentor-expertise {
     width: 100%;
-    margin-left: 0;
+  }
+
+  .coaching-mentor {
+    gap: 16px;
+  }
+
+  .coaching-mentor--with-portrait .coaching-mentor-portrait {
+    flex-basis: 156px;
+    width: 156px;
+  }
+
+  .coaching-mentor-highlight {
+    flex: 1 1 92px;
   }
 }
 
@@ -1897,6 +2008,24 @@ a.member-pill:hover {
   .coaching-mentor-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 16px;
+  }
+
+  /* 手机上人物头像改为右上角小图，文案继续环绕阅读 */
+  .coaching-mentor,
+  .coaching-mentor--with-portrait {
+    display: block;
+  }
+
+  .coaching-mentor--with-portrait .coaching-mentor-portrait {
+    float: right;
+    width: 96px;
+    height: auto;
+    margin: 0 0 10px 12px;
+    border-radius: 14px;
+  }
+
+  .coaching-mentor-portrait img {
+    height: 112px;
   }
 }
 
