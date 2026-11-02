@@ -199,6 +199,7 @@ function AppShell() {
           <Route path="/career-planning/tech-articles" element={<TechArticlesPage />} />
           <Route path="/career-planning/application-guide" element={<ApplicationGuidePage />} />
           <Route path="/career-planning/coaching" element={<CoachingPage />} />
+          <Route path="/career-planning/followup/:storyId" element={<FollowupStoryPage />} />
           <Route path="/consultation" element={<ConsultationPage />} />
           <Route path="/about" element={<AboutPage />} />
         </Routes>
@@ -4150,6 +4151,283 @@ function StudyAbroadUpdatesPage() {
   );
 }
 
+// 长期随访：一级页双列卡片流与二级页 /career-planning/followup/:storyId 共用同一份数据
+type FollowupSection = { label: string; text: string; wide?: boolean };
+
+// 随访文章的分类：左上角三角角标按类别配色，方便快速区分
+// 注：赵同学是跨考上岸，归到「考研」；如需并回三类，把类别改成「保研」即可
+type FollowupCategory = '求职' | '留学' | '保研' | '考研';
+
+const followupCategoryClass: Record<FollowupCategory, string> = {
+  求职: 'job',
+  留学: 'abroad',
+  保研: 'postgrad',
+  考研: 'exam',
+};
+
+type FollowupStory = {
+  id: string;
+  category: FollowupCategory;
+  name: string;
+  school: string;
+  period: string;
+  avatar: string;
+  cover: string;
+  title: string;
+  summary: string;
+  achievement: string;
+  sections: FollowupSection[];
+};
+
+const followupStories: FollowupStory[] = [
+  {
+    id: 'zhou-baidu',
+    category: '求职',
+    name: '周同学',
+    school: '某高校计算机',
+    period: '2027届',
+    avatar: '🚀',
+    cover: '/followup/story-baidu-campus.jpg',
+    title: '两段大厂实习，第二段进百度做 Agent 研发',
+    summary: '大二暑假就开始投实习，在岗时拿下百度 Agent 研发岗；每场面试录音复盘，离职前把实习证明和推荐信一次收齐。',
+    achievement: '百度 · Agent 研发实习',
+    sections: [
+      {
+        label: '实习时机',
+        text: '大二暑假我就开始投了，别等大三下。手上有一段在跑的时候，反而更好投下一段——我 8 月底一边实习一边面百度，9 月中出 offer，9 月 21 日就入职了，两段连起来，节奏一点没浪费。',
+      },
+      {
+        label: '实习准备',
+        text: '投之前先把目标公司和产品线摸清楚。我面 Agent 岗被问到 dumate，还以为是内部代号，结果是人家自家的产品——这种尴尬说到底就是准备没做够。简历上少写“参与”，把一件具体的事讲清楚：做了什么、效果多少。',
+      },
+      {
+        label: '面试应考',
+        text: '每场面试我都录音，回来逐句复盘：哪里答得虚、哪个问题卡住，当天就补。面试官说“不用自我介绍”也别掉以轻心，一样要能三句话说清自己做什么。答不上来就直说不知道，回去把它变成知道——面试官更在意你怎么面对不会。',
+      },
+      {
+        label: '实际工作',
+        text: '进百度之后一直在 agent 开发这条线上，一个多月学到的东西比在学校半年还密。也提醒一句：离职别拍拍屁股就走，实习证明先开好，再请 leader 用公司邮箱写一封推荐信，下一段实习和之后申请都用得上。',
+      },
+      {
+        label: '对辅导老师的评价',
+        text: '老师没替我面试，他是那个逼我把每场面试变成经验的人：催录音、催复盘，有匹配的岗位先想到我（货拉拉 HR、字节的岗位都是他直接推的）。我赶项目的时候他不扰我，我要找第二段了他又第一时间接上，这种分寸感挺难得。',
+        wide: true,
+      },
+    ],
+  },
+  {
+    id: 'sui-hku',
+    category: '留学',
+    name: '隋同学',
+    school: '北邮海南学院 计算机',
+    period: '2026届',
+    avatar: '✨',
+    cover: '/followup/story-hku-campus.jpg',
+    title: '均分 84、0 实习，正式批首录港大 CS',
+    summary: '大三结束均分 84、雅思 6.5、实习空白，先把软背景用科研补起来；港大提前批因排名被挡，稳住心态转正式批，2026 年 2 月收到港大 CS 录取。',
+    achievement: '香港大学 · CS 硕士录取',
+    sections: [
+      {
+        label: '起点与定位',
+        text: '我是北邮海南学院第一届学生，没有往届经验可参照。大三结束均分 84、雅思 6.5——不算差，但在计算机方向的申请里真算不上突出。最要命的是实习：准确说到大三结束还是 0 段。越查案例越焦虑，港新方向是知道的，但具体怎么走、短板怎么补，完全没头绪。',
+      },
+      {
+        label: '把短板补上',
+        text: '博哥没有先画大饼，而是把我能补的部分拆出来：绩点已过门槛不必死磕，最紧迫的是用科研填掉实习的空白。我按他的建议去申请了本校实验室，这段科研后来几乎撑起了我整个软背景，文书也终于有东西可写。科研老师的反馈是“很按时去实验室，很上心”。',
+      },
+      {
+        label: '语言与节奏',
+        text: '语言上他给我下了“死命令”：十一假期前后必须出分，并给了对应的备考策略。选校、申请节点也一并排清楚——第一次知道该往哪走之后，焦虑就换成了执行：雅思按节奏推进，科研持续推进，不再纠结“我行不行”。',
+      },
+      {
+        label: '提前批被拒',
+        text: '港大 CS 提前批的反馈很直接：排名在 40% 以后，无法参加提前批考试。那一刻我以为港大跟我无缘了。博哥只回了一句“没事，提前批不行咱们就正常申”。听起来简单，但对刚被拒的人来说是真定心丸——提前批不是唯一的路，正式批一样有机会。',
+      },
+      {
+        label: '正式批录取',
+        text: '正式申之前，博哥把我零散的科研经历和课业成绩重新梳理了一遍，像上阵前把武器弹药擦干净。2026 年 2 月的一个晚上，我像往常一样打开邮箱，港大 CS 的录取就躺在那里——正式批首录，之前的焦虑和怀疑一下就都放下了。',
+      },
+      {
+        label: '对辅导老师的评价',
+        text: '务实分析不画饼，是我信任他的根源：不说“你肯定行”，也不制造焦虑说“你这背景悬”，而是把问题翻译成行动方案，再排优先级——什么该重点补、什么可以放一放。遇事沉着经验足，是他服务里最值钱的部分：提前批被拒时他没有过度安慰，也没有一点慌张，那种镇定本身就在告诉我“还有路”。',
+        wide: true,
+      },
+      {
+        label: '致学弟学妹',
+        text: '这段经历教会我最重要的一件事：面对不确定性，与其问“我行不行”，不如想“下一步该做什么”。提前批被拒就是最好的例子——以前的我可能就此放弃港大，走完这一遭才知道，一次挫折不等于终局，持续的规划和努力才靠得住。',
+        wide: true,
+      },
+    ],
+  },
+  {
+    id: 'zhang-tsinghua',
+    category: '保研',
+    name: '张同学',
+    school: '某211计算机',
+    period: '2023届',
+    avatar: '🎓',
+    cover: '/followup/story-tsinghua.jpg',
+    title: 'GPA 前 5%，夏令营同时拿下清华、北大、浙大',
+    summary: '大二上就把保研当主线，绩点、科研、竞赛按学期排进日程；夏令营阶段只做一件事：把材料讲清楚。',
+    achievement: '保研至清华大学计算机系',
+    sections: [
+      {
+        label: '前期规划',
+        text: '大二上就把保研当主线：先把绩点稳住（最终排名前 5%），再把每学期的科研、竞赛排进日程。很多人到大三下才开始准备，其实名额在那之前就已经定了大半。',
+      },
+      {
+        label: '科研与材料',
+        text: '两段科研经历加一篇论文，不是为了堆数量，而是能在面试时讲清楚：问题是什么、我做了什么、结果怎么验证。夏令营材料也按这个逻辑写，不写“我热爱科研”。',
+      },
+      {
+        label: '夏令营节奏',
+        text: '清华、北大、浙大的夏令营时间高度重叠，提前排好时间与准备顺序，每场结束当天复盘，把被追问的点补进下一场。',
+      },
+      {
+        label: '给师弟师妹的一句话',
+        text: '保研是四年的事，不是大三下三个月的冲刺。绩点是门票，科研和表达决定你能走多远。',
+        wide: true,
+      },
+    ],
+  },
+  {
+    id: 'li-cmu',
+    category: '留学',
+    name: '李同学',
+    school: '某双非软件工程',
+    period: '2023届',
+    avatar: '🌏',
+    cover: '/followup/story-cmu.jpg',
+    title: '双非起步，拿到 CMU MSCS 全奖',
+    summary: '从双非本科出发，用科研实习、海外推荐信和精准选校，把“不可能”拆成一年内可执行的清单。',
+    achievement: 'CMU MSCS 全奖录取',
+    sections: [
+      {
+        label: '选校定位',
+        text: '先认清自己的位置：双非背景冲顶尖项目，必须用科研和推荐信补位。选校按冲刺 / 主申 / 保底拉开梯度，把钱和精力押在最匹配的项目上。',
+      },
+      {
+        label: '科研与推荐信',
+        text: '主动进实验室，从跑实验、写报告做起，做出能写进文书的成果；推荐信找真正了解你的老师写，能说出具体细节的推荐信才有分量。',
+      },
+      {
+        label: '文书',
+        text: '文书不写“我热爱计算机”，写具体做过什么、遇到什么、怎么解决，以及为什么非这个项目不可。',
+      },
+      {
+        label: '给师弟师妹的一句话',
+        text: '出身决定起跑线，不决定终点。把能控的部分做到极致，剩下的交给时间。',
+        wide: true,
+      },
+    ],
+  },
+  {
+    id: 'wang-bytedance',
+    category: '求职',
+    name: '王同学',
+    school: '某985信息学院',
+    period: '2024届',
+    avatar: '💼',
+    cover: '/followup/story-bytedance.jpg',
+    title: '两段大厂实习，秋招拿到字节跳动 SP',
+    summary: '大三一年跑完两段实习，刷题与项目同步推进，秋招时手里握着字节、腾讯、阿里多个 SP。',
+    achievement: '字节跳动 SP Offer',
+    sections: [
+      {
+        label: '实习节奏',
+        text: '大三上开始投第一段实习，寒假前落地；第二段按目标岗位挑，尽量让两段在同一条技术线上，简历才有主线。',
+      },
+      {
+        label: '刷题与项目',
+        text: '刷题只解决入场券，项目决定能谈多少。把实习里的真实模块沉淀成可讲的技术故事，面试时按“背景 - 方案 - 权衡 - 结果”讲。',
+      },
+      {
+        label: '秋招策略',
+        text: '提前批先投最想去的几家练手，正式批再冲；每场面试当天复盘，把被问倒的点补进题库。',
+      },
+      {
+        label: '给师弟师妹的一句话',
+        text: '实习不是简历上的装饰，是你把学校知识换成工程能力的地方。',
+        wide: true,
+      },
+    ],
+  },
+  {
+    id: 'zhao-zju',
+    category: '考研',
+    name: '赵同学',
+    school: '某211数学系',
+    period: '2024届',
+    avatar: '📚',
+    cover: '/followup/story-zju.jpg',
+    title: '数学系转码，8 个月从零上岸浙大',
+    summary: '408 零基础起步，把四门专业课、数学和英语排成可执行的时间表，初试 400+、复试机试满分。',
+    achievement: '跨考上岸浙江大学计算机',
+    sections: [
+      {
+        label: '为什么转',
+        text: '数学底子是我的优势，缺的是工程基础。想清楚这一点后，复习重心直接压到 408 和机试，而不是从头补专业课。',
+      },
+      {
+        label: '八个月怎么过',
+        text: '把 8 个月切成四段：三门公共课打地基 → 408 第一轮 → 真题与机试 → 冲刺。每周固定一天做复盘，只调计划不硬扛。',
+      },
+      {
+        label: '复试',
+        text: '机试满分靠的是考前两个月每天固定题量；面试把跨专业的经历讲成优势，而不是道歉。',
+      },
+      {
+        label: '给师弟师妹的一句话',
+        text: '跨考最难的不是知识，是节奏和心态。按周推进，别按情绪推进。',
+        wide: true,
+      },
+    ],
+  },
+  {
+    id: 'chen-hkust',
+    category: '留学',
+    name: '陈同学',
+    school: '某普通一本CS',
+    period: '2024届',
+    avatar: '🏆',
+    cover: '/followup/story-hkust.jpg',
+    title: '普通一本背景，拿到港科大 MSc 录取',
+    summary: 'GPA、一段对口的实习和一份反复打磨的文书，把普通一本的背景讲成了港科大能读懂的故事。',
+    achievement: '香港科技大学 MSc 录取',
+    sections: [
+      {
+        label: '硬指标先过关',
+        text: '港校看重 GPA 与语言成绩，这两项没到位，文书再好也难进审理；先把分数拉到项目的中位数以上。',
+      },
+      {
+        label: '实习与项目',
+        text: '一段与申请方向一致的实习，比三段无关经历更有用。项目要能说清你负责哪一块、产出了什么。',
+      },
+      {
+        label: '文书打磨',
+        text: '文书至少改五稿：第一稿写事实，第二稿删形容词，后面几稿对照项目要求逐条印证。',
+      },
+      {
+        label: '给师弟师妹的一句话',
+        text: '申请不是运气，是把每一项材料都做到“刚好够好”的累积。',
+        wide: true,
+      },
+    ],
+  },
+];
+
+// 每个专区内容末尾统一的咨询跳转模块：文案按专区区分，样式统一用工 .career-followup-cta
+function ConsultCta({ title, onConsult }: { title: string; onConsult: () => void }) {
+  return (
+    <Card className="career-followup-cta" style={{ marginTop: 24 }}>
+      <div style={{ textAlign: 'center' }}>
+        <Title level={5}>{title}</Title>
+        <Button type="primary" size="large" onClick={onConsult}>立即预约 1v1 咨询</Button>
+      </div>
+    </Card>
+  );
+}
+
 function CareerPlanningPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -4240,14 +4518,6 @@ function CareerPlanningPage() {
     internship: internshipValueData,
     abroad: studyAbroadValueData,
   };
-
-  const studentCases = [
-    { name: '张同学', school: '某211计算机', achievement: '成功保研至清华大学计算机系', period: '2023届', story: '大二开始规划，GPA排名前5%，两段科研经历+一篇论文，夏令营拿到清华、北大、浙大offer。', avatar: '🎓' },
-    { name: '李同学', school: '某双非软件工程', achievement: '拿到CMU MSCS全奖录取', period: '2023届', story: '从双非起步，通过科研实习+高质量推荐信+精准选校策略，逆袭拿到CMU全奖。', avatar: '🌏' },
-    { name: '王同学', school: '某985信息学院', achievement: '秋招拿到字节跳动SP Offer', period: '2024届', story: '大三两段大厂实习，系统化刷题+项目沉淀，最终斩获字节、腾讯、阿里多个SP。', avatar: '💼' },
-    { name: '赵同学', school: '某211数学系', achievement: '跨考上岸浙大计算机', period: '2024届', story: '数学系转码，408零基础用8个月系统备考，初试400+，复试机试满分。', avatar: '📚' },
-    { name: '陈同学', school: '某普通一本CS', achievement: '香港科技大学MSc录取', period: '2024届', story: '普通一本背景，通过高GPA+实习经历+精心打磨的文书，成功申请港科大。', avatar: '🏆' },
-  ];
 
   const jobCategoryData = [
     { name: '技术类', icon: '💻' },
@@ -4668,11 +4938,20 @@ function CareerPlanningPage() {
     />
   );
 
+  // 四个专区的 hero 主标题各写一句，后半句（渐变字）承载各自的核心目标
+  const heroTitleData: Record<string, { lead: string; highlight: string }> = {
+    internship: { lead: '实习先人一步，', highlight: '未来职场不焦虑！' },
+    abroad: { lead: '找准自身定位，', highlight: '名校录取不是梦～' },
+    postgraduate: { lead: '选课、竞赛、论文，', highlight: '是你保研上岸的最大助力' },
+    followup: { lead: '沿着学长的真实轨迹，', highlight: '找到属于你自己的最优解！' },
+  };
+  const heroTitle = heroTitleData[activeTab] || { lead: '为你的未来，', highlight: '量身定制路径' };
+
   // 蓝色 hero 作为每个专区内容区的顶部横幅，使 Tabs 导航条位于页面最上方
   const heroSection = (
     <div className="career-hero">
       <div className="career-hero-badge">🎯 生涯规划中心</div>
-      <Title level={2}>为你的未来，<span className="career-hero-highlight">量身定制路径</span></Title>
+      <Title level={2}>{heroTitle.lead}<span className="career-hero-highlight">{heroTitle.highlight}</span></Title>
       {/* 求职 / 留学专区在 hero 内展示各自的三重回报 */}
       {heroValueData[activeTab] && (
         <Row gutter={[16, 16]} className="career-value-strip">
@@ -4709,6 +4988,7 @@ function CareerPlanningPage() {
             if (item.title === '技术干货抢先读') navigate('/career-planning/tech-articles');
             if (item.title === '1V1全流程辅导') navigate('/career-planning/coaching');
           })}
+          <ConsultCta title="想拿到心仪的实习 Offer？先聊一次，把投递节奏排清楚" onConsult={() => navigate('/consultation')} />
         </div>
       ),
     },
@@ -4727,6 +5007,7 @@ function CareerPlanningPage() {
             if (item.title === 'GRE/TOEFL/IELTS备考指南') navigate('/career-planning/study-abroad-tests');
             if (item.title === '留学申请新动态') navigate('/career-planning/study-abroad-updates');
           })}
+          <ConsultCta title="想确认自己能冲哪几所？先做一次选校定位与背景评估" onConsult={() => navigate('/consultation')} />
         </div>
       ),
     },
@@ -4744,6 +5025,7 @@ function CareerPlanningPage() {
             {renderResourceList(postgraduateData)}
             <ComingSoonMask section="保研专区" />
           </div>
+          <ConsultCta title="想知道自己离保研还差哪几步？先做一次背景评估" onConsult={() => navigate('/consultation')} />
         </div>
       ),
     },
@@ -4757,31 +5039,43 @@ function CareerPlanningPage() {
             <Title level={4}>长期随访 · 学长现身说法</Title>
             <Paragraph type="secondary">记录每一位同学的规划与成长历程，见证努力到收获的完整链路</Paragraph>
           </div>
-          <Row gutter={[16, 16]}>
-            {studentCases.map((c) => (
-              <Col xs={24} md={12} key={c.name}>
-                <Card className="career-case-card" hoverable>
-                  <div className="career-case-header">
-                    <span className="career-case-avatar">{c.avatar}</span>
-                    <div>
-                      <Text strong>{c.name}</Text>
-                      <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>{c.school} · {c.period}</Text>
-                    </div>
+          {/* 一级页只做双列流：封面图 + 标题 + 一句话简介，详情统一进二级页 */}
+          <div className="followup-grid">
+            {followupStories.map((story) => (
+              <article
+                className="followup-card"
+                key={story.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate(`/career-planning/followup/${story.id}`)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    navigate(`/career-planning/followup/${story.id}`);
+                  }
+                }}
+              >
+                <div className="followup-cover">
+                  {/* 左上角三角角标：按分类配色（求职 / 留学 / 保研 / 考研） */}
+                  <span className={`followup-cover-category followup-cover-category--${followupCategoryClass[story.category]}`}>
+                    {story.category}
+                  </span>
+                  <img src={story.cover} alt={`${story.name}·${story.achievement}`} loading="lazy" />
+                  <span className="followup-cover-badge">{story.avatar} {story.period}</span>
+                </div>
+                <div className="followup-card-body">
+                  <div className="followup-card-name">
+                    {story.name}
+                    <span className="followup-card-meta">{story.school}</span>
                   </div>
-                  <div className="career-case-achievement">
-                    <Tag color="blue">{c.achievement}</Tag>
-                  </div>
-                  <Paragraph type="secondary" className="career-case-story">{c.story}</Paragraph>
-                </Card>
-              </Col>
+                  <h3 className="followup-card-title">{story.title}</h3>
+                  <p className="followup-card-summary">{story.summary}</p>
+                  <span className="followup-card-action">阅读全文<ArrowRightOutlined /></span>
+                </div>
+              </article>
             ))}
-          </Row>
-          <Card className="career-followup-cta" style={{ marginTop: 24 }}>
-            <div style={{ textAlign: 'center' }}>
-              <Title level={5}>想了解更多学员案例或获取专属规划？</Title>
-              <Button type="primary" size="large" onClick={() => navigate('/consultation')}>立即预约 1v1 咨询</Button>
-            </div>
-          </Card>
+          </div>
+          <ConsultCta title="想了解更多真实案例或获取专属规划？" onConsult={() => navigate('/consultation')} />
         </div>
       ),
     },
@@ -4823,6 +5117,66 @@ function CareerPlanningPage() {
   return (
     <div className="career-planning-page career-planning-home">
       <Tabs activeKey={activeTab} onChange={handleTabChange} items={tabItems} className="career-tabs" size="large" />
+    </div>
+  );
+}
+
+function FollowupStoryPage() {
+  const navigate = useNavigate();
+  const { storyId } = useParams();
+  const story = followupStories.find((item) => item.id === storyId);
+
+  const backButton = (
+    <Button type="primary" style={{ marginBottom: 16 }} onClick={() => navigate('/career-planning?tab=followup')}>← 返回长期随访</Button>
+  );
+
+  if (!story) {
+    return (
+      <div className="career-planning-page">
+        {backButton}
+        <Card className="career-resource-card">
+          <Empty description="没找到这条随访记录，可能链接已经更新" />
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="career-planning-page">
+      {backButton}
+      <Card className="followup-detail-hero">
+        <div className="followup-detail-intro">
+          <div className="career-hero-badge">🎓 {story.category} · 学长现身说法</div>
+          <Title level={2}>{story.title}</Title>
+          <div className="followup-detail-meta">
+            <span className="followup-detail-avatar" aria-hidden="true">{story.avatar}</span>
+            <Text strong>{story.name}</Text>
+            <Text type="secondary">{story.school} · {story.period}</Text>
+          </div>
+          <Tag color="blue" className="followup-detail-tag">{story.achievement}</Tag>
+          <Paragraph type="secondary" className="followup-detail-summary">{story.summary}</Paragraph>
+        </div>
+        <img className="followup-detail-cover" src={story.cover} alt={`${story.name}·${story.achievement}`} />
+      </Card>
+
+      <Card className="career-resource-card followup-detail-sections" title="经验分享">
+        <div className="career-case-sections">
+          {story.sections.map((section, index) => (
+            <section
+              className={`career-case-section${section.wide ? ' career-case-section--wide' : ''}`}
+              key={section.label}
+            >
+              <div className="career-case-section-label">
+                <span className="career-case-section-index">{String(index + 1).padStart(2, '0')}</span>
+                {section.label}
+              </div>
+              <p className="career-case-section-text">{section.text}</p>
+            </section>
+          ))}
+        </div>
+      </Card>
+
+      <ConsultCta title="想走同一条路？先聊一次，把节奏排清楚" onConsult={() => navigate('/consultation')} />
     </div>
   );
 }

@@ -2663,31 +2663,310 @@ a.member-pill:hover {
   }
 }
 
-/* 学员案例卡片 */
-.career-case-card {
-  border-radius: 14px;
-  height: 100%;
+/* 经验分享分块（长期随访二级页复用） */
+.career-case-sections {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px 18px;
 }
 
-.career-case-header {
+.career-case-section {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+/* 整行宽块：老师评价是家长最关心的一块，浅蓝底单独拎出来 */
+.career-case-section--wide {
+  grid-column: 1 / -1;
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  background: linear-gradient(140deg, rgba(37, 99, 235, 0.07), rgba(37, 99, 235, 0.02));
+}
+
+.career-case-section-label {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: #1e293b;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.career-case-section-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.career-case-section-text {
+  margin: 0;
+  color: #475569;
+  font-size: 13.5px;
+  line-height: 1.9;
+}
+
+/* 窄屏回到单栏，避免 13px 正文被挤成窄条 */
+@media (max-width: 720px) {
+  .career-case-sections {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* 长期随访一级页：双列流卡片（封面图 + 标题 + 一句话简介） */
+.followup-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.followup-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(37, 99, 235, 0.1);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.06);
+  cursor: pointer;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.followup-card:hover,
+.followup-card:focus-visible {
+  transform: translateY(-3px);
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.14);
+  outline: none;
+}
+
+.followup-cover {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: linear-gradient(135deg, #e8eefc, #f4f7ff);
+}
+
+.followup-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.followup-card:hover .followup-cover img {
+  transform: scale(1.04);
+}
+
+/* 左上角分类三角角标：右侧斜切成三角尖，四种分类各一个主色 */
+.followup-cover-category {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 22px 0 14px;
+  border-radius: 16px 0 0 0;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 13px) 100%, 0 100%);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.18);
+}
+
+.followup-cover-category--job {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+}
+
+.followup-cover-category--abroad {
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+}
+
+.followup-cover-category--postgrad {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+}
+
+.followup-cover-category--exam {
+  background: linear-gradient(135deg, #ea580c, #f97316);
+}
+
+.followup-cover-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.55);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.6;
+  backdrop-filter: blur(4px);
+}
+
+.followup-card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  padding: 16px 18px 18px;
+}
+
+.followup-card-name {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: #1e293b;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.followup-card-meta {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.followup-card-title {
+  margin: 0 0 8px;
+  color: #0f172a;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.followup-card-summary {
+  margin: 0 0 14px;
+  color: #64748b;
+  font-size: 13.5px;
+  line-height: 1.8;
+}
+
+.followup-card-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #f1f5fb;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.22s ease, color 0.22s ease;
+}
+
+.followup-card-action .anticon {
+  font-size: 12px;
+  transition: transform 0.22s ease;
+}
+
+.followup-card:hover .followup-card-action {
+  background: #2563eb;
+  color: #fff;
+}
+
+.followup-card:hover .followup-card-action .anticon {
+  transform: translateX(3px);
+}
+
+/* 长期随访二级页：左文右图的 hero + 经验分享分块 */
+.followup-detail-hero {
+  border: 1px solid #e2eafc;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #f8faff 0%, #eef4ff 55%, #f0f7ff 100%);
+}
+
+.followup-detail-hero .ant-card-body {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.followup-detail-intro {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.followup-detail-intro h2 {
+  margin: 12px 0 14px;
+  color: #1e293b;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.45;
+  letter-spacing: -0.3px;
+}
+
+.followup-detail-meta {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-bottom: 10px;
 }
 
-.career-case-avatar {
-  font-size: 28px;
+.followup-detail-avatar {
+  font-size: 20px;
 }
 
-.career-case-achievement {
-  margin-bottom: 8px;
+.followup-detail-tag {
+  margin-inline-end: 0;
 }
 
-.career-case-story {
-  margin-bottom: 0 !important;
-  font-size: 13px;
-  line-height: 1.6;
+.followup-detail-summary {
+  margin: 12px 0 0 !important;
+  color: #475569 !important;
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.followup-detail-cover {
+  flex: 0 0 40%;
+  width: 40%;
+  max-width: 420px;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 14px;
+  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.12);
+}
+
+.followup-detail-sections {
+  margin-top: 16px;
+}
+
+@media (max-width: 900px) {
+  .followup-detail-hero .ant-card-body {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 18px;
+  }
+
+  .followup-detail-cover {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: none;
+  }
+
+  .followup-detail-intro h2 {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 860px) {
+  .followup-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .career-followup-cta {
