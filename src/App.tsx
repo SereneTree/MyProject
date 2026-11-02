@@ -2903,7 +2903,8 @@ function CoachingPage() {
 }
 
 // 小红书封面：真实数据是图片 URL，早期手填数据用的是 emoji 占位
-const XHS_COVER_IMAGE = /^https?:\/\//;
+// 封面既可能是历史外链，也可能是本地化后的 /xhs-covers/ 路径
+const XHS_COVER_IMAGE = /^(https?:\/\/|\/xhs-covers\/)/;
 
 function TechArticlesPage() {
   const navigate = useNavigate();
