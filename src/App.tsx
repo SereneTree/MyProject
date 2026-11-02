@@ -4222,7 +4222,7 @@ const followupStories: FollowupStory[] = [
     school: '北邮海南学院 计算机',
     period: '2026届',
     avatar: '✨',
-    cover: '/followup/story-hku-campus.jpg',
+    cover: '/followup/story-hku-wall.jpg',
     title: '均分 84、0 实习，正式批首录港大 CS',
     summary: '大三结束均分 84、雅思 6.5、实习空白，先把软背景用科研补起来；港大提前批因排名被挡，稳住心态转正式批，2026 年 2 月收到港大 CS 录取。',
     achievement: '香港大学 · CS 硕士录取',
