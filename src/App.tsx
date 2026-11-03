@@ -2147,6 +2147,7 @@ function CampusRecruitTab() {
           size="small"
           pagination={false}
           rowKey="stage"
+          scroll={{ x: 760 }}
           dataSource={autumnTimelineData}
           columns={[
             { title: '时间段', dataIndex: 'period', width: 120 },
@@ -2162,6 +2163,7 @@ function CampusRecruitTab() {
           size="small"
           pagination={false}
           rowKey="level"
+          scroll={{ x: 900 }}
           dataSource={offerLevelData}
           columns={[
             { title: '评级', dataIndex: 'level', width: 160 },
@@ -2306,6 +2308,7 @@ function DailyInternTab() {
           size="small"
           pagination={false}
           rowKey="period"
+          scroll={{ x: 680 }}
           dataSource={internTimelineData}
           columns={[
             { title: '时间段', dataIndex: 'period', width: 110 },
@@ -2356,6 +2359,7 @@ function DailyInternTab() {
           size="small"
           pagination={false}
           rowKey="channel"
+          scroll={{ x: 720 }}
           dataSource={internChannelData}
           columns={[
             { title: '渠道', dataIndex: 'channel', width: 150 },
@@ -7146,7 +7150,7 @@ function CareerPlanningPage() {
       renderItem={(item) => (
         <List.Item className={onItemClick ? 'career-list-item--clickable' : 'career-list-item--static'}>
           <Card
-            className={`career-resource-card${onItemClick ? ' career-resource-card--clickable' : ''}`}
+            className={`career-resource-card career-resource-card--entry${onItemClick ? ' career-resource-card--clickable' : ''}`}
             hoverable={Boolean(onItemClick)}
             onClick={onItemClick ? () => onItemClick(item) : undefined}
           >
@@ -7173,7 +7177,7 @@ function CareerPlanningPage() {
                   ) : (
                     <Tag color={item.color}>{item.tag}</Tag>
                   )}
-                  <Text className="career-resource-title" strong style={item.highlight ? { color: '#b8860b' } : undefined}>
+                  <Text className="career-resource-title" title={item.title} strong style={item.highlight ? { color: '#b8860b' } : undefined}>
                     {item.title}
                   </Text>
                 </div>

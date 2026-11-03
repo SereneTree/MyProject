@@ -2335,14 +2335,52 @@ a.member-pill:hover {
   transform: translateX(3px);
 }
 
-/* 窄屏下「查看详情」贴顶部对齐，不再垂直居中挤压正文 */
-@media (max-width: 576px) {
+.career-resource-card--entry {
+  container: career-resource-entry / inline-size;
+}
+
+/* 根据卡片实际宽度切换排版，兼顾手机与窄列布局。 */
+@container career-resource-entry (max-width: 480px) {
+  .ant-card-body {
+    padding: 20px;
+  }
+
   .career-resource-main {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .career-resource-body {
+    flex: none;
+    width: 100%;
+  }
+
+  .career-resource-card--entry .career-resource-header {
+    flex-direction: column;
     align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .career-resource-header .ant-tag {
+    margin-inline-end: 0;
+  }
+
+  .career-resource-card--entry .career-resource-title {
+    width: 100%;
+    font-size: clamp(14px, 4cqi, 16px);
+    line-height: 1.5;
+  }
+
+  .career-resource-desc {
+    font-size: 14px;
+    line-height: 1.75;
   }
 
   .career-resource-action {
-    padding: 5px 11px;
+    align-self: flex-end;
+    padding: 6px 12px;
     font-size: 12px;
   }
 }
@@ -2366,6 +2404,15 @@ a.member-pill:hover {
 
 .career-resource-title {
   font-size: 15px;
+}
+
+.career-resource-card--entry .career-resource-title {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .career-resource-desc {
