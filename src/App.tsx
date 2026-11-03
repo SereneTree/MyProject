@@ -1,5 +1,5 @@
-import { ArrowLeftOutlined, ArrowRightOutlined, BookOutlined, CrownOutlined, DownloadOutlined, FileTextOutlined, FormOutlined, LockOutlined, MenuOutlined, ProfileOutlined, ReadOutlined, RocketOutlined, SoundOutlined, TeamOutlined, TrophyOutlined } from '@ant-design/icons';
-import { Alert, Badge, Button, Card, Col, Collapse, Divider, Dropdown, Empty, Form, Image, Input, Layout, List, Menu, message, Radio, Row, Select, Space, Spin, Statistic, Table, Tabs, Tag, Timeline, Typography } from 'antd';
+import { ArrowLeftOutlined, ArrowRightOutlined, ArrowUpOutlined, BookOutlined, CodeOutlined, CrownOutlined, DownloadOutlined, FileTextOutlined, FormOutlined, LineChartOutlined, LockOutlined, MenuOutlined, ProfileOutlined, ReadOutlined, RocketOutlined, ShopOutlined, SoundOutlined, TeamOutlined, TrophyOutlined } from '@ant-design/icons';
+import { Alert, Badge, Button, Card, Col, Collapse, Divider, Dropdown, Empty, FloatButton, Form, Grid, Image, Input, Layout, List, Menu, message, Radio, Row, Select, Space, Spin, Statistic, Table, Tabs, Tag, Timeline, Typography } from 'antd';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -98,6 +98,24 @@ function useLocalState<T>(key: string, fallback: T) {
   return [value, setValue] as const;
 }
 
+function useStickySectionNav(enabled = true) {
+  const sectionNavSentinel = useRef<HTMLDivElement>(null);
+  const [sectionNavStuck, setSectionNavStuck] = useState(false);
+
+  useEffect(() => {
+    setSectionNavStuck(false);
+    const sentinel = sectionNavSentinel.current;
+    if (!sentinel || !enabled) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      setSectionNavStuck(!entry.isIntersecting && entry.boundingClientRect.top <= 64);
+    }, { rootMargin: '-64px 0px 0px 0px' });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [enabled]);
+
+  return { sectionNavSentinel, sectionNavStuck };
+}
+
 function AppShell() {
   const location = useLocation();
 
@@ -193,6 +211,14 @@ function AppShell() {
           <Route path="/about" element={<AboutPage />} />
         </Routes>
       </Content>
+      <FloatButton.BackTop
+        className="back-to-top"
+        icon={<ArrowUpOutlined />}
+        aria-label="回到顶部"
+        tooltip="回到顶部"
+        visibilityHeight={240}
+        duration={window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 450}
+      />
       {/* <Footer className="footer">MVP Demo · 内容用于学习参考和产品验证</Footer> */}
     </Layout>
   );
@@ -2567,6 +2593,7 @@ function SelfAssessmentTab() {
 
 function ApplicationGuidePage() {
   const navigate = useNavigate();
+  const { sectionNavSentinel, sectionNavStuck } = useStickySectionNav();
   return (
     <div className="career-planning-page">
       <Button type="primary" style={{ marginBottom: 16 }} onClick={() => navigate('/career-planning')}>← 返回求职专区</Button>
@@ -2575,10 +2602,11 @@ function ApplicationGuidePage() {
         <Title level={2}>大厂申请<span className="career-hero-highlight">全流程</span></Title>
         <Paragraph>从面试准备、简历投递到 Offer 接收的完整链路，含个人评估、时间节点与注意事项</Paragraph>
       </div>
+      <div ref={sectionNavSentinel} className="career-nav-sentinel" aria-hidden="true" />
       <Tabs
         defaultActiveKey="campus"
         size="large"
-        className="career-tabs career-section-tabs career-guide-tabs"
+        className={`career-tabs career-section-tabs career-guide-tabs${sectionNavStuck ? ' is-stuck' : ''}`}
         items={[
           { key: 'campus', label: <span><ReadOutlined />校招</span>, children: <CampusRecruitTab /> },
           { key: 'internship', label: <span><RocketOutlined />日常实习</span>, children: <DailyInternTab /> },
@@ -2600,7 +2628,7 @@ type CoachingMentor = {
   name: string;
   role: string;
   education: string;
-  summary: string;
+  summary?: string;
   // 右侧虚拟人物头像；未配置时退化为无图单栏布局
   avatar?: string;
   highlights?: CoachingMentorHighlight[];
@@ -2616,7 +2644,7 @@ type CoachingSkill = { title: string; desc: string };
 
 type CoachingTrack = {
   key: string;
-  label: string;
+  label: ReactNode;
   steps: CoachingStep[];
   stepsTitle?: string;
   origin?: string;
@@ -2630,11 +2658,11 @@ type CoachingTrack = {
   gainsNote?: string;
 };
 
-// 1V1 全流程辅导：研发 / 商科两个方向的陪跑环节拆解
+// 1V1 全流程辅导：已开放方向的陪跑环节拆解
 const coachingTracks: CoachingTrack[] = [
   {
     key: 'rd',
-    label: '💻 研发',
+    label: <span><CodeOutlined />研发</span>,
     stepsTitle: '三阶段陪跑流程',
     origin: '做陪跑的初衷很简单：我大学那几年，最盼的就是身边有个学长带。那些绕过的弯、错过的机会，学弟学妹们不必再经历一遍——这条路上的经验，我们直接交到你手上！',
     pains: [
@@ -2722,7 +2750,7 @@ const coachingTracks: CoachingTrack[] = [
   },
   {
     key: 'biz',
-    label: '📈 商科&产品',
+    label: <span><LineChartOutlined />商科&产品</span>,
     origin: '做商科陪跑的初衷很实在：我自己就是从语言类专业 0 基础跨界商科，选赛道、改简历、练 Case、跑面试，每一步都踩过坑。这些经验不必再让你自己摸索一遍——方向怎么选、材料怎么写、面试怎么答，我直接带你走一遍。',
     reliefText: '这些不是能力问题，是信息差——早有人替你踩过，就不必自己再撞一遍。简历有人改、Case 有人陪练、面试有人逐句复盘，行业与岗位的选择也提前帮你想清楚。等秋招真正开始，你会发现自己已经准备好了。三个月走完，目标只有一个：拿到一份你自己满意的工作。',
     pains: [
@@ -2738,22 +2766,17 @@ const coachingTracks: CoachingTrack[] = [
         role: '商科方向主导师',
         education: 'HEC Paris 战略管理研究生（欧洲第一商学院）',
         avatar: '/coaching/mentor-y-flat.jpg',
-        summary: '从 0 到 1 跨界商科，成为咨询、互联网战略与快消行业的全能型选手。',
         highlights: [
-          { value: '4 个', label: '名企 Offer 斩获' },
+          { value: '20+ 个', label: '名企 Offer 斩获' },
           { value: '3 大', label: '赛道全覆盖' },
-          { value: '6 家', label: '头部公司实战' },
+          { value: '7 家', label: '头部公司实战' },
           { value: '0 → 1', label: '跨界商科路径' },
         ],
         expertise: ['面试辅导', 'Mock Case', '快消 / 互联网 / 咨询行业岗位介绍与选择'],
         experiences: [
           { label: '咨询', value: '贝恩、罗兰贝格' },
-          { label: '互联网战略', value: '字节跳动、百度' },
+          { label: '互联网战略', value: '字节跳动、百度、腾讯微信' },
           { label: '快消', value: '联合利华、玛氏' },
-        ],
-        offers: [
-          { label: '暑期实习', value: '宝洁 BRM、腾讯微信产品经理、某战略咨询' },
-          { label: '秋招', value: '某 Tier 2 战略咨询' },
         ],
       },
     ],
@@ -2880,14 +2903,14 @@ function CoachingTrackPanel({ track, onConsult }: { track: CoachingTrack; onCons
                     <div className="coaching-mentor-name">
                       {mentor.name}
                       <span className="coaching-mentor-role">{mentor.role}</span>
-                      {mentor.education && (
-                        <span className="coaching-mentor-edu-tag">
-                          <ReadOutlined />
-                          {mentor.education}
-                        </span>
-                      )}
                     </div>
                   </div>
+                  {mentor.education && (
+                    <span className="coaching-mentor-edu-tag">
+                      <ReadOutlined />
+                      <span>{mentor.education}</span>
+                    </span>
+                  )}
                 </header>
                 {mentor.highlights && mentor.highlights.length > 0 && (
                   <ul className="coaching-mentor-highlights">
@@ -2910,12 +2933,24 @@ function CoachingTrackPanel({ track, onConsult }: { track: CoachingTrack; onCons
                   </div>
                 )}
                 {/* 一句话定位下移：作为经历列表的引导句，取代原来的栏目小标题 */}
-                <p className="coaching-mentor-summary">{mentor.summary}</p>
+                {mentor.summary && <p className="coaching-mentor-summary">{mentor.summary}</p>}
                 {hasRows(mentor.experiences) || hasRows(mentor.offers) ? (
                   <div className={`coaching-mentor-grid${hasRows(mentor.experiences) && hasRows(mentor.offers) ? '' : ' coaching-mentor-grid--single'}`}>
                     {hasRows(mentor.experiences) && (
                       <section className="coaching-mentor-col">
-                        {renderMentorRows(mentor.experiences)}
+                        <div className="coaching-mentor-col-title">从业经历</div>
+                        <ul className="coaching-experience-list">
+                          {mentor.experiences.map((experience) => (
+                            <li className="coaching-experience-item" key={experience.label}>
+                              <span className="coaching-experience-category">{experience.label}</span>
+                              <div className="coaching-experience-companies">
+                                {experience.value.split('、').map((company) => (
+                                  <span className="coaching-experience-company" key={company}>{company}</span>
+                                ))}
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
                       </section>
                     )}
                     {hasRows(mentor.offers) && (
@@ -3012,7 +3047,7 @@ function CoachingTrackPanel({ track, onConsult }: { track: CoachingTrack; onCons
       )}
       {media.results && (
         <Card className="career-resource-card" title="成果收获" style={{ marginBottom: 16 }}>
-          <img className="coaching-wide-img coaching-img-narrow" src={media.results} alt="成果收获：4 项核心资产" loading="lazy" />
+          <CoachingPreviewImage className="coaching-img-narrow" src={media.results} alt="成果收获：4 项核心资产" />
           <div className="coaching-results-note">
             <p className="coaching-results-note-title">这条路，我陪你走完</p>
             <p className="coaching-results-note-text">
@@ -3034,6 +3069,7 @@ function CoachingTrackPanel({ track, onConsult }: { track: CoachingTrack; onCons
 
 function CoachingPage() {
   const navigate = useNavigate();
+  const { sectionNavSentinel, sectionNavStuck } = useStickySectionNav();
   return (
     <div className="career-planning-page">
       <Button type="primary" style={{ marginBottom: 16 }} onClick={() => navigate('/career-planning')}>← 返回求职专区</Button>
@@ -3042,16 +3078,44 @@ function CoachingPage() {
         <Title level={2}>1V1<span className="career-hero-highlight">全流程辅导</span></Title>
         <Paragraph>职业性格评测、个人能力摸底、背景&简历提升、模拟面试、真实面试复盘、流程跟进等全流程陪跑</Paragraph>
       </div>
+      <div ref={sectionNavSentinel} className="career-nav-sentinel" aria-hidden="true" />
       <Tabs
         defaultActiveKey="rd"
         size="large"
-        className="career-tabs"
-        items={coachingTracks.map((track) => ({
+        className={`career-tabs career-section-tabs career-guide-tabs${sectionNavStuck ? ' is-stuck' : ''}`}
+        items={[...coachingTracks.map((track) => ({
           key: track.key,
           label: track.label,
           children: <CoachingTrackPanel track={track} onConsult={() => navigate('/consultation')} />,
-        }))}
+        })), {
+          key: 'operations-sales',
+          label: <span><ShopOutlined />运营&销售</span>,
+          children: <OperationsSalesComingSoon />,
+        }]}
       />
+    </div>
+  );
+}
+
+function OperationsSalesComingSoon() {
+  const sections = [
+    { tag: '定位', color: 'blue', title: '岗位定位与赛道选择', desc: '认识用户运营、内容运营、产品运营与销售岗位，梳理适合自己的求职方向。' },
+    { tag: '简历', color: 'green', title: '简历与项目经历梳理', desc: '围绕岗位要求梳理过往经历，准备可展示的业务案例与项目成果。' },
+    { tag: '面试', color: 'orange', title: '业务案例与面试准备', desc: '梳理运营思路、销售场景与常见面试问题，准备结构化表达。' },
+    { tag: '规划', color: 'purple', title: '投递节奏与求职规划', desc: '了解岗位招聘流程与准备节点，逐步完善个人求职计划。' },
+  ];
+  return (
+    <div className="career-coming-soon-body coaching-coming-soon">
+      <div className="coaching-coming-soon-items" aria-hidden="true">
+        {sections.map((section) => (
+          <Card className="career-resource-card" key={section.tag}>
+            <Tag color={section.color}>{section.tag}</Tag>
+            <Title level={5}>{section.title}</Title>
+            <Paragraph type="secondary" style={{ marginBottom: 0 }}>{section.desc}</Paragraph>
+          </Card>
+        ))}
+      </div>
+      <ComingSoonMask section="运营&销售方向" />
     </div>
   );
 }
@@ -3189,7 +3253,7 @@ function ComingSoonMask({ section }: { section: string }) {
     <div className="career-coming-soon-mask">
       <div className="career-coming-soon-panel">
         <LockOutlined className="career-coming-soon-icon" />
-        <Title level={5} className="career-coming-soon-title">功能暂未开放</Title>
+        <Title level={5} className="career-coming-soon-title">紧锣密鼓开发中～</Title>
         <Paragraph type="secondary" className="career-coming-soon-desc">
           {section}正在整理完善中，暂不支持查看，敬请期待
         </Paragraph>
@@ -3553,6 +3617,7 @@ const abroadScoreRows: AbroadScoreRow[] = [
 // 标化备考二级页：新形势 + 时间轴/选择策略 + 分科要点 + 总结箴言
 function StudyAbroadTestPage() {
   const navigate = useNavigate();
+  const { sectionNavSentinel, sectionNavStuck } = useStickySectionNav();
 
   const renderPoints = (points: AbroadTestPoint[]) => (
     <div>
@@ -3581,13 +3646,14 @@ function StudyAbroadTestPage() {
         <Paragraph type="secondary">
           三科考试近两年都经历了结构性调整：长度变短、评分与送分规则在变，备考策略也必须跟着变。
         </Paragraph>
+        <div ref={sectionNavSentinel} className="career-nav-sentinel" aria-hidden="true" />
         <Tabs
           defaultActiveKey="toefl"
           size="large"
-          className="abroad-tabs"
+          className={`abroad-tabs career-tabs career-section-tabs career-guide-tabs${sectionNavStuck ? ' is-stuck' : ''}`}
           items={abroadTestGuides.map((guide) => ({
             key: guide.key,
-            label: guide.label,
+            label: <span>{guide.key === 'toefl' ? <ReadOutlined /> : guide.key === 'ielts' ? <SoundOutlined /> : <FormOutlined />}{guide.label}</span>,
             children: renderPoints(guide.trends),
           }))}
         />
@@ -4007,6 +4073,9 @@ const abroadDifficultyGroups: AbroadSchoolDifficultyGroup[] = [
 // 留学专区二级页：2027 入学申请时间表 + 审理规则变化
 function StudyAbroadUpdatesPage() {
   const navigate = useNavigate();
+  const { sectionNavSentinel, sectionNavStuck } = useStickySectionNav();
+  const screens = Grid.useBreakpoint();
+  const schoolColumnWidth = screens.md ? 210 : 112;
 
   // 难度地图筛选：'全部' 表示不筛选
   const [difficultySchool, setDifficultySchool] = useState('全部');
@@ -4102,7 +4171,6 @@ function StudyAbroadUpdatesPage() {
       <Card
         className="career-resource-card"
         title="一、2027 入学申请时间与截止日期"
-        extra={<Text type="secondary" style={{ fontSize: 12 }}>更新于 2026 年 10 月</Text>}
         style={{ marginBottom: 16 }}
       >
         <Alert
@@ -4111,24 +4179,24 @@ function StudyAbroadUpdatesPage() {
           message="表格是「项目级」时间窗口，不是录取难度参考"
           description="港校多为分轮 + 滚动审理，项目可能在公告截止前满额关闭；请以目标项目官网最新页面为准。项目难度的相对档位见下方「二、项目录取难度地图」。"
         />
-        <Text type="secondary" className="abroad-table-tip">内容较多，可左右滑动表格查看完整信息</Text>
+        <Text type="secondary" className="abroad-table-tip">更新于 2026 年 10 月</Text>
         <Table
           className="abroad-update-table"
           style={{ marginTop: 8 }}
           size="middle"
           pagination={false}
           rowKey="key"
-          scroll={{ x: 1120 }}
+          scroll={{ x: schoolColumnWidth + 910 }}
           dataSource={abroadUpdateRows}
           columns={[
             {
               title: '学校',
               dataIndex: 'school',
-              width: 210,
+              width: schoolColumnWidth,
               fixed: 'left',
               onCell: (row) => ({ rowSpan: schoolRowSpans[row.key] }),
               render: (_: string, row: AbroadUpdateRow) => (
-                <Text strong className="abroad-update-school-name">{row.school}</Text>
+                <Text strong className="abroad-update-school-name">{row.school.replace(/\s+[A-Za-z].*$/, '')}</Text>
               ),
             },
             {
@@ -4232,36 +4300,41 @@ function StudyAbroadUpdatesPage() {
           点选学校行或下方标签可按院校 / 难度筛选项目，再次点击已选学校即取消筛选
         </Text>
 
-        <div className="abroad-diff-filters">
+        <div ref={sectionNavSentinel} className="career-nav-sentinel" aria-hidden="true" />
+        <div className={`abroad-diff-filters${sectionNavStuck ? ' is-stuck' : ''}`}>
           <div className="abroad-diff-filter-row">
             <span className="abroad-diff-filter-label">院校</span>
-            <Tag.CheckableTag checked={difficultySchool === '全部'} onChange={() => setDifficultySchool('全部')}>
-              全部
-            </Tag.CheckableTag>
-            {difficultyOverview.schools.map((school) => (
-              <Tag.CheckableTag
-                key={school.schoolShort}
-                checked={difficultySchool === school.schoolShort}
-                onChange={() => setDifficultySchool(school.schoolShort)}
-              >
-                {school.schoolShort}
+            <div className="abroad-diff-filter-options">
+              <Tag.CheckableTag checked={difficultySchool === '全部'} onChange={() => setDifficultySchool('全部')}>
+                全部
               </Tag.CheckableTag>
-            ))}
+              {difficultyOverview.schools.map((school) => (
+                <Tag.CheckableTag
+                  key={school.schoolShort}
+                  checked={difficultySchool === school.schoolShort}
+                  onChange={() => setDifficultySchool(school.schoolShort)}
+                >
+                  {school.schoolShort}
+                </Tag.CheckableTag>
+              ))}
+            </div>
           </div>
           <div className="abroad-diff-filter-row">
             <span className="abroad-diff-filter-label">难度</span>
-            <Tag.CheckableTag checked={difficultyLevel === '全部'} onChange={() => setDifficultyLevel('全部')}>
-              全部
-            </Tag.CheckableTag>
-            {abroadDifficultyLevels.map((level) => (
-              <Tag.CheckableTag
-                key={level.key}
-                checked={difficultyLevel === level.key}
-                onChange={() => setDifficultyLevel(level.key)}
-              >
-                {level.label}
+            <div className="abroad-diff-filter-options">
+              <Tag.CheckableTag checked={difficultyLevel === '全部'} onChange={() => setDifficultyLevel('全部')}>
+                全部
               </Tag.CheckableTag>
-            ))}
+              {abroadDifficultyLevels.map((level) => (
+                <Tag.CheckableTag
+                  key={level.key}
+                  checked={difficultyLevel === level.key}
+                  onChange={() => setDifficultyLevel(level.key)}
+                >
+                  {level.label}
+                </Tag.CheckableTag>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -4500,6 +4573,7 @@ function CareerPlanningPage() {
   const [activeJobCategory, setActiveJobCategory] = useState('技术类');
   // 二级页面返回时可通过 ?tab=abroad 直接锚定对应专区，默认仍为求职专区
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'internship');
+  const { sectionNavSentinel, sectionNavStuck } = useStickySectionNav(!jobsBoardOpen);
 
   // 岗位集结号是页内二级视图（不换路由），上层的路由回顶 effect 不会触发：
   // 进入与返回都手动回顶，否则会沿用上一个视图的滚动位置，一进来就停在页面中间
@@ -4510,6 +4584,9 @@ function CareerPlanningPage() {
   const handleTabChange = (key: string) => {
     setActiveTab(key);
     navigate(key === 'internship' ? '/career-planning' : `/career-planning?tab=${key}`, { replace: true });
+    if (window.matchMedia('(max-width: 768px)').matches) {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
   };
 
   const postgraduateData = [
@@ -7401,7 +7478,8 @@ function CareerPlanningPage() {
 
   return (
     <div className="career-planning-page career-planning-home">
-      <Tabs activeKey={activeTab} onChange={handleTabChange} items={tabItems} className="career-tabs career-section-tabs" size="large" />
+      <div ref={sectionNavSentinel} className="career-nav-sentinel" aria-hidden="true" />
+      <Tabs activeKey={activeTab} onChange={handleTabChange} items={tabItems} className={`career-tabs career-section-tabs${sectionNavStuck ? ' is-stuck' : ''}`} size="large" />
     </div>
   );
 }

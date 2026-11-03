@@ -12,6 +12,23 @@ body {
   min-height: 100vh;
 }
 
+.back-to-top.ant-float-btn {
+  right: 20px;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  width: 44px;
+  height: 44px;
+  border: 1px solid #c8dafa;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.16);
+}
+
+.back-to-top .ant-float-btn-body {
+  background: #eff6ff;
+}
+
+.back-to-top .ant-float-btn-icon {
+  color: #2563eb;
+}
+
 .topbar {
   position: sticky;
   top: 0;
@@ -1530,7 +1547,19 @@ a.member-pill:hover {
   --career-tab-count: 3;
 }
 
+.career-nav-sentinel {
+  height: 1px;
+  margin-bottom: -1px;
+  pointer-events: none;
+}
+
 @media (max-width: 768px) {
+  .career-section-tabs > .ant-tabs-nav {
+    position: sticky;
+    top: 64px;
+    z-index: 9;
+  }
+
   .career-section-tabs > .ant-tabs-nav {
     padding: 4px;
     background: #e2edff;
@@ -1576,6 +1605,29 @@ a.member-pill:hover {
   .career-section-tabs > .ant-tabs-nav .ant-tabs-tab .anticon {
     margin: 0;
     font-size: 18px;
+  }
+
+  .career-section-tabs.is-stuck > .ant-tabs-nav {
+    width: 100vw;
+    margin-left: calc((100% - 100vw) / 2);
+    padding: 4px 16px;
+    border-inline: none;
+    border-radius: 0;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  }
+
+  .career-section-tabs.is-stuck > .ant-tabs-nav .ant-tabs-tab {
+    padding: 6px 2px;
+    border-radius: 8px;
+    font-size: 12px;
+  }
+
+  .career-section-tabs.is-stuck > .ant-tabs-nav .ant-tabs-tab-btn > span {
+    gap: 3px;
+  }
+
+  .career-section-tabs.is-stuck > .ant-tabs-nav .ant-tabs-tab .anticon {
+    font-size: 16px;
   }
 
   .career-section-tabs > .ant-tabs-nav .ant-tabs-ink-bar,
@@ -2163,6 +2215,46 @@ a.member-pill:hover {
   list-style: none;
 }
 
+.coaching-experience-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.coaching-experience-item {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.coaching-experience-category {
+  display: block;
+  flex: 0 0 65px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.coaching-experience-companies {
+  display: flex;
+  flex-wrap: wrap;
+  min-width: 0;
+  gap: 4px 10px;
+}
+
+.coaching-experience-company {
+  color: #25344b;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
 .coaching-mentor-rows li {
   display: flex;
   align-items: baseline;
@@ -2178,6 +2270,7 @@ a.member-pill:hover {
 
 .coaching-mentor-label {
   flex: 0 0 76px;
+  white-space: nowrap;
   color: #64748b;
   font-size: 13px;
   font-weight: 600;
@@ -2384,8 +2477,9 @@ a.member-pill:hover {
   }
 
   .coaching-mentor-head {
-    align-items: flex-start;
-    flex-wrap: nowrap;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
     gap: 12px;
   }
 
@@ -2421,9 +2515,23 @@ a.member-pill:hover {
   }
 
   .coaching-mentor-edu-tag {
-    padding: 1px 7px;
-    font-size: 11px;
+    grid-column: 1 / -1;
+    padding: 7px 10px;
+    align-items: flex-start;
+    gap: 7px;
+    background: #fff8e8;
+    border-color: #f0dfb6;
+    color: #946715;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0;
     box-shadow: none;
+  }
+
+  .coaching-mentor-edu-tag .anticon {
+    flex-shrink: 0;
+    margin-top: 4px;
+    color: inherit;
   }
 
   .coaching-mentor-highlights {
@@ -2439,6 +2547,47 @@ a.member-pill:hover {
   .coaching-mentor-summary {
     padding-left: 10px;
     font-size: 14px;
+  }
+
+  .coaching-mentor-expertise {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .coaching-mentor-expertise-tag {
+    max-width: 100%;
+    border-radius: 8px;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+
+  .coaching-mentor-col-title {
+    margin-bottom: 8px;
+    color: #64748b;
+    letter-spacing: 0;
+  }
+
+  .coaching-mentor-rows li {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 10px;
+    padding: 10px 0;
+  }
+
+  .coaching-mentor-label,
+  .coaching-mentor-value {
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .coaching-mentor-col--offers {
+    padding: 14px;
+  }
+
+  .coaching-mentor-col--offers .coaching-mentor-rows li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
   }
 }
 
@@ -2695,6 +2844,25 @@ a.member-pill:hover {
   position: relative;
 }
 
+.coaching-coming-soon-items {
+  display: grid;
+  gap: 16px;
+  padding: 14px;
+}
+
+.coaching-coming-soon-items h5.ant-typography {
+  margin-top: 12px;
+}
+
+.coaching-coming-soon .career-coming-soon-mask {
+  padding: 16px;
+}
+
+.coaching-coming-soon .career-coming-soon-panel {
+  width: min(100%, 360px);
+  padding: 24px 18px;
+}
+
 .career-coming-soon-mask {
   position: absolute;
   inset: 0;
@@ -2904,6 +3072,18 @@ a.member-pill:hover {
   background: #fff;
 }
 
+@media (max-width: 767px) {
+  .abroad-update-table .ant-table-cell-fix-left {
+    padding-inline: 8px;
+  }
+
+  .abroad-update-table .abroad-update-school-name.ant-typography {
+    font-size: 13px;
+    line-height: 1.6;
+    overflow-wrap: break-word;
+  }
+}
+
 .abroad-update-table .ant-table-tbody > tr:hover > td {
   background: #f8fbff;
 }
@@ -3081,27 +3261,120 @@ a.member-pill:hover {
 .abroad-diff-filters {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 14px;
   margin: 16px 0 20px;
-  padding: 14px;
-  background: #fbfcfe;
-  border: 1px dashed #e2e8f0;
+  padding: 12px;
+  background: #f6f9ff;
+  border: 1px solid #e1e9f6;
   border-radius: 12px;
 }
 
 .abroad-diff-filter-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.abroad-diff-filter-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .abroad-diff-filter-label {
-  flex-shrink: 0;
-  margin-right: 2px;
+  grid-column: 1 / -1;
+  margin-bottom: 2px;
   font-size: 13px;
   font-weight: 600;
   color: #475569;
+}
+
+.abroad-diff-filter-row + .abroad-diff-filter-row {
+  padding-top: 12px;
+  border-top: 1px solid #e1e9f6;
+}
+
+.abroad-diff-filter-row .ant-tag-checkable {
+  margin: 0;
+  padding: 5px 4px;
+  border: 1px solid #dce6f5;
+  border-radius: 7px;
+  background: #fff;
+  color: #475569;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.abroad-diff-filter-row .ant-tag-checkable-checked {
+  border-color: #9ebef3;
+  background: #e2edff;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.abroad-diff-filter-row .ant-tag-checkable:hover {
+  border-color: #9ebef3;
+  color: #1d4ed8;
+}
+
+@media (max-width: 768px) {
+  .abroad-diff-filters {
+    position: sticky;
+    top: 64px;
+    z-index: 8;
+  }
+
+  .abroad-diff-filters.is-stuck {
+    width: 100vw;
+    margin-left: calc((100% - 100vw) / 2);
+    padding: 8px 16px;
+    gap: 6px;
+    border-inline: none;
+    border-top: none;
+    border-bottom-color: #c4d8f8;
+    border-radius: 0;
+    background: #f0f5ff;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.06);
+  }
+
+  .abroad-diff-filters.is-stuck .abroad-diff-filter-row {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .abroad-diff-filters.is-stuck .abroad-diff-filter-label {
+    grid-column: auto;
+    align-self: center;
+    margin: 0;
+    font-size: 12px;
+  }
+
+  .abroad-diff-filters.is-stuck .abroad-diff-filter-options {
+    display: flex;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .abroad-diff-filters.is-stuck .abroad-diff-filter-options::-webkit-scrollbar {
+    display: none;
+  }
+
+  .abroad-diff-filters.is-stuck .ant-tag-checkable {
+    flex-shrink: 0;
+    padding: 3px 10px;
+  }
+
+  .abroad-diff-filters.is-stuck .abroad-diff-filter-row + .abroad-diff-filter-row {
+    padding-top: 0;
+    border-top: none;
+  }
 }
 
 .abroad-diff-group {
