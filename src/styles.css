@@ -1066,6 +1066,107 @@ a.member-pill:hover {
   justify-content: center;
 }
 
+/* 移动端（≤576px）：单列堆叠、收紧内边距、放大控件与点击热区 */
+@media (max-width: 576px) {
+  /* Row 的负外边距会让窄屏内容横向溢出，改为靠 Row 自身的 row-gap 控制列间距 */
+  .consult-page {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .consult-page > .ant-col {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .consult-page .ant-card {
+    border-radius: 16px;
+  }
+
+  .consult-card .ant-card-body {
+    padding: 20px 18px;
+  }
+
+  .consult-card h2.ant-typography {
+    margin: 10px 0 8px !important;
+    font-size: 22px;
+    line-height: 1.4;
+  }
+
+  .consult-card .ant-typography {
+    font-size: 13.5px;
+    line-height: 1.8;
+  }
+
+  .consult-badge {
+    margin-bottom: 4px;
+  }
+
+  .consult-feature-list {
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .consult-feature {
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .consult-process-title {
+    margin-top: 18px;
+    font-size: 14px;
+  }
+
+  /* 三步流程：隐藏箭头，三等分平铺，避免文字被挤断 */
+  .consult-process {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .consult-process-arrow {
+    display: none;
+  }
+
+  .consult-process-step {
+    height: 44px;
+    gap: 4px;
+    padding: 0 6px;
+  }
+
+  .consult-process-index {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+  }
+
+  .consult-process-step .ant-typography {
+    font-size: 12.5px;
+  }
+
+  .consult-form-card .ant-card-head {
+    padding: 0 16px;
+  }
+
+  .consult-form-card .ant-card-body {
+    padding: 18px 16px 20px;
+  }
+
+  .consult-form-extra {
+    font-size: 12px;
+  }
+
+  .consult-page .ant-form-item {
+    margin-bottom: 18px;
+  }
+
+  /* 控件高度与字号由 antd 的 size="large" 提供（见 useNarrowScreen），这里只拉满按钮宽度 */
+  .consult-submit-row .ant-btn {
+    width: 100%;
+  }
+}
+
 .profile-center {
   align-items: flex-start;
 }

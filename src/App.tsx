@@ -7396,9 +7396,28 @@ function FollowupStoryPage() {
   );
 }
 
+// 窄屏判定：手机端把表单控件换成 antd 的 large 尺寸（高度 40px、字号 16px）
+// 16px 字号也能避免 iOS Safari 聚焦输入框时自动放大页面
+function useNarrowScreen(maxWidth = 576) {
+  const query = `(max-width: ${maxWidth}px)`;
+  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
+
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const onChange = () => setMatches(mq.matches);
+    onChange();
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, [query]);
+
+  return matches;
+}
+
 function ConsultationPage() {
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
+  const isNarrow = useNarrowScreen();
+  const controlSize = isNarrow ? 'large' : 'middle';
 
   async function submit(values: Record<string, string>) {
     setSubmitting(true);
@@ -7448,19 +7467,20 @@ function ConsultationPage() {
           <Form
             form={form}
             layout="vertical"
+            size={controlSize}
             onFinish={submit}
           >
             <Row gutter={12}>
-              <Col xs={24} md={12}><Form.Item name="name" label="姓名" rules={[{ required: true }]}><Input placeholder="例如：陈小博" /></Form.Item></Col>
-              <Col xs={24} md={12}><Form.Item name="contact" label="联系方式（手机/微信）" rules={[{ required: true }]}><Input placeholder="例如：138xxxxxxxx / 微信号" /></Form.Item></Col>
-              <Col xs={24} md={12}><Form.Item name="school" label="学校"><Input placeholder="例如：北京邮电大学" /></Form.Item></Col>
-              <Col xs={24} md={12}><Form.Item name="major" label="专业"><Input placeholder="例如：计算机科学与技术" /></Form.Item></Col>
-              <Col xs={24} md={12}><Form.Item name="grade" label="年级"><Select placeholder="请选择你所在年级" options={consultGradeOptions} /></Form.Item></Col>
+              <Col xs={24} md={12}><Form.Item name="name" label="姓名" rules={[{ required: true, message: '请输入姓名' }]}><Input placeholder="例如：陈小博" /></Form.Item></Col>
+              <Col xs={24} md={12}><Form.Item name="contact" label="联系方式（手机/微信）" rules={[{ required: true, message: '请输入联系方式' }]}><Input placeholder="例如：138xxxxxxxx / 微信号" /></Form.Item></Col>
+              <Col xs={24} md={12}><Form.Item name="school" label="学校" rules={[{ required: true, message: '请输入学校名称' }]}><Input placeholder="例如：北京邮电大学" /></Form.Item></Col>
+              <Col xs={24} md={12}><Form.Item name="major" label="专业" rules={[{ required: true, message: '请输入专业名称' }]}><Input placeholder="例如：计算机科学与技术" /></Form.Item></Col>
+              <Col xs={24} md={12}><Form.Item name="grade" label="年级" rules={[{ required: true, message: '请选择你所在年级' }]}><Select placeholder="请选择你所在年级" options={consultGradeOptions} /></Form.Item></Col>
               <Col xs={24} md={12}><Form.Item name="goal" label="咨询方向" rules={[{ required: true, message: '请选择咨询方向' }]}><Select placeholder="请选择所咨询方向" options={['实习与就业', '考研与保研', '留学', '其他'].map((item) => ({ value: item, label: item }))} /></Form.Item></Col>
             </Row>
             <Form.Item name="description" label="当前困惑" rules={[{ required: true, message: '请描述你当前的困惑' }]}><Input.TextArea rows={5} placeholder="描述你目前的学习/升学/就业困惑" /></Form.Item>
             <div className="consult-submit-row">
-              <Button type="primary" htmlType="submit" loading={submitting}>提交意向</Button>
+              <Button type="primary" htmlType="submit" size={controlSize} loading={submitting}>提交意向</Button>
             </div>
           </Form>
         </Card>
