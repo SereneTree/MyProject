@@ -2578,10 +2578,11 @@ function ApplicationGuidePage() {
       <Tabs
         defaultActiveKey="campus"
         size="large"
+        className="career-tabs career-section-tabs career-guide-tabs"
         items={[
-          { key: 'campus', label: '校招', children: <CampusRecruitTab /> },
-          { key: 'internship', label: '日常实习', children: <DailyInternTab /> },
-          { key: 'assessment', label: '个人评估', children: <SelfAssessmentTab /> },
+          { key: 'campus', label: <span><ReadOutlined />校招</span>, children: <CampusRecruitTab /> },
+          { key: 'internship', label: <span><RocketOutlined />日常实习</span>, children: <DailyInternTab /> },
+          { key: 'assessment', label: <span><FormOutlined />个人评估</span>, children: <SelfAssessmentTab /> },
         ]}
       />
     </div>

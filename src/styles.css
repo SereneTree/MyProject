@@ -1526,6 +1526,10 @@ a.member-pill:hover {
   padding: 10px 6px;
 }
 
+.career-guide-tabs {
+  --career-tab-count: 3;
+}
+
 @media (max-width: 768px) {
   .career-section-tabs > .ant-tabs-nav {
     padding: 4px;
@@ -1540,7 +1544,7 @@ a.member-pill:hover {
 
   .career-section-tabs > .ant-tabs-nav .ant-tabs-nav-list {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--career-tab-count, 4), minmax(0, 1fr));
     flex: 1;
     width: 100%;
     min-width: 0;
