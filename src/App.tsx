@@ -1,5 +1,5 @@
-import { ArrowLeftOutlined, ArrowRightOutlined, BookOutlined, CrownOutlined, DownloadOutlined, FileTextOutlined, FormOutlined, LockOutlined, ProfileOutlined, ReadOutlined, RocketOutlined, SoundOutlined, TeamOutlined, TrophyOutlined } from '@ant-design/icons';
-import { Alert, Badge, Button, Card, Col, Collapse, Divider, Empty, Form, Input, Layout, List, Menu, message, Radio, Row, Select, Space, Spin, Statistic, Table, Tabs, Tag, Timeline, Typography } from 'antd';
+import { ArrowLeftOutlined, ArrowRightOutlined, BookOutlined, CrownOutlined, DownloadOutlined, FileTextOutlined, FormOutlined, LockOutlined, MenuOutlined, ProfileOutlined, ReadOutlined, RocketOutlined, SoundOutlined, TeamOutlined, TrophyOutlined } from '@ant-design/icons';
+import { Alert, Badge, Button, Card, Col, Collapse, Divider, Dropdown, Empty, Form, Input, Layout, List, Menu, message, Radio, Row, Select, Space, Spin, Statistic, Table, Tabs, Tag, Timeline, Typography } from 'antd';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -158,11 +158,7 @@ function AppShell() {
           <img className="brand-logo" src="/logo.png" alt="平台 Logo" />
           <span>计算机专业学习与发展规划平台</span>
         </Link>
-        <Menu mode="horizontal" className="nav" selectedKeys={[getSelectedNavKey(location.pathname)]} items={[
-          { key: 'home', label: <Link to={DEFAULT_RESOURCE_PATH} onClick={scrollToResourceColumnFallback}>学习资源</Link> },
-          { key: 'career-planning', label: <Link to="/career-planning" onClick={() => window.scrollTo({ top: 0 })}>生涯规划</Link> },
-          { key: 'consultation', label: <Link to="/consultation">咨询服务</Link> }
-        ]} />
+        <HeaderNavigation />
         <HeaderBroadcast />
       </Header>
       <Content className="content">
@@ -199,6 +195,52 @@ function AppShell() {
       </Content>
       {/* <Footer className="footer">MVP Demo · 内容用于学习参考和产品验证</Footer> */}
     </Layout>
+  );
+}
+
+function HeaderNavigation() {
+  const location = useLocation();
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 768px)').matches);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 768px)');
+    const onChange = () => {
+      setIsMobile(media.matches);
+      setOpen(false);
+    };
+    onChange();
+    media.addEventListener('change', onChange);
+    return () => media.removeEventListener('change', onChange);
+  }, []);
+
+  useEffect(() => setOpen(false), [location]);
+
+  const items = [
+    { key: 'home', label: <Link to={DEFAULT_RESOURCE_PATH} onClick={scrollToResourceColumnFallback}>学习资源</Link> },
+    { key: 'career-planning', label: <Link to="/career-planning" onClick={() => window.scrollTo({ top: 0 })}>生涯规划</Link> },
+    { key: 'consultation', label: <Link to="/consultation">咨询服务</Link> }
+  ];
+  const selectedKeys = [getSelectedNavKey(location.pathname)];
+
+  if (!isMobile) return <Menu mode="horizontal" className="nav" selectedKeys={selectedKeys} items={items} />;
+
+  return (
+    <Dropdown
+      trigger={['click']}
+      placement="bottomRight"
+      open={open}
+      onOpenChange={setOpen}
+      menu={{ items, selectedKeys, selectable: true, onClick: () => setOpen(false), className: 'mobile-nav-menu' }}
+    >
+      <Button
+        className={`mobile-nav-trigger${open ? ' is-open' : ''}`}
+        icon={<MenuOutlined />}
+        aria-label={open ? '关闭导航菜单' : '打开导航菜单'}
+        aria-haspopup="menu"
+        aria-expanded={open}
+      />
+    </Dropdown>
   );
 }
 
