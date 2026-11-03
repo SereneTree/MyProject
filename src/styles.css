@@ -1533,8 +1533,8 @@ a.member-pill:hover {
 @media (max-width: 768px) {
   .career-section-tabs > .ant-tabs-nav {
     padding: 4px;
-    background: #f0f4fa;
-    border: 1px solid #e4ebf5;
+    background: #e2edff;
+    border: 1px solid #bdd2f5;
     border-radius: 14px;
   }
 
