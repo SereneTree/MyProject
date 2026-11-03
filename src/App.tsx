@@ -7371,7 +7371,7 @@ function CareerPlanningPage() {
 
   return (
     <div className="career-planning-page career-planning-home">
-      <Tabs activeKey={activeTab} onChange={handleTabChange} items={tabItems} className="career-tabs" size="large" />
+      <Tabs activeKey={activeTab} onChange={handleTabChange} items={tabItems} className="career-tabs career-section-tabs" size="large" />
     </div>
   );
 }
