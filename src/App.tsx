@@ -1,5 +1,5 @@
 import { ArrowLeftOutlined, ArrowRightOutlined, ArrowUpOutlined, BookOutlined, CodeOutlined, CrownOutlined, DownloadOutlined, FileTextOutlined, FormOutlined, LineChartOutlined, LockOutlined, MenuOutlined, ProfileOutlined, ReadOutlined, RocketOutlined, ShopOutlined, SoundOutlined, TeamOutlined, TrophyOutlined } from '@ant-design/icons';
-import { Alert, Badge, Button, Card, Col, Collapse, Divider, Dropdown, Empty, FloatButton, Form, Grid, Image, Input, Layout, List, Menu, message, Radio, Row, Select, Space, Spin, Statistic, Table, Tabs, Tag, Timeline, Typography } from 'antd';
+import { Alert, Badge, Button, Card, Col, Collapse, Divider, Dropdown, Empty, FloatButton, Form, Grid, Image, Input, Layout, List, Menu, message, Popover, Radio, Row, Select, Space, Spin, Statistic, Table, Tabs, Tag, Timeline, Typography } from 'antd';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -219,6 +219,7 @@ function AppShell() {
         visibilityHeight={240}
         duration={window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 450}
       />
+      <MobileBroadcast />
       {/* <Footer className="footer">MVP Demo · 内容用于学习参考和产品验证</Footer> */}
     </Layout>
   );
@@ -276,6 +277,40 @@ const HEADER_BROADCAST_ITEMS = [
   '求职岗位实时更新中，有意向请直接咨询～',
   '学习资源区课件&大作业面向全体同学征集，课程资源加油包为你量身打造！'
 ];
+
+function MobileBroadcast() {
+  const screens = Grid.useBreakpoint();
+  const location = useLocation();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => setOpen(false), [location, screens.md]);
+
+  if (screens.md !== false) return null;
+
+  return (
+    <Popover
+      title="站内播报"
+      trigger="click"
+      placement="topRight"
+      open={open}
+      onOpenChange={setOpen}
+      overlayClassName="mobile-broadcast-popover"
+      content={(
+        <ul className="mobile-broadcast-list">
+          {HEADER_BROADCAST_ITEMS.map((item) => <li key={item}>{item}</li>)}
+        </ul>
+      )}
+    >
+      <Button
+        className="mobile-broadcast-trigger"
+        shape="circle"
+        icon={<SoundOutlined />}
+        aria-label="查看站内播报"
+        aria-expanded={open}
+      />
+    </Popover>
+  );
+}
 
 // 顶栏小播报站：文案首尾相接横向滚动，鼠标悬停暂停
 function HeaderBroadcast() {
@@ -3370,6 +3405,7 @@ const studyAbroadRegions: StudyAbroadRegion[] = [
 // 留学专区二级页：从趋势出发的选校定位方法论
 function StudyAbroadTrendPage() {
   const navigate = useNavigate();
+  const { sectionNavSentinel, sectionNavStuck } = useStickySectionNav();
   return (
     <div className="career-planning-page">
       <Button type="primary" style={{ marginBottom: 16 }} onClick={() => navigate('/career-planning?tab=abroad')}>← 返回留学专区</Button>
@@ -3430,13 +3466,19 @@ function StudyAbroadTrendPage() {
         <Paragraph type="secondary">
           基于北邮学生的专业背景（通信、计算机、电子、数据等），以下为当前常申请的「英、港、新」三大地区头部院校及对口专业，可作为选校的「简易自测」清单。
         </Paragraph>
+        <div ref={sectionNavSentinel} className="career-nav-sentinel" aria-hidden="true" />
         <Tabs
           defaultActiveKey="hk"
           size="large"
-          className="abroad-region-tabs"
+          className={`abroad-region-tabs career-tabs career-section-tabs career-guide-tabs${sectionNavStuck ? ' is-stuck' : ''}`}
           items={studyAbroadRegions.map((region) => ({
             key: region.key,
-            label: region.label,
+            label: (
+              <span>
+                <span className="abroad-region-flag" aria-hidden="true">{region.label.split(' ')[0]}</span>
+                {region.label.split(' ').slice(1).join(' ')}
+              </span>
+            ),
             children: (
               <>
                 <Paragraph type="secondary" className="abroad-region-summary">{region.summary}</Paragraph>
