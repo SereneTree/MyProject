@@ -580,9 +580,6 @@ function Home({ isLoggedIn, profile, memberLevel }: { isLoggedIn: boolean; profi
           <div className="cascade-column cascade-column-main" ref={resourceColumnRef}>
             <div className="cascade-title">
               <span>课程资源</span>
-              {selectedCourse && (
-                <Button size="small" onClick={() => setSelectedCourse(undefined)}>返回资源总览</Button>
-              )}
             </div>
 
             <div className={resourceComingSoon ? 'resource-coming-soon-wrap' : undefined}>
