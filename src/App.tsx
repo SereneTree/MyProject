@@ -1,5 +1,5 @@
 import { ArrowLeftOutlined, ArrowRightOutlined, BookOutlined, CrownOutlined, DownloadOutlined, FileTextOutlined, FormOutlined, LockOutlined, MenuOutlined, ProfileOutlined, ReadOutlined, RocketOutlined, SoundOutlined, TeamOutlined, TrophyOutlined } from '@ant-design/icons';
-import { Alert, Badge, Button, Card, Col, Collapse, Divider, Dropdown, Empty, Form, Input, Layout, List, Menu, message, Radio, Row, Select, Space, Spin, Statistic, Table, Tabs, Tag, Timeline, Typography } from 'antd';
+import { Alert, Badge, Button, Card, Col, Collapse, Divider, Dropdown, Empty, Form, Image, Input, Layout, List, Menu, message, Radio, Row, Select, Space, Spin, Statistic, Table, Tabs, Tag, Timeline, Typography } from 'antd';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -2636,7 +2636,7 @@ const coachingTracks: CoachingTrack[] = [
     key: 'rd',
     label: '💻 研发',
     stepsTitle: '三阶段陪跑流程',
-    origin: '做陪跑的初衷很简单：我大学那几年，最盼的就是身边有个学长带。那些绕过的弯、错过的机会，学弟学妹们不必再经历一遍——这条路上的经验，我们直接给你。',
+    origin: '做陪跑的初衷很简单：我大学那几年，最盼的就是身边有个学长带。那些绕过的弯、错过的机会，学弟学妹们不必再经历一遍——这条路上的经验，我们直接交到你手上！',
     pains: [
       '⏳ 学期与假期拥有大段可支配时间，却缺少清晰的能力积累路径',
       '🧩 校内课程与企业岗位要求的知识结构之间，找不到明确的结合点',
@@ -2653,7 +2653,7 @@ const coachingTracks: CoachingTrack[] = [
         summary: '金融Agent一线实战＋校招 / 社招面试官视角，帮你把项目讲成面试官真正想听的样子。',
         highlights: [
           { value: '6 年+', label: '头部金融平台经验' },
-          { value: '近千万级', label: '日活 Agent 产品' },
+          { value: '百万级', label: '日活 Agent 产品' },
           { value: '2 年', label: '团队管理经验' },
           { value: '100+', label: '过往考察面试候选人' },
         ],
@@ -2794,6 +2794,33 @@ const coachingMedia: Record<string, { hero?: string; stages?: string; map?: stri
   },
 };
 
+function CoachingPreviewImage({ src, alt, className }: { src: string; alt: string; className: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <figure className={`coaching-preview-media ${className}`}>
+      <Image
+        src={src}
+        alt={alt}
+        loading="lazy"
+        width="100%"
+        preview={{ visible: open, onVisibleChange: setOpen, mask: '点击查看大图' }}
+      />
+      <button
+        className="coaching-stages-preview-hint"
+        type="button"
+        aria-label={`放大查看：${alt}`}
+        onClick={() => setOpen(true)}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M9 13V5a2 2 0 0 1 4 0v7" />
+          <path d="M13 10a2 2 0 0 1 4 0v2" />
+          <path d="M17 11a2 2 0 0 1 4 0v5a6 6 0 0 1-6 6h-2c-2 0-3-.6-4-2l-5-6a2 2 0 0 1 3-3l2 2" />
+        </svg>
+      </button>
+    </figure>
+  );
+}
+
 function CoachingTrackPanel({ track, onConsult }: { track: CoachingTrack; onConsult: () => void }) {
   const media = coachingMedia[track.key] || {};
   const hasHero = Boolean(media.hero || track.origin || track.pains);
@@ -2839,12 +2866,14 @@ function CoachingTrackPanel({ track, onConsult }: { track: CoachingTrack; onCons
         </section>
       )}
       {track.mentors && track.mentors.length > 0 && (
-        <Card className="career-resource-card" title="学长团队" style={{ marginBottom: 16 }}>
+        <Card className="career-resource-card coaching-team-card" title="学长团队" style={{ marginBottom: 16 }}>
           {track.mentors.map((mentor) => (
             <article className={`coaching-mentor${mentor.avatar ? ' coaching-mentor--with-portrait' : ''}`} key={mentor.name}>
               <div className="coaching-mentor-main">
                 <header className="coaching-mentor-head">
-                  {!mentor.avatar && (
+                  {mentor.avatar ? (
+                    <img className="coaching-mentor-head-portrait" src={mentor.avatar} alt={`${mentor.name} 虚拟形象`} loading="lazy" />
+                  ) : (
                     <div className="coaching-mentor-avatar" aria-hidden="true">{mentor.name.slice(0, 1)}</div>
                   )}
                   <div className="coaching-mentor-meta">
@@ -2926,9 +2955,7 @@ function CoachingTrackPanel({ track, onConsult }: { track: CoachingTrack; onCons
             }))}
           />
           {media.stages && (
-            <figure className="coaching-stages-media">
-              <img src={media.stages} alt="三阶段陪跑：从写简历到拿大厂 AI Offer" loading="lazy" />
-            </figure>
+            <CoachingPreviewImage className="coaching-stages-media" src={media.stages} alt="三阶段陪跑：从写简历到拿大厂 AI Offer" />
           )}
         </div>
       </Card>
@@ -2969,20 +2996,18 @@ function CoachingTrackPanel({ track, onConsult }: { track: CoachingTrack; onCons
             这是一条螺旋向上的路：先打牢编程底子，再了解模型原理，Agent框架、工程理念逐层叠加，最后一站直接落在行业项目与面试上。
           </Paragraph>
           {media.map && (
-            <figure className="coaching-map">
-              <img
-                src={media.map}
-                alt="从零基础到大厂 Agent 工程师的学习地图：1 编程与工程基础、2 大模型基础原理、3 RAG 与知识检索、4 Agent 基础能力、5 上下文与记忆工程、6 Agent 工程化 Harness、7 工具生态与 AI Coding、8 行业项目与面试准备"
-                loading="lazy"
-              />
-            </figure>
+            <CoachingPreviewImage
+              className="coaching-map"
+              src={media.map}
+              alt="从零基础到大厂 Agent 工程师的学习地图：1 编程与工程基础、2 大模型基础原理、3 RAG 与知识检索、4 Agent 基础能力、5 上下文与记忆工程、6 Agent 工程化 Harness、7 工具生态与 AI Coding、8 行业项目与面试准备"
+            />
           )}
           <Divider style={{ margin: '20px 0 16px' }} />
           <Text strong className="coaching-map-heading">📁 地图之外：持续更新的 27 个实战项目文件夹</Text>
           <Paragraph type="secondary" style={{ marginBottom: 12 }}>
             地图上每一站都不是空谈，项目库已沉淀 27 个主题文件夹，覆盖行业 AI Coding（电商 / 金融 / 内容消费）、Agent 架构、MCP / RAG / Context Engineering、Harness 工程化、主流 AI 编程工具与框架实践等行业热门领域，并持续更新补充。选题和找资料这两件最耗时间的事，不必再自己扛！
           </Paragraph>
-          <img className="coaching-wide-img coaching-img-medium" src={media.projects} alt="实战项目库：27 个主题文件夹，覆盖行业 AI Coding、Agent、MCP、RAG、Context Engineering 等主题" loading="lazy" />
+          <CoachingPreviewImage className="coaching-img-medium" src={media.projects} alt="实战项目库：27 个主题文件夹，覆盖行业 AI Coding、Agent、MCP、RAG、Context Engineering 等主题" />
         </Card>
       )}
       {media.results && (
@@ -7202,7 +7227,7 @@ function CareerPlanningPage() {
   const heroTitleData: Record<string, { lead: string; highlight: string }> = {
     internship: { lead: '实习先人一步，', highlight: '未来职场不焦虑！' },
     abroad: { lead: '找准自身定位，', highlight: '名校录取不是梦～' },
-    postgraduate: { lead: '选课、竞赛、论文，', highlight: '是你保研上岸的最大助力' },
+    postgraduate: { lead: '绩点、竞赛、论文，', highlight: '保研上岸的最大助力' },
     followup: { lead: '沿着学长的真实轨迹，', highlight: '找到属于你自己的最优解！' },
   };
   const heroTitle = heroTitleData[activeTab] || { lead: '为你的未来，', highlight: '量身定制路径' };

@@ -1734,16 +1734,90 @@ a.member-pill:hover {
   margin-bottom: 0;
 }
 
-.coaching-stages-media {
+.coaching-preview-media {
+  position: relative;
   margin: 0;
 }
 
-.coaching-stages-media img {
+.coaching-preview-media img {
   display: block;
   width: 100%;
   border-radius: 12px;
   border: 1px solid #eef2f7;
   background: #ffffff;
+}
+
+.coaching-preview-media .ant-image-mask {
+  border-radius: 12px;
+}
+
+.coaching-stages-preview-hint {
+  display: none;
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.88);
+  color: #737b88;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.12);
+  cursor: pointer;
+}
+
+.coaching-stages-preview-hint svg {
+  width: 24px;
+  height: 24px;
+  animation: coaching-hand-breathe 2.4s ease-in-out infinite;
+}
+
+.coaching-stages-preview-hint::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(115, 123, 136, 0.35);
+  border-radius: inherit;
+  pointer-events: none;
+  animation: coaching-hand-halo 2.4s ease-in-out infinite;
+}
+
+@keyframes coaching-hand-breathe {
+  0%, 100% {
+    opacity: 0.65;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes coaching-hand-halo {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(115, 123, 136, 0);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.08);
+    box-shadow: 0 0 8px 2px rgba(115, 123, 136, 0.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coaching-stages-preview-hint svg,
+  .coaching-stages-preview-hint::before {
+    animation: none;
+  }
+}
+
+.coaching-stages-preview-hint:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
 }
 
 /* 中等宽度下适当收窄右列，避免左列中文长段落被挤 */
@@ -1758,6 +1832,10 @@ a.member-pill:hover {
     grid-template-columns: minmax(0, 1fr);
     gap: 20px;
   }
+
+  .coaching-stages-preview-hint {
+    display: grid;
+  }
 }
 
 .coaching-step-bullets {
@@ -1769,6 +1847,20 @@ a.member-pill:hover {
 
 .coaching-step-bullets li + li {
   margin-top: 6px;
+}
+
+@media (max-width: 768px) {
+  .coaching-stages {
+    gap: 12px;
+  }
+
+  .coaching-stages > .ant-timeline > .ant-timeline-item-last {
+    padding-bottom: 0;
+  }
+
+  .coaching-stages .ant-timeline-item-last .coaching-step-bullets {
+    margin-bottom: 0;
+  }
 }
 
 /* 1V1 陪跑配图：三阶段/项目库/成果为大图 */
@@ -1924,6 +2016,10 @@ a.member-pill:hover {
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
+}
+
+.coaching-mentor-head-portrait {
+  display: none;
 }
 
 .coaching-mentor-avatar {
@@ -2256,22 +2352,93 @@ a.member-pill:hover {
     gap: 16px;
   }
 
-  /* 手机上人物头像改为右上角小图，文案继续环绕阅读 */
+  .coaching-team-card > .ant-card-body {
+    padding: 14px;
+    background: #f3f6fc;
+    border-radius: 0 0 12px 12px;
+  }
+
+  /* 每位导师独立成卡，头像与身份信息在卡片头部并排。 */
   .coaching-mentor,
   .coaching-mentor--with-portrait {
     display: block;
+    padding: 16px;
+    border: 1px solid #dce6f5;
+    border-radius: 14px;
+    background: #fff;
+  }
+
+  .coaching-mentor + .coaching-mentor {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #dce6f5;
+  }
+
+  .coaching-mentor-main {
+    flex: none;
+    width: 100%;
   }
 
   .coaching-mentor--with-portrait .coaching-mentor-portrait {
-    float: right;
-    width: 96px;
-    height: auto;
-    margin: 0 0 10px 12px;
-    border-radius: 14px;
+    display: none;
   }
 
-  .coaching-mentor-portrait img {
-    height: 112px;
+  .coaching-mentor-head {
+    align-items: flex-start;
+    flex-wrap: nowrap;
+    gap: 12px;
+  }
+
+  .coaching-mentor-head-portrait {
+    display: block;
+    flex: 0 0 56px;
+    width: 56px;
+    height: 68px;
+    object-fit: cover;
+    object-position: center 18%;
+    border: 1px solid #c7d9fb;
+    border-radius: 10px;
+    background: #eff6ff;
+  }
+
+  .coaching-mentor-meta {
+    flex: 1;
+  }
+
+  .coaching-mentor-name {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    line-height: 1.5;
+  }
+
+  .coaching-mentor-role {
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    overflow-wrap: anywhere;
+  }
+
+  .coaching-mentor-edu-tag {
+    padding: 1px 7px;
+    font-size: 11px;
+    box-shadow: none;
+  }
+
+  .coaching-mentor-highlights {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .coaching-mentor-highlight {
+    min-width: 0;
+    padding: 10px;
+  }
+
+  .coaching-mentor-summary {
+    padding-left: 10px;
+    font-size: 14px;
   }
 }
 
