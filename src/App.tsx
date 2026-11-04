@@ -172,7 +172,7 @@ function AppShell() {
   return (
     <Layout className="app-shell">
       <Header className="topbar">
-        <Link to="/" className="brand">
+        <Link to={DEFAULT_RESOURCE_PATH} className="brand" onClick={scrollToResourceColumnFallback}>
           <img className="brand-logo" src="/logo.png" alt="平台 Logo" />
           <span>计算机专业学习与发展规划平台</span>
         </Link>
